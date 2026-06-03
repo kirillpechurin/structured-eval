@@ -5,6 +5,9 @@ description = "The LLM Structured Output Evaluation Framework"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.13.4",
+]
 
 [dependency-groups]
 dev = [
@@ -27,3 +30,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
