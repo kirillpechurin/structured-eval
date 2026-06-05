@@ -3,20 +3,26 @@ name = "structured-eval"
 version = "0.1.0"
 description = "The LLM Structured Output Evaluation Framework"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.13.4",
 ]
 
+[project.optional-dependencies]
+yaml = ["pyyaml>=6.0"]
+fuzzy = ["rapidfuzz>=3.0"]
+all = ["pyyaml>=6.0", "rapidfuzz>=3.0"]
+
 [dependency-groups]
 dev = [
-  "pytest>=8.0",
-  "ruff>=0.4",
-  "mypy>=1.10",
-  "pytest-cov>=5.0",
-  "pyyaml>=6.0.3",
-  "types-pyyaml>=6.0.12.20260518",
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest-cov>=5.0",
+    "pyyaml>=6.0",
+    "rapidfuzz>=3.0",
+    "types-pyyaml>=6.0",
 ]
 
 [tool.mypy]
