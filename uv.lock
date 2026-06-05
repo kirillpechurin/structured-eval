@@ -730,11 +730,15 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "jsonschema" },
     { name = "pyyaml" },
     { name = "rapidfuzz" },
 ]
 fuzzy = [
     { name = "rapidfuzz" },
+]
+jsonschema = [
+    { name = "jsonschema" },
 ]
 yaml = [
     { name = "pyyaml" },
@@ -755,13 +759,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "jsonschema", marker = "extra == 'all'", specifier = ">=4.26.0" },
+    { name = "jsonschema", marker = "extra == 'jsonschema'", specifier = ">=4.26.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyyaml", marker = "extra == 'all'", specifier = ">=6.0" },
     { name = "pyyaml", marker = "extra == 'yaml'", specifier = ">=6.0" },
     { name = "rapidfuzz", marker = "extra == 'all'", specifier = ">=3.0" },
     { name = "rapidfuzz", marker = "extra == 'fuzzy'", specifier = ">=3.0" },
 ]
-provides-extras = ["yaml", "fuzzy", "all"]
+provides-extras = ["yaml", "fuzzy", "jsonschema", "all"]
 
 [package.metadata.requires-dev]
 dev = [
