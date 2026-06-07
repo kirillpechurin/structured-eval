@@ -47,16 +47,18 @@ class ArrayMatchResult(BaseModel):
     """Alignment result for a pair of object arrays."""
 
     strategy: ArrayStrategy = Field(description="Strategy used: by_index, by_key, best_match.")
-    matched_pairs: list[tuple[int, int]] = Field(
-        description="Pairs of (expected_index, actual_index) that were aligned."
+    matched: list[tuple[int, int]] = Field(
+        description="Pairs of (expected_index, actual_index) that were aligned (TP)."
     )
-    unmatched_expected: list[int] = Field(
-        description="Indices of expected items that had no match in actual (false negatives)."
+    missed: list[int] = Field(
+        description="Expected indices not found in actual (FN)."
     )
-    unmatched_actual: list[int] = Field(
-        description="Indices of actual items that had no match in expected (false positives)."
+    spurious: list[int] = Field(
+        description="Actual indices not present in expected (FP)."
     )
-    score: float = Field(ge=0.0, le=1.0, description="Overall array match score.")
+    precision: float = Field(ge=0.0, le=1.0, description="Matched / total actual.")
+    recall: float = Field(ge=0.0, le=1.0, description="Matched / total expected.")
+    f1: float = Field(ge=0.0, le=1.0, description="Harmonic mean of precision and recall.")
 
 
 class RuleResult(BaseModel):
@@ -87,19 +89,37 @@ class EvalReport(BaseModel):
     Top-level output of evaluate(). Contains aggregate metrics, per-field
     breakdown, rule results, and optional schema validation details.
 
-    The score property is an alias for f1 and is the recommended single-number
-    summary for thresholding in CI.
+    The score property is the recommended single-number summary for CI thresholding.
+    It returns the best available signal: f1 > rule_pass_rate > coverage_score.
+    When expected is not provided (schema-only mode), f1/precision/recall are None.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # Core metrics
-    f1: float = Field(ge=0.0, le=1.0, description="Harmonic mean of precision and recall.")
-    precision: float = Field(
-        ge=0.0, le=1.0, description="Fraction of actual fields that match expected."
+    # Core metrics — None when expected was not provided (schema-only mode)
+    f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Harmonic mean of precision and recall. None in schema-only mode.",
     )
-    recall: float = Field(
-        ge=0.0, le=1.0, description="Fraction of expected fields found in actual."
+    precision: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Fraction of actual fields that match expected. None in schema-only mode.",
+    )
+    recall: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Fraction of expected fields found in actual. None in schema-only mode.",
+    )
+
+    # Per-sample flags
+    perfect: bool | None = Field(
+        default=None,
+        description="True iff f1 == 1.0 (all fields correct). None in schema-only mode.",
     )
 
     # Schema
@@ -140,18 +160,24 @@ class EvalReport(BaseModel):
     )
     rule_results: list[RuleResult] = Field(default_factory=list)
 
+    # Faithfulness
+    faithfulness_score: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Fraction of leaf fields whose value is found in the source text (L1 substring).",
+    )
+    hallucinated_fields: list[str] = Field(
+        default_factory=list,
+        description="Field paths where the value was not found in the source text.",
+    )
+
     # Breakdown
     field_scores: dict[str, FieldScore] = Field(default_factory=dict)
     array_matches: dict[str, ArrayMatchResult] | None = None
     root_array_match: ArrayMatchResult | None = Field(
         default=None,
         description="Set when the top-level input is a list. Not supported in v0.1.",
-    )
-    hallucination_rate: float | None = Field(
-        default=None,
-        ge=0.0,
-        le=1.0,
-        description="Fraction of actual fields not grounded in the source context.",
     )
 
     # Meta
@@ -162,9 +188,19 @@ class EvalReport(BaseModel):
     )
 
     @property
-    def score(self) -> float:
-        """Alias for f1. Recommended single-number summary for CI thresholding."""
-        return self.f1
+    def score(self) -> float | None:
+        """Best available single-number summary for CI thresholding.
+
+        Returns the first non-None value from: f1 → rule_pass_rate → coverage_score.
+        Returns None when no metric could be computed (e.g. no expected, no schema, no rules).
+        """
+        if self.f1 is not None:
+            return self.f1
+        if self.rule_pass_rate is not None:
+            return self.rule_pass_rate
+        if self.coverage_score is not None:
+            return self.coverage_score
+        return None
 
     def failed_fields(self) -> list[FieldScore]:
         """Return all top-level fields with score < 1.0."""

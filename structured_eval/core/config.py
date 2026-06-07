@@ -101,7 +101,23 @@ class _Custom:
         return f"custom:{self.name}" if self.name else "custom"
 
 
-MatcherType = _Exact | _Normalized | _Numeric | _TokenF1 | _Fuzzy | _Custom
+@dataclass(frozen=True)
+class _Jaccard:
+    """Token-level Jaccard similarity: |A∩B| / |A∪B|."""
+
+    def __str__(self) -> str:
+        return "jaccard"
+
+
+@dataclass(frozen=True)
+class _Url:
+    """URL comparison after normalization via urllib.parse."""
+
+    def __str__(self) -> str:
+        return "url"
+
+
+MatcherType = _Exact | _Normalized | _Numeric | _TokenF1 | _Fuzzy | _Custom | _Jaccard | _Url
 
 
 class MatchMode:
@@ -113,6 +129,8 @@ class MatchMode:
     Examples:
         MatchMode.EXACT
         MatchMode.NORMALIZED
+        MatchMode.JACCARD
+        MatchMode.URL
         MatchMode.NUMERIC(tolerance=0.05, mode=NumericMode.RELATIVE)
         MatchMode.CUSTOM(lambda a, e: a.lower() in e.lower(), name="substr")
     """
@@ -121,6 +139,8 @@ class MatchMode:
     NORMALIZED: ClassVar[_Normalized] = _Normalized()
     TOKEN_F1: ClassVar[_TokenF1] = _TokenF1()
     FUZZY: ClassVar[_Fuzzy] = _Fuzzy()
+    JACCARD: ClassVar[_Jaccard] = _Jaccard()
+    URL: ClassVar[_Url] = _Url()
 
     @staticmethod
     def NUMERIC(

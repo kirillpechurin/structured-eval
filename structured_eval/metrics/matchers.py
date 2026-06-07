@@ -5,10 +5,10 @@ from __future__ import annotations
 # Current dispatch-function approach works for MVP but is harder to extend:
 # adding a new matcher requires touching match(), and there's no natural place
 # for per-matcher state or configuration beyond what the dataclass carries.
-# It is possible to use Generic[MatcherType] here, but it will add an additional
-# complexity to user matchers. I should rethink this module.
+# Planned for v0.2 start alongside COSINE_TFIDF and SEMANTIC matchers.
 import re
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlparse
 
 from structured_eval.core.config import (
     MatcherType,
@@ -17,9 +17,11 @@ from structured_eval.core.config import (
     _Custom,
     _Exact,
     _Fuzzy,
+    _Jaccard,
     _Normalized,
     _Numeric,
     _TokenF1,
+    _Url,
 )
 
 # ── Exact ─────────────────────────────────────────────────────────────────────
@@ -61,13 +63,16 @@ def _match_numeric(actual: Any, expected: Any, tolerance: float, mode: NumericMo
     return max(0.0, 1.0 - deviation / tolerance)
 
 
-# ── Token F1 ──────────────────────────────────────────────────────────────────
+# ── Tokenization (shared by TOKEN_F1 and JACCARD) ────────────────────────────
 
 _NON_WORD = re.compile(r"[^\w\s]")
 
 
 def _tokenize(value: Any) -> list[str]:
     return _NON_WORD.sub(" ", str(value).lower()).split()
+
+
+# ── Token F1 ──────────────────────────────────────────────────────────────────
 
 
 def _match_token_f1(actual: Any, expected: Any) -> float:
@@ -85,6 +90,46 @@ def _match_token_f1(actual: Any, expected: Any) -> float:
 
     denom = precision + recall
     return 2 * precision * recall / denom if denom else 0.0
+
+
+# ── Jaccard ───────────────────────────────────────────────────────────────────
+
+
+def _match_jaccard(actual: Any, expected: Any) -> float:
+    actual_tokens = set(_tokenize(actual))
+    expected_tokens = set(_tokenize(expected))
+
+    if not actual_tokens and not expected_tokens:
+        return 1.0
+    if not actual_tokens or not expected_tokens:
+        return 0.0
+
+    intersection = len(actual_tokens & expected_tokens)
+    union = len(actual_tokens | expected_tokens)
+    return intersection / union
+
+
+# ── URL ───────────────────────────────────────────────────────────────────────
+
+
+def _normalize_url(url: Any) -> str:
+    try:
+        s = str(url).strip()
+        parsed = urlparse(s)
+        scheme = parsed.scheme.lower()
+        netloc = parsed.netloc.lower()
+        path = parsed.path.rstrip("/") or "/"
+        query = urlencode(sorted(parse_qsl(parsed.query)))
+        normalized = f"{scheme}://{netloc}{path}"
+        if query:
+            normalized += f"?{query}"
+        return normalized
+    except Exception:
+        return str(url).lower().strip()
+
+
+def _match_url(actual: Any, expected: Any) -> float:
+    return 1.0 if _normalize_url(actual) == _normalize_url(expected) else 0.0
 
 
 # ── Fuzzy ─────────────────────────────────────────────────────────────────────
@@ -126,6 +171,10 @@ def match(matcher: MatcherType, actual: Any, expected: Any) -> float:
         return _match_numeric(actual, expected, matcher.tolerance, matcher.mode)
     if isinstance(matcher, _TokenF1):
         return _match_token_f1(actual, expected)
+    if isinstance(matcher, _Jaccard):
+        return _match_jaccard(actual, expected)
+    if isinstance(matcher, _Url):
+        return _match_url(actual, expected)
     if isinstance(matcher, _Fuzzy):
         return _match_fuzzy(actual, expected)
     if isinstance(matcher, _Custom):
@@ -135,9 +184,18 @@ def match(matcher: MatcherType, actual: Any, expected: Any) -> float:
 
 # ── Auto-detect ───────────────────────────────────────────────────────────────
 
-# TODO: name-based heuristic is too coarse — "country_description" incorrectly maps to EXACT
-# because "country" appears as a token. Needs a proper design: suffix-only matching,
-# an explicit allow-list, or user-configurable rules before this is production-ready.
+_URL_NAME = re.compile(
+    r"(^|_)(url|link|href|uri|endpoint|website)(_|$)",
+    re.IGNORECASE,
+)
+
+# Long-text suffixes — checked before _EXACT_NAME to prevent false EXACT matches
+# like "country_description" or "status_note".
+_TEXT_SUFFIX = re.compile(
+    r"(^|_)(description|note|text|label|message|body|content|summary|detail|info|comment)(_|$)",
+    re.IGNORECASE,
+)
+
 _EXACT_NAME = re.compile(
     r"(^|_)(id|code|status|type|kind|currency|country|language|locale|flag|mode|state)(_|$)",
     re.IGNORECASE,
@@ -148,10 +206,16 @@ def detect_matcher(field_name: str, expected_value: Any) -> MatcherType:
     """Infer a matcher from field name and expected value type.
 
     Priority order:
-      1. Name matches id/code/status/... → EXACT
-      2. Expected is a number (int/float, not bool) → NUMERIC
-      3. Everything else → TOKEN_F1
+      1. URL-named fields (*_url, *_link, etc.) → URL
+      2. Long-text suffixes (*_description, *_note, etc.) → TOKEN_F1
+      3. Exact-type names (id, code, status, ...) → EXACT
+      4. Numeric values → NUMERIC
+      5. Everything else → TOKEN_F1
     """
+    if _URL_NAME.search(field_name):
+        return MatchMode.URL
+    if _TEXT_SUFFIX.search(field_name):
+        return MatchMode.TOKEN_F1
     if _EXACT_NAME.search(field_name):
         return MatchMode.EXACT
     if isinstance(expected_value, (int, float)) and not isinstance(expected_value, bool):
