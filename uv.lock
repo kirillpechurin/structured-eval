@@ -167,6 +167,15 @@ wheels = [
 ]
 
 [[package]]
+name = "jsonpath-ng"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/58/250751940d75c8019659e15482d548a4aa3b6ce122c515102a4bfdac50e3/jsonpath_ng-1.8.0.tar.gz", hash = "sha256:54252968134b5e549ea5b872f1df1168bd7defe1a52fed5a358c194e1943ddc3", size = 74513, upload-time = "2026-02-24T14:42:06.182Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/99/33c7d78a3fb70d545fd5411ac67a651c81602cc09c9cf0df383733f068c5/jsonpath_ng-1.8.0-py3-none-any.whl", hash = "sha256:b8dde192f8af58d646fc031fac9c99fe4d00326afc4148f1f043c601a8cfe138", size = 67844, upload-time = "2026-02-28T00:53:19.637Z" },
+]
+
+[[package]]
 name = "jsonschema"
 version = "4.26.0"
 source = { registry = "https://pypi.org/simple" }
@@ -730,6 +739,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "jsonpath-ng" },
     { name = "jsonschema" },
     { name = "pyyaml" },
     { name = "rapidfuzz" },
@@ -740,12 +750,16 @@ fuzzy = [
 jsonschema = [
     { name = "jsonschema" },
 ]
+rules = [
+    { name = "jsonpath-ng" },
+]
 yaml = [
     { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "jsonpath-ng" },
     { name = "jsonschema" },
     { name = "mypy" },
     { name = "pytest" },
@@ -759,6 +773,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "jsonpath-ng", marker = "extra == 'all'", specifier = ">=1.6" },
+    { name = "jsonpath-ng", marker = "extra == 'rules'", specifier = ">=1.6" },
     { name = "jsonschema", marker = "extra == 'all'", specifier = ">=4.26.0" },
     { name = "jsonschema", marker = "extra == 'jsonschema'", specifier = ">=4.26.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
@@ -767,10 +783,11 @@ requires-dist = [
     { name = "rapidfuzz", marker = "extra == 'all'", specifier = ">=3.0" },
     { name = "rapidfuzz", marker = "extra == 'fuzzy'", specifier = ">=3.0" },
 ]
-provides-extras = ["yaml", "fuzzy", "jsonschema", "all"]
+provides-extras = ["yaml", "fuzzy", "jsonschema", "rules", "all"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "jsonpath-ng", specifier = ">=1.6" },
     { name = "jsonschema", specifier = ">=4.26.0" },
     { name = "mypy", specifier = ">=1.10" },
     { name = "pytest", specifier = ">=8.0" },
