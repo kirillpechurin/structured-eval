@@ -69,15 +69,24 @@ class RuleResult(BaseModel):
     message: str = Field(default="", description="Human-readable explanation for failures.")
 
 
+def _metric_delta(a: float | None, b: float | None) -> float | None:
+    """Return a - b, treating None as 0.0 unless both sides are None."""
+    if a is None and b is None:
+        return None
+    return (a or 0.0) - (b or 0.0)
+
+
 class RegressionDiff(BaseModel):
     """Metric delta between two EvalReport runs.
 
     Positive deltas indicate improvement; negative indicate regression.
+    Aggregate metric deltas are None when the metric was unavailable in both runs
+    (e.g. schema-only mode where f1 is None).
     """
 
-    f1_delta: float = Field(description="Change in F1 score.")
-    precision_delta: float = Field(description="Change in precision.")
-    recall_delta: float = Field(description="Change in recall.")
+    f1_delta: float | None = Field(description="Change in F1 score. None if f1 unavailable in both runs.")
+    precision_delta: float | None = Field(description="Change in precision. None if unavailable in both runs.")
+    recall_delta: float | None = Field(description="Change in recall. None if unavailable in both runs.")
     field_deltas: dict[str, float] = Field(
         description="Per-field score deltas. Only includes fields present in at least one run."
     )
@@ -223,5 +232,29 @@ class EvalReport(BaseModel):
         raise NotImplementedError
 
     def diff_from(self, other: EvalReport) -> RegressionDiff:
-        """Compute metric deltas relative to other (self is the newer run)."""
-        raise NotImplementedError
+        """Compute metric deltas relative to other (self is the newer run).
+
+        Positive deltas mean self improved over other; negative mean regression.
+        Aggregate deltas (f1_delta etc.) are None when the metric is absent in
+        both runs. When the metric is absent in only one run, the missing side
+        is treated as 0.0 so the delta reflects the full gain or loss.
+
+        field_deltas covers all fields present in at least one run.
+        Fields absent in a run contribute 0.0 to the delta for that run.
+        """
+        all_keys = set(self.field_scores) | set(other.field_scores)
+        field_deltas: dict[str, float] = {
+            key: (
+                self.field_scores[key].score if key in self.field_scores else 0.0
+            ) - (
+                other.field_scores[key].score if key in other.field_scores else 0.0
+            )
+            for key in sorted(all_keys)
+        }
+
+        return RegressionDiff(
+            f1_delta=_metric_delta(self.f1, other.f1),
+            precision_delta=_metric_delta(self.precision, other.precision),
+            recall_delta=_metric_delta(self.recall, other.recall),
+            field_deltas=field_deltas,
+        )
