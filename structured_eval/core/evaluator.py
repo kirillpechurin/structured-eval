@@ -5,6 +5,7 @@ from typing import Any, Literal, overload
 from structured_eval.core.config import EvalConfig
 from structured_eval.core.result import EvalReport, RuleResult
 from structured_eval.metrics.field_accuracy import FieldAccuracyResult, evaluate_fields
+from structured_eval.rules.engine import run_rules
 from structured_eval.parsers.base import ParseError
 from structured_eval.parsers.json_parser import JsonParser
 from structured_eval.schema.coverage import coverage_score as _compute_coverage
@@ -123,9 +124,7 @@ def _build_report(
     rule_results: list[RuleResult] = []
     rule_pass_rate = None
     if cfg.rules:
-        warnings.append(
-            "Rules engine is not yet implemented (planned for v0.2). Rules were skipped."
-        )
+        rule_results, rule_pass_rate = run_rules(cfg.rules, actual)
 
     return EvalReport(
         f1=fa.f1,
