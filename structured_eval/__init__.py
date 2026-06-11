@@ -22,6 +22,16 @@ from structured_eval.diff.structured_diff import (
     StructuredDiff,
     structured_diff,
 )
+from structured_eval.matchers import (
+    ExactMatcher,
+    FuzzyMatcher,
+    JaccardMatcher,
+    MatcherBase,
+    NumericMatcher,
+    RegexNormalizedMatcher,
+    TokenF1Matcher,
+    UrlMatcher,
+)
 from structured_eval.nodes import (
     ArrayMatchResult,
     ArrayNode,
@@ -55,6 +65,15 @@ __all__ = [
     "ArrayNode",
     "FieldPair",
     "ArrayMatchResult",
+    # matchers
+    "MatcherBase",
+    "ExactMatcher",
+    "RegexNormalizedMatcher",
+    "NumericMatcher",
+    "TokenF1Matcher",
+    "JaccardMatcher",
+    "FuzzyMatcher",
+    "UrlMatcher",
     # rules / utils / diff
     "Rule",
     "flatten",
