@@ -30,7 +30,12 @@ def _field_score(node: EvalNode) -> FieldScore:
 
 def build_report(root: EvalNode, context: EvalContext, warnings: list[str]) -> EvalReport:
     """Phase 3: flatten the computed tree into an EvalReport."""
-    field_scores = {node.path: _field_score(node) for node in walk(root)}
+    field_scores = {}
+    array_matches = {}
+    for node in walk(root):
+        field_scores[node.path] = _field_score(node)
+        if isinstance(node, ArrayNode) and node.match_result is not None:
+            array_matches[node.path] = node.match_result
 
     metrics = dict(root.metric_results)  # root node carries the document-level metrics
     config = context.config
@@ -45,5 +50,6 @@ def build_report(root: EvalNode, context: EvalContext, warnings: list[str]) -> E
         score_label=score_label,
         metrics=metrics,
         field_scores=field_scores,
+        array_matches=array_matches,
         warnings=warnings,
     )

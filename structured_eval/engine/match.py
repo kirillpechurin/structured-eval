@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from structured_eval.align import align
 from structured_eval.core.config import (
     ArrayFieldConfig,
+    ArrayStrategy,
     EvalConfig,
     ExtraKeysPolicy,
     FieldConfig,
@@ -12,6 +14,7 @@ from structured_eval.core.config import (
 from structured_eval.core.context import EvalContext
 from structured_eval.metrics.field.exact import ExactMatch
 from structured_eval.metrics.protocol import FieldMetric, get_metric_class
+from structured_eval.nodes.array_node import ArrayNode
 from structured_eval.nodes.base import MISSING, _navigate
 from structured_eval.nodes.object_node import ObjectNode
 from structured_eval.nodes.scalar import ScalarNode
@@ -24,11 +27,11 @@ def _resolve_metric(spec: Any) -> FieldMetric:
 def build_tree(context: EvalContext) -> tuple[Any, list[str]]:
     """Phase 1: build the EvalNode tree and compute leaf (field) metrics.
 
-    Returns ``(root_node, warnings)``. Arrays are not handled yet (Stage 7):
-    a list value is treated as a scalar and a warning is recorded.
+    Returns ``(root_node, warnings)``. Each node carries an ``actual``-side
+    ``path`` and, when arrays reorder elements, a diverging ``expected_path``.
     """
     builder = _TreeBuilder(context)
-    root = builder.node("$", builder.root_config())
+    root = builder.node("$", "$", builder.root_config())
     return root, builder.warnings
 
 
@@ -40,7 +43,7 @@ class _TreeBuilder:
 
     # ── config resolution ──────────────────────────────────────────────────
 
-    def root_config(self) -> ObjectFieldConfig | ArrayFieldConfig | None:
+    def root_config(self) -> Any:
         if self.config.root is not None:
             return self.config.root
         if self.config.fields:
@@ -67,25 +70,22 @@ class _TreeBuilder:
         value = _navigate(doc, path)
         return None if value is MISSING else value
 
-    def node(self, path: str, cfg: Any) -> Any:
-        actual = self._value(self.context.actual, path)
-        expected = self._value(self.context.expected, path)
+    def _child(self, path: str, key: str) -> str:
+        return key if path in ("$", "") else f"{path}.{key}"
+
+    def node(self, apath: str, epath: str, cfg: Any) -> Any:
+        actual = self._value(self.context.actual, apath)
+        expected = self._value(self.context.expected, epath)
         ref = expected if expected is not None else actual
 
         if isinstance(ref, dict):
-            return self._object(path, cfg, actual, expected)
+            return self._object(apath, epath, cfg, actual, expected)
         if isinstance(ref, list):
-            self.warnings.append(
-                f"[ARRAY_UNSUPPORTED] {path!r}: arrays land in Stage 7, "
-                "compared as a scalar for now"
-            )
-        return self._scalar(path, cfg)
-
-    def _child_path(self, path: str, key: str) -> str:
-        return key if path in ("$", "") else f"{path}.{key}"
+            return self._array(apath, epath, cfg, actual, expected)
+        return self._scalar(apath, epath, cfg)
 
     def _object(
-        self, path: str, cfg: Any, actual: Any, expected: Any
+        self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any
     ) -> ObjectNode:
         a_keys = set(actual) if isinstance(actual, dict) else set()
         e_keys = set(expected) if isinstance(expected, dict) else set()
@@ -99,7 +99,7 @@ class _TreeBuilder:
             spurious = []
             for key in extra:
                 self.warnings.append(
-                    f"[EXTRA_KEY] {self._child_path(path, key)!r} not in expected "
+                    f"[EXTRA_KEY] {self._child(apath, key)!r} not in expected "
                     "(ExtraKeysPolicy.IGNORE)"
                 )
 
@@ -107,33 +107,64 @@ class _TreeBuilder:
         children: dict[str, Any] = {}
         matched: list[Any] = []
         for key in sorted(a_keys | e_keys):
-            child = self.node(self._child_path(path, key), fields.get(key))
+            child = self.node(
+                self._child(apath, key), self._child(epath, key), fields.get(key)
+            )
             children[key] = child
             if key in both:
                 matched.append(child)
         for key in missing:
             self.warnings.append(
-                f"[MISSING_FIELD] {self._child_path(path, key)!r} absent in actual"
+                f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual"
             )
 
         return ObjectNode(
-            path=path,
+            path=apath,
             context=self.context,
+            expected_path=epath if epath != apath else None,
             matched=matched,
             missing=missing,
             spurious=spurious,
             children=children,
         )
 
-    def _scalar(self, path: str, cfg: Any) -> ScalarNode:
+    def _array(
+        self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any
+    ) -> ArrayNode:
+        a_list = actual if isinstance(actual, list) else []
+        e_list = expected if isinstance(expected, list) else []
+        is_cfg = isinstance(cfg, ArrayFieldConfig)
+        result = align(
+            e_list,
+            a_list,
+            strategy=cfg.strategy if is_cfg else ArrayStrategy.BY_INDEX,
+            key=cfg.key if is_cfg else None,
+            key_metric=cfg.key_metric if is_cfg else None,
+            key_threshold=cfg.key_threshold if is_cfg else 1.0,
+        )
+        item_cfg = cfg.item if is_cfg else None
+        items = [
+            self.node(f"{apath}[{aidx}]", f"{epath}[{eidx}]", item_cfg)
+            for eidx, aidx in result.matched
+        ]
+        return ArrayNode(
+            path=apath,
+            context=self.context,
+            expected_path=epath if epath != apath else None,
+            match_result=result,
+            items=items,
+        )
+
+    def _scalar(self, apath: str, epath: str, cfg: Any) -> ScalarNode:
         threshold = (
             cfg.threshold
             if isinstance(cfg, FieldConfig) and cfg.threshold is not None
             else 1.0
         )
         node = ScalarNode(
-            path=path,
+            path=apath,
             context=self.context,
+            expected_path=epath if epath != apath else None,
             key_metric=self._key_metric(cfg),
             threshold=threshold,
         )

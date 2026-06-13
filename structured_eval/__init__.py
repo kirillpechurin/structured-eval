@@ -25,7 +25,13 @@ from structured_eval.diff.structured_diff import (
     structured_diff,
 )
 from structured_eval.metrics import (
+    ArrayAccuracy,
+    ArrayCardinality,
+    ArrayF1,
     ArrayMetric,
+    ArrayPRF1,
+    ArrayPrecision,
+    ArrayRecall,
     ExactMatch,
     FieldMetric,
     Fuzzy,
@@ -100,6 +106,13 @@ __all__ = [
     "ObjectF1",
     "ObjectPRF1",
     "ObjectValidity",
+    # metrics — array
+    "ArrayAccuracy",
+    "ArrayPrecision",
+    "ArrayRecall",
+    "ArrayF1",
+    "ArrayPRF1",
+    "ArrayCardinality",
     # rules / utils / diff
     "Rule",
     "flatten",

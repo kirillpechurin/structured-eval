@@ -58,13 +58,16 @@ def _navigate(obj: Any, path: str) -> Any:
 class EvalNode:
     """A node in the evaluation tree.
 
-    Holds only its ``path`` and a shared reference to the ``EvalContext``.
-    Data is never copied — ``actual``/``expected`` are resolved lazily by
-    navigating the context's documents along ``path``.
+    Holds its ``path`` and a shared reference to the ``EvalContext``; data is
+    never copied — ``actual``/``expected`` are resolved lazily by navigating the
+    context's documents. ``expected_path`` defaults to ``path``; it diverges
+    only for array items aligned out of order (``expected[1]`` ↔ ``actual[0]``),
+    so each side navigates its own index.
     """
 
     path: str
     context: "EvalContext"
+    expected_path: str | None = None
 
     @property
     def actual(self) -> Any:
@@ -75,5 +78,5 @@ class EvalNode:
     def expected(self) -> Any:
         if self.context.expected is None:
             return None
-        value = _navigate(self.context.expected, self.path)
+        value = _navigate(self.context.expected, self.expected_path or self.path)
         return None if value is MISSING else value
