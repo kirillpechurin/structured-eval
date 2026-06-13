@@ -41,19 +41,21 @@ class ArrayStrategy(StrEnum):
 class FieldConfig:
     """Configuration for a scalar (leaf) field.
 
-    ``matcher=None`` means AUTO — the matcher is auto-detected from the key
-    name and value type. ``metrics`` overrides the global metric list for
-    this field only.
+    In v3 comparison is a metric: ``metrics`` is the field's metric list
+    (``None`` → ``EvalConfig.default_metrics``). ``key_metric`` names which of
+    them is the match criterion the parent object/array uses (a metric instance
+    or its registered name; ``None`` → ``ExactMatch``); ``threshold`` is the bar
+    it must clear to count as a true positive.
     """
 
-    matcher: Any = None  # Matcher instance, or None for AUTO
+    metrics: list[Any] | None = None  # list[Metric]; None → EvalConfig.default_metrics
+    key_metric: Any = None  # Metric | name str used as the parent's match criterion
+    threshold: float | None = None
     weight: float = DEFAULT_FIELD_WEIGHT
     required: bool = False
     null_policy: NullPolicy | None = None  # None → inherit EvalConfig.null_policy
-    threshold: float | None = None
     exclude: bool = False
     derived: bool = False  # excluded from Faithfulness
-    metrics: list[Any] | None = None  # list[Metric], overrides global
 
 
 @dataclass
@@ -73,13 +75,19 @@ class ObjectFieldConfig:
 class ArrayFieldConfig:
     """Configuration for an array (list) field.
 
-    ``item`` describes the type and config of each element. ``key`` names the
-    unique field used to align elements when ``strategy=BY_KEY``.
+    ``item`` describes the type and config of each element. For ``BY_KEY``,
+    ``key`` names the element field used to align items (``None`` → the whole
+    element is the key); ``key_metric`` is how keys are compared (a metric
+    instance or name; ``None`` → ``ExactMatch``) and ``key_threshold`` the bar
+    for a pair to align. The generalized ``BY_KEY`` subsumes value- and
+    similarity-based matching (technical_details_v3 §5).
     """
 
     item: FieldConfig | ObjectFieldConfig | None = None
     strategy: ArrayStrategy = ArrayStrategy.BY_INDEX
-    key: str | None = None  # required for BY_KEY
+    key: str | None = None  # element field used as the key; None → whole element
+    key_metric: Any = None  # Metric | name str comparing keys (None → ExactMatch)
+    key_threshold: float = 1.0
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
     exclude: bool = False
@@ -105,7 +113,7 @@ class EvalConfig:
     metrics: list[Any] = field(default_factory=list)  # list[Metric]
     fields: dict[str, AnyFieldConfig] = field(default_factory=dict)
     root: ObjectFieldConfig | ArrayFieldConfig | None = None
-    default_matcher: Any = None  # Matcher applied to fields without an explicit one
+    default_metrics: list[Any] | None = None  # for fields without explicit metrics
     key_metric: Any = None  # Metric whose value becomes report.score
     null_policy: NullPolicy = NullPolicy.PENALIZE
     extra_keys: ExtraKeysPolicy = ExtraKeysPolicy.IGNORE

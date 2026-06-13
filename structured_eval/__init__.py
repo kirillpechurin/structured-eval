@@ -1,7 +1,8 @@
 """structured_eval — field-level evaluation of structured LLM outputs.
 
-NOTE: this package is mid-rewrite (v2). evaluate(), matchers/ and metrics/
-land in Stages 4–6; only the data structures are wired up so far.
+NOTE: this package is mid-rewrite (v3, see rfcs/user-stories/technical_details_v3).
+Comparison is a metric; the engine and evaluate() land in Stage 6. So far the
+data structures and the field/object metric hierarchy are wired up.
 """
 
 from structured_eval.core.config import (
@@ -22,21 +23,31 @@ from structured_eval.diff.structured_diff import (
     StructuredDiff,
     structured_diff,
 )
-from structured_eval.matchers import (
-    ExactMatcher,
-    FuzzyMatcher,
-    JaccardMatcher,
-    MatcherBase,
-    NumericMatcher,
-    RegexNormalizedMatcher,
-    TokenF1Matcher,
-    UrlMatcher,
+from structured_eval.metrics import (
+    ArrayMetric,
+    ExactMatch,
+    FieldMetric,
+    Fuzzy,
+    Metric,
+    NodeMetric,
+    NormalizedMatch,
+    Numeric,
+    ObjectAccuracy,
+    ObjectF1,
+    ObjectMetric,
+    ObjectPRF1,
+    ObjectPrecision,
+    ObjectRecall,
+    ObjectValidity,
+    Presence,
+    RootMetric,
+    TokenF1,
+    TypeMatch,
 )
 from structured_eval.nodes import (
     ArrayMatchResult,
     ArrayNode,
     EvalNode,
-    FieldPair,
     ObjectNode,
     ScalarNode,
 )
@@ -63,17 +74,29 @@ __all__ = [
     "ScalarNode",
     "ObjectNode",
     "ArrayNode",
-    "FieldPair",
     "ArrayMatchResult",
-    # matchers
-    "MatcherBase",
-    "ExactMatcher",
-    "RegexNormalizedMatcher",
-    "NumericMatcher",
-    "TokenF1Matcher",
-    "JaccardMatcher",
-    "FuzzyMatcher",
-    "UrlMatcher",
+    # metrics — base hierarchy
+    "Metric",
+    "FieldMetric",
+    "ObjectMetric",
+    "ArrayMetric",
+    "RootMetric",
+    "NodeMetric",
+    # metrics — field
+    "ExactMatch",
+    "NormalizedMatch",
+    "Numeric",
+    "TokenF1",
+    "Fuzzy",
+    "Presence",
+    "TypeMatch",
+    # metrics — object
+    "ObjectAccuracy",
+    "ObjectPrecision",
+    "ObjectRecall",
+    "ObjectF1",
+    "ObjectPRF1",
+    "ObjectValidity",
     # rules / utils / diff
     "Rule",
     "flatten",

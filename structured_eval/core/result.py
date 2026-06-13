@@ -27,17 +27,15 @@ class RuleResult:
 class FieldScore:
     """Evaluation result for one node of the tree (flat, dot-notation path).
 
-    ``matcher_used`` and ``similarity`` are populated only for scalar nodes.
     ``metrics`` holds only the metrics that were requested and applied to this
-    node. ``score`` is the value of the key metric at this path.
+    node (e.g. ``{"exact_match": 0.0, "token_f1": 0.62}``). ``score`` is the
+    value of the key metric at this path, ``threshold`` the bar applied to it.
     """
 
     path: str
     node_type: NodeType
     actual: Any = None
     expected: Any = None
-    matcher_used: str | None = None  # scalar only (Matcher.name)
-    similarity: float | None = None  # scalar only (FieldPair.similarity)
     metrics: dict[str, float] = field(default_factory=dict)
     score: float | None = None
     threshold: float | None = None
