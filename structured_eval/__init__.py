@@ -14,6 +14,7 @@ from structured_eval.core.config import (
     NullPolicy,
     ObjectFieldConfig,
 )
+from structured_eval._evaluate import evaluate
 from structured_eval.core.context import EvalContext
 from structured_eval.core.result import EvalReport, FieldScore, RegressionDiff, RuleResult
 from structured_eval.core.sample import Sample
@@ -55,6 +56,8 @@ from structured_eval.rules.dsl import Rule
 from structured_eval.utils.flatten import flatten
 
 __all__ = [
+    # entrypoint
+    "evaluate",
     # core
     "Sample",
     "EvalContext",
