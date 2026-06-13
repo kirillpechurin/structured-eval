@@ -45,11 +45,16 @@ def build_report(root: EvalNode, context: EvalContext, warnings: list[str]) -> E
         score_label = config.key_metric.name
         score = metrics.get(score_label)
 
+    schema_errors: list[str] = []
+    for metric in [*config.metrics, config.key_metric]:
+        schema_errors.extend(getattr(metric, "schema_errors", []) or [])
+
     return EvalReport(
         score=score,
         score_label=score_label,
         metrics=metrics,
         field_scores=field_scores,
         array_matches=array_matches,
+        schema_errors=schema_errors,
         warnings=warnings,
     )

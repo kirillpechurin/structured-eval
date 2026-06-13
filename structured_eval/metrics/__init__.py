@@ -19,6 +19,9 @@ from structured_eval.metrics.object_precision import ObjectPrecision
 from structured_eval.metrics.object_prf1 import ObjectPRF1
 from structured_eval.metrics.object_recall import ObjectRecall
 from structured_eval.metrics.object_validity import ObjectValidity
+from structured_eval.metrics.coverage import Coverage
+from structured_eval.metrics.overall_score import OverallScore
+from structured_eval.metrics.schema_validity import SchemaValidity
 from structured_eval.metrics.protocol import (
     ArrayMetric,
     FieldMetric,
@@ -60,4 +63,8 @@ __all__ = [
     "ArrayF1",
     "ArrayPRF1",
     "ArrayCardinality",
+    # root metrics
+    "OverallScore",
+    "SchemaValidity",
+    "Coverage",
 ]

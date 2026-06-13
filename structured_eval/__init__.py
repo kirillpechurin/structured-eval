@@ -32,6 +32,7 @@ from structured_eval.metrics import (
     ArrayPRF1,
     ArrayPrecision,
     ArrayRecall,
+    Coverage,
     ExactMatch,
     FieldMetric,
     Fuzzy,
@@ -46,8 +47,10 @@ from structured_eval.metrics import (
     ObjectPrecision,
     ObjectRecall,
     ObjectValidity,
+    OverallScore,
     Presence,
     RootMetric,
+    SchemaValidity,
     TokenF1,
     TypeMatch,
 )
@@ -113,6 +116,10 @@ __all__ = [
     "ArrayF1",
     "ArrayPRF1",
     "ArrayCardinality",
+    # metrics — root
+    "OverallScore",
+    "SchemaValidity",
+    "Coverage",
     # rules / utils / diff
     "Rule",
     "flatten",

@@ -68,6 +68,7 @@ class EvalNode:
     path: str
     context: "EvalContext"
     expected_path: str | None = None
+    weight: float = 1.0  # relative importance for weighted aggregation (OverallScore)
 
     @property
     def actual(self) -> Any:

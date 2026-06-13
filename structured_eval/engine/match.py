@@ -24,6 +24,10 @@ def _resolve_metric(spec: Any) -> FieldMetric:
     return get_metric_class(spec)() if isinstance(spec, str) else spec
 
 
+def _weight(cfg: Any) -> float:
+    return getattr(cfg, "weight", 1.0) if cfg is not None else 1.0
+
+
 def build_tree(context: EvalContext) -> tuple[Any, list[str]]:
     """Phase 1: build the EvalNode tree and compute leaf (field) metrics.
 
@@ -122,6 +126,7 @@ class _TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
+            weight=_weight(cfg),
             matched=matched,
             missing=missing,
             spurious=spurious,
@@ -151,6 +156,7 @@ class _TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
+            weight=_weight(cfg),
             match_result=result,
             items=items,
         )
@@ -165,6 +171,7 @@ class _TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
+            weight=_weight(cfg),
             key_metric=self._key_metric(cfg),
             threshold=threshold,
         )
