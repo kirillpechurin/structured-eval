@@ -136,3 +136,55 @@ class EvalReport:
 
     def assert_schema_valid(self) -> None:
         raise NotImplementedError
+
+
+# ── Batch / consistency reports ───────────────────────────────────────────────
+
+
+@dataclass
+class BatchEvalReport:
+    """Aggregate result over a list of documents (``evaluate(list[Sample])``).
+
+    ``metrics`` is the mean of each document-level metric across successfully
+    parsed samples; ``score`` is the mean key-metric score. ``perfect_response_rate``
+    is the fraction of samples that parsed and had no failing field;
+    ``parse_error_rate`` the fraction that failed to parse.
+    """
+
+    per_sample: list[EvalReport] = field(default_factory=list)
+    metrics: dict[str, float] = field(default_factory=dict)
+    score: float | None = None
+    score_label: str | None = None
+    perfect_response_rate: float = 0.0
+    parse_error_rate: float = 0.0
+
+    def field_breakdown(
+        self, threshold: float | None = None
+    ) -> dict[str, dict[str, float]]:
+        """Per-path statistics across the batch: mean/min/max/p95/fail_rate.
+
+        Only nodes with a score (a key metric applied) are counted. ``fail_rate``
+        is the fraction of samples where the field scored below its bar (the
+        ``threshold`` argument, else the field's own threshold, else 1.0).
+        """
+        from structured_eval.engine.aggregate import field_breakdown
+
+        return field_breakdown(self.per_sample, threshold)
+
+
+@dataclass
+class ConsistencyReport:
+    """Stability of repeated runs of one prompt (``evaluate_consistency``).
+
+    ``field_variance`` is the variance of each field's score across runs;
+    fields with variance at or below ``variance_threshold`` are ``stable_fields``,
+    the rest ``unstable_fields``. ``score_variance`` is the variance of the
+    document-level key-metric score.
+    """
+
+    per_run: list[EvalReport] = field(default_factory=list)
+    field_variance: dict[str, float] = field(default_factory=dict)
+    stable_fields: list[str] = field(default_factory=list)
+    unstable_fields: list[str] = field(default_factory=list)
+    mean_score: float | None = None
+    score_variance: float | None = None
