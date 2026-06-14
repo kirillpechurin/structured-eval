@@ -168,22 +168,60 @@ class EvalReport:
 
         return RegressionDiff(deltas=deltas, field_deltas=field_deltas)
 
-    # ── Assertions (later stages) ─────────────────────────────────────────
-
-    def assert_score(self, min_score: float) -> None:
-        raise NotImplementedError
-
-    def assert_field(self, path: str, min_score: float) -> None:
-        raise NotImplementedError
-
-    def assert_metric(self, metric_name: str, min_value: float) -> None:
-        raise NotImplementedError
+    # ── Assertions (pytest-style: raise AssertionError, else None) ────────
 
     def assert_no_parse_errors(self) -> None:
-        raise NotImplementedError
+        """Fail if the document could not be parsed."""
+        if self.parse_error:
+            raise AssertionError(
+                f"parse error: {self.parse_error_message or 'could not parse document'}"
+            )
+
+    def assert_score(self, min_score: float) -> None:
+        """Fail if the key-metric score is below ``min_score``."""
+        self.assert_no_parse_errors()
+        if self.score is None:
+            raise AssertionError(
+                "no score available (no key metric configured); "
+                "use assert_metric() instead"
+            )
+        if self.score < min_score:
+            label = self.score_label or "score"
+            raise AssertionError(
+                f"{label} {self.score:.4g} < required {min_score:.4g}"
+            )
+
+    def assert_field(self, path: str, min_score: float) -> None:
+        """Fail if the field at ``path`` scores below ``min_score``."""
+        fs = self.field_scores.get(path)
+        if fs is None:
+            raise AssertionError(f"no field at path {path!r}")
+        if fs.score is None:
+            raise AssertionError(f"field {path!r} has no score (no key metric applied)")
+        if fs.score < min_score:
+            raise AssertionError(
+                f"field {path!r} scored {fs.score:.4g} < required {min_score:.4g} "
+                f"(actual={fs.actual!r}, expected={fs.expected!r})"
+            )
+
+    def assert_metric(self, metric_name: str, min_value: float) -> None:
+        """Fail if metric ``metric_name`` is missing or below ``min_value``."""
+        if metric_name not in self.metrics:
+            available = ", ".join(sorted(self.metrics)) or "none"
+            raise AssertionError(
+                f"metric {metric_name!r} not computed (available: {available})"
+            )
+        value = self.metrics[metric_name]
+        if value < min_value:
+            raise AssertionError(
+                f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}"
+            )
 
     def assert_schema_valid(self) -> None:
-        raise NotImplementedError
+        """Fail if schema validation produced errors."""
+        if self.metrics.get("schema_validity") == 0.0 or self.schema_errors:
+            errors = "; ".join(self.schema_errors) or "schema validation failed"
+            raise AssertionError(f"schema invalid: {errors}")
 
 
 # ── Batch / consistency reports ───────────────────────────────────────────────
