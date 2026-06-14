@@ -99,26 +99,74 @@ class EvalReport:
                 failed.append(fs)
         return failed
 
-    # ── Reporting / serialization (later stages) ──────────────────────────
+    # ── Reporting / serialization ─────────────────────────────────────────
 
     def print_summary(self) -> None:
-        """Print a Rich-formatted summary table to stdout (Stage 11)."""
-        raise NotImplementedError
+        """Print a field-level summary table to stdout."""
+        from structured_eval.report.console import render
+
+        print(render(self))
+
+    def to_dict(self) -> dict:
+        """Return a JSON-friendly dict of the full report."""
+        from structured_eval.report.serialize import report_to_dict
+
+        return report_to_dict(self)
 
     def to_json(self, path: str) -> None:
-        """Serialize the report to JSON (Stage 11)."""
-        raise NotImplementedError
+        """Serialize the report to a JSON file."""
+        import json
+
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(self.to_dict(), fh, ensure_ascii=False, indent=2)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> EvalReport:
+        """Reconstruct a report from a dict produced by ``to_dict``."""
+        from structured_eval.report.serialize import report_from_dict
+
+        return report_from_dict(data)
 
     @classmethod
     def from_json(cls, path: str) -> EvalReport:
-        """Load a report from JSON (Stage 11)."""
-        raise NotImplementedError
+        """Load a report from a JSON file."""
+        import json
+
+        with open(path, encoding="utf-8") as fh:
+            return cls.from_dict(json.load(fh))
 
     def diff_from(
         self, other: EvalReport, metrics: list[str] | None = None
     ) -> RegressionDiff:
-        """Compute metric deltas relative to ``other`` (Stage 11)."""
-        raise NotImplementedError
+        """Compute metric deltas relative to ``other`` (self minus other).
+
+        ``deltas`` covers document-level metrics present in both reports (or the
+        subset named in ``metrics``); ``field_deltas`` covers per-field metrics
+        for paths present in both. Positive means improvement.
+        """
+        names = metrics if metrics is not None else sorted(self.metrics)
+        deltas = {
+            name: self.metrics[name] - other.metrics[name]
+            for name in names
+            if name in self.metrics and name in other.metrics
+        }
+
+        field_deltas: dict[str, dict[str, float]] = {}
+        for path, fs in self.field_scores.items():
+            other_fs = other.field_scores.get(path)
+            if other_fs is None:
+                continue
+            per: dict[str, float] = {
+                m: fs.metrics[m] - other_fs.metrics[m]
+                for m in fs.metrics
+                if m in other_fs.metrics
+            }
+            if fs.score is not None and other_fs.score is not None:
+                per["score"] = fs.score - other_fs.score
+            if per:
+                field_deltas[path] = per
+
+        return RegressionDiff(deltas=deltas, field_deltas=field_deltas)
 
     # ── Assertions (later stages) ─────────────────────────────────────────
 
@@ -171,6 +219,12 @@ class BatchEvalReport:
 
         return field_breakdown(self.per_sample, threshold)
 
+    def print_summary(self) -> None:
+        """Print a batch summary (aggregate metrics + field breakdown)."""
+        from structured_eval.report.console import render
+
+        print(render(self))
+
 
 @dataclass
 class ConsistencyReport:
@@ -188,3 +242,9 @@ class ConsistencyReport:
     unstable_fields: list[str] = field(default_factory=list)
     mean_score: float | None = None
     score_variance: float | None = None
+
+    def print_summary(self) -> None:
+        """Print a consistency summary (stable/unstable fields + variance)."""
+        from structured_eval.report.console import render
+
+        print(render(self))
