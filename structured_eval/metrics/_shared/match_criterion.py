@@ -26,13 +26,16 @@ def leaf_name(path: str) -> str:
 
 def _resolve_metric(spec: Any) -> FieldMetric:
     if isinstance(spec, str):
-        return get_metric_class(spec)()
+        instance = get_metric_class(spec)()
+        assert isinstance(instance, FieldMetric)
+        return instance
+    assert isinstance(spec, FieldMetric)
     return spec
 
 
 def _resolve_threshold(thresholds: Any, name: str, fallback: float) -> float:
     if isinstance(thresholds, dict):
-        return thresholds.get(name, fallback)
+        return float(thresholds.get(name, fallback))
     if thresholds is not None:
         return float(thresholds)
     return fallback
@@ -54,7 +57,9 @@ def field_verdict(
     else:
         metric = ExactMatch()
 
-    score = float(metric.score(node.actual, node.expected))
+    raw = metric.score(node.actual, node.expected)
+    assert not isinstance(raw, dict)  # a match criterion is a scalar comparison
+    score = float(raw)
     threshold = _resolve_threshold(thresholds, name, getattr(node, "threshold", 1.0))
     return score, threshold
 

@@ -66,5 +66,5 @@ class Evaluator:
         return self._aggregator.consistency(reports, variance_threshold)
 
 
-def _flat(data: Any) -> dict:
+def _flat(data: Any) -> dict[str, Any]:
     return flatten(data) if isinstance(data, (dict, list)) else {}

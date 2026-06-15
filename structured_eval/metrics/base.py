@@ -39,10 +39,10 @@ class FieldMetric(Metric):
     ``compute(node)`` directly. ``compute`` delegates to ``score`` by default.
     """
 
-    def compute(self, node: ScalarNode) -> float | dict:
+    def compute(self, node: ScalarNode) -> float | dict[str, float]:
         return self.score(node.actual, node.expected)
 
-    def score(self, actual: Any, expected: Any) -> float | dict:
+    def score(self, actual: Any, expected: Any) -> float | dict[str, float]:
         raise NotImplementedError
 
 
@@ -50,21 +50,21 @@ class ObjectMetric(Metric):
     """Applies to each ObjectNode (root and nested)."""
 
     @abstractmethod
-    def compute(self, node: ObjectNode) -> float | dict: ...
+    def compute(self, node: ObjectNode) -> float | dict[str, float]: ...
 
 
 class ArrayMetric(Metric):
     """Applies to each ArrayNode."""
 
     @abstractmethod
-    def compute(self, node: ArrayNode) -> float | dict: ...
+    def compute(self, node: ArrayNode) -> float | dict[str, float]: ...
 
 
 class RootMetric(Metric):
     """Applies only to the root node (path == "$"); receives any EvalNode."""
 
     @abstractmethod
-    def compute(self, node: EvalNode) -> float | dict: ...
+    def compute(self, node: EvalNode) -> float | dict[str, float]: ...
 
 
 class NodeMetric(Metric):

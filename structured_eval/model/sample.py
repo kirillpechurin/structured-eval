@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -11,7 +13,7 @@ class Sample(BaseModel):
     ``list[Sample]`` is a batch of documents.
     """
 
-    actual: dict | list | str
-    expected: dict | list | str | None = None
+    actual: dict[str, Any] | list[Any] | str
+    expected: dict[str, Any] | list[Any] | str | None = None
     source: str | None = None  # original text, for Faithfulness
     id: str | None = None  # identifier in a BatchEvalReport

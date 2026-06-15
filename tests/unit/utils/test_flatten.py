@@ -1,7 +1,6 @@
 from structured_eval.utils import flatten
 from structured_eval.utils.flatten import flatten as flatten_direct
 
-
 # ── Basic cases ───────────────────────────────────────────────────────────────
 
 

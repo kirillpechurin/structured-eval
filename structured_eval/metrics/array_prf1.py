@@ -20,7 +20,7 @@ class ArrayPRF1(ArrayMetric):
         self.threshold = threshold
         self.mode = mode
 
-    def compute(self, node: ArrayNode) -> dict:
+    def compute(self, node: ArrayNode) -> dict[str, float]:
         n_missing, n_spurious = astats.missing_spurious(node)
         tp, predicted, expected = stats.prf_counts(
             astats.verdicts(node, self.threshold), n_missing, n_spurious, self.mode

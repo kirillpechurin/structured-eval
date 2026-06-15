@@ -1,0 +1,23 @@
+{
+  "domain": "invoice extraction",
+  "cases": [
+    {
+      "name": "perfect",
+      "actual": {"id": "INV-001", "vendor": "Acme Corp", "total": 100.0, "status": "paid"},
+      "expected": {"id": "INV-001", "vendor": "Acme Corp", "total": 100.0, "status": "paid"},
+      "expect_object_f1": 1.0
+    },
+    {
+      "name": "one-wrong-value",
+      "actual": {"id": "INV-002", "vendor": "Acme Corp", "total": 90.0, "status": "paid"},
+      "expected": {"id": "INV-002", "vendor": "Acme Corp", "total": 100.0, "status": "paid"},
+      "expect_object_f1": 0.75
+    },
+    {
+      "name": "missing-field",
+      "actual": {"id": "INV-003", "vendor": "Globex", "total": 50.0},
+      "expected": {"id": "INV-003", "vendor": "Globex", "total": 50.0, "status": "draft"},
+      "expect_object_f1": 0.8571428571428571
+    }
+  ]
+}

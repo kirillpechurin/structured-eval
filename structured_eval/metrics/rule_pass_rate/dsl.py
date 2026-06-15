@@ -36,7 +36,7 @@ def _ensure_jsonpath() -> None:
 
 def _resolve_path(path: str, document: dict[str, Any]) -> Any:
     _ensure_jsonpath()
-    from jsonpath_ng import parse  # type: ignore[import-untyped]
+    from jsonpath_ng import parse
 
     matches = parse(path).find(document)
     if not matches:
@@ -62,7 +62,7 @@ def _eval_node(node: ast.expr) -> Any:
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
-        return -_eval_node(node.operand)  # type: ignore[operator]
+        return -_eval_node(node.operand)
     if isinstance(node, ast.BinOp):
         op_fn = _ARITH_OPS.get(type(node.op))
         if op_fn is None:

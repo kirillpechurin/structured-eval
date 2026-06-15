@@ -15,7 +15,12 @@ _MISSING_KEY = object()
 def _resolve_metric(spec: Any) -> FieldMetric:
     if spec is None:
         return ExactMatch()
-    return get_metric_class(spec)() if isinstance(spec, str) else spec
+    if isinstance(spec, str):
+        instance = get_metric_class(spec)()
+        assert isinstance(instance, FieldMetric)
+        return instance
+    assert isinstance(spec, FieldMetric)
+    return spec
 
 
 class ArrayAligner(ABC):
@@ -28,7 +33,7 @@ class ArrayAligner(ABC):
     """
 
     @abstractmethod
-    def align(self, expected: list, actual: list) -> ArrayMatchResult: ...
+    def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult: ...
 
 
 class ByIndexAligner(ArrayAligner):
@@ -38,7 +43,7 @@ class ByIndexAligner(ArrayAligner):
     comparison is performed.
     """
 
-    def align(self, expected: list, actual: list) -> ArrayMatchResult:
+    def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
         n = min(len(expected), len(actual))
         return ArrayMatchResult(
             strategy=ArrayStrategy.BY_INDEX,
@@ -67,7 +72,7 @@ class ByKeyAligner(ArrayAligner):
         self.metric = _resolve_metric(key_metric)
         self.threshold = threshold
 
-    def align(self, expected: list, actual: list) -> ArrayMatchResult:
+    def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
         used: set[int] = set()
         matched: list[tuple[int, int]] = []
         missed: list[int] = []
@@ -89,11 +94,13 @@ class ByKeyAligner(ArrayAligner):
             spurious=spurious,
         )
 
-    def _find_partner(self, actual: list, e_key: Any, used: set[int]) -> int | None:
+    def _find_partner(self, actual: list[Any], e_key: Any, used: set[int]) -> int | None:
         for ai, a_item in enumerate(actual):
             if ai in used:
                 continue
-            if self.metric.score(self._key_of(a_item), e_key) >= self.threshold:
+            key_score = self.metric.score(self._key_of(a_item), e_key)
+            assert not isinstance(key_score, dict)  # criterion metrics return a scalar
+            if key_score >= self.threshold:
                 return ai
         return None
 

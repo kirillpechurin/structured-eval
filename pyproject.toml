@@ -39,8 +39,21 @@ dev = [
 python_version = "3.12"
 strict = true
 
+# Optional third-party deps without type stubs (lazy-imported behind extras).
+[[tool.mypy.overrides]]
+module = ["jsonpath_ng.*", "deepeval.*", "langsmith.*", "deepdiff.*", "rapidfuzz.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--import-mode=importlib"
+markers = [
+    "unit: pure unit tests (single module, no engine)",
+    "engine: end-to-end through the Evaluator",
+    "integration: host-framework adapters (deepeval/langsmith)",
+    "golden: regression on dataset fixtures",
+]
 
 [tool.ruff]
 line-length = 100

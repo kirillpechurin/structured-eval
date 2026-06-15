@@ -21,7 +21,12 @@ from structured_eval.model.nodes.scalar import ScalarNode
 
 
 def _resolve_metric(spec: Any) -> FieldMetric:
-    return get_metric_class(spec)() if isinstance(spec, str) else spec
+    if isinstance(spec, str):
+        instance = get_metric_class(spec)()
+        assert isinstance(instance, FieldMetric)
+        return instance
+    assert isinstance(spec, FieldMetric)
+    return spec
 
 
 def _weight(cfg: Any) -> float:

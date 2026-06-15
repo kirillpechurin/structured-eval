@@ -1,13 +1,11 @@
-import pytest
 
-from structured_eval.diff.structured_diff import (
+from structured_eval.utils.structured_diff import (
     DiffEntry,
     DiffType,
     StructuredDiff,
     _to_readable_path,
     structured_diff,
 )
-
 
 # ── _to_readable_path ─────────────────────────────────────────────────────────
 

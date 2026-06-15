@@ -20,6 +20,6 @@ class EvalContext(BaseModel):
     actual: Any
     expected: Any
     source: str | None
-    flat_actual: dict
-    flat_expected: dict
+    flat_actual: dict[str, Any]
+    flat_expected: dict[str, Any]
     config: EvalConfig

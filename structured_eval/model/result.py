@@ -128,7 +128,7 @@ class EvalReport(BaseModel):
         """Print a field-level summary table to stdout."""
         print(render(self))
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly dict of the full report."""
         return self.model_dump(mode="json")
 
@@ -138,7 +138,7 @@ class EvalReport(BaseModel):
             fh.write(self.model_dump_json(indent=2))
 
     @classmethod
-    def from_dict(cls, data: dict) -> EvalReport:
+    def from_dict(cls, data: dict[str, Any]) -> EvalReport:
         """Reconstruct a report from a dict produced by ``to_dict``."""
         return cls.model_validate(data)
 

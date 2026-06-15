@@ -38,7 +38,7 @@ class MetricRunner:
                 if result is not None:
                     self._store(node, metric, result)
 
-    def apply(self, metric: Metric, node: EvalNode) -> float | dict | None:
+    def apply(self, metric: Metric, node: EvalNode) -> float | dict[str, float] | None:
         """Run ``metric`` on ``node`` if it applies, else return ``None``."""
         if isinstance(metric, FieldMetric) and isinstance(node, ScalarNode):
             return metric.compute(node)
@@ -51,11 +51,12 @@ class MetricRunner:
 
         method = self._DUCK_METHOD.get(type(node))
         if method and hasattr(metric, method):
-            return getattr(metric, method)(node)
+            result: float | dict[str, float] | None = getattr(metric, method)(node)
+            return result
         return None
 
     @staticmethod
-    def _store(node: EvalNode, metric: Metric, result: float | dict) -> None:
+    def _store(node: EvalNode, metric: Metric, result: float | dict[str, float]) -> None:
         results: dict[str, Any] = node.metric_results
         if isinstance(result, dict):
             results.update(result)

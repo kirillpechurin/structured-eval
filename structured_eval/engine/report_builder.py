@@ -6,13 +6,17 @@ from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
-from structured_eval.model.result import EvalReport, FieldScore, RuleResult
+from structured_eval.model.result import EvalReport, FieldScore, NodeType, RuleResult
 
 
 class ReportBuilder:
     """Phase 3: flatten the computed node tree into an ``EvalReport``."""
 
-    _NODE_TYPE = {ScalarNode: "scalar", ObjectNode: "object", ArrayNode: "array"}
+    _NODE_TYPE = {
+        ScalarNode: NodeType.SCALAR,
+        ObjectNode: NodeType.OBJECT,
+        ArrayNode: NodeType.ARRAY,
+    }
 
     def build(
         self, root: EvalNode, context: EvalContext, warnings: list[str]
@@ -60,7 +64,7 @@ class ReportBuilder:
             score, threshold = mc.field_verdict(node)  # key (match-criterion) value
         return FieldScore(
             path=node.path,
-            node_type=self._NODE_TYPE.get(type(node), "scalar"),
+            node_type=self._NODE_TYPE.get(type(node), NodeType.SCALAR),
             actual=node.actual,
             expected=node.expected,
             metrics=dict(node.metric_results),

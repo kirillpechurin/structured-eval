@@ -26,7 +26,7 @@ from structured_eval.integrations._adapter import verdict
 from structured_eval.model.config import EvalConfig
 
 
-class StructuredMetric(BaseMetric):
+class StructuredMetric(BaseMetric):  # type: ignore[misc]  # BaseMetric is Any when deepeval is absent
     """Field-level structured-output metric for deepeval."""
 
     def __init__(
