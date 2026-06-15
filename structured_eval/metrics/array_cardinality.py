@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from structured_eval.metrics.protocol import ArrayMetric
-from structured_eval.nodes.array_node import ArrayNode
+from structured_eval.metrics.base import ArrayMetric
+from structured_eval.model.nodes.array_node import ArrayNode
 
 
 class ArrayCardinality(ArrayMetric):

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from structured_eval.metrics.field.type_match import TypeMatch
-from structured_eval.metrics.protocol import ObjectMetric
-from structured_eval.nodes.object_node import ObjectNode
-from structured_eval.nodes.scalar import ScalarNode
+from structured_eval.metrics.base import ObjectMetric
+from structured_eval.metrics.type_match import TypeMatch
+from structured_eval.model.nodes.object_node import ObjectNode
+from structured_eval.model.nodes.scalar import ScalarNode
 
 
 class ObjectValidity(ObjectMetric):

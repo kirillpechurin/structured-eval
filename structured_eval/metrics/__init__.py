@@ -1,28 +1,10 @@
-from structured_eval.metrics.field import (
-    ExactMatch,
-    Fuzzy,
-    NormalizedMatch,
-    Numeric,
-    Presence,
-    TokenF1,
-    TypeMatch,
-)
 from structured_eval.metrics.array_accuracy import ArrayAccuracy
 from structured_eval.metrics.array_cardinality import ArrayCardinality
 from structured_eval.metrics.array_f1 import ArrayF1
 from structured_eval.metrics.array_precision import ArrayPrecision
 from structured_eval.metrics.array_prf1 import ArrayPRF1
 from structured_eval.metrics.array_recall import ArrayRecall
-from structured_eval.metrics.object_accuracy import ObjectAccuracy
-from structured_eval.metrics.object_f1 import ObjectF1
-from structured_eval.metrics.object_precision import ObjectPrecision
-from structured_eval.metrics.object_prf1 import ObjectPRF1
-from structured_eval.metrics.object_recall import ObjectRecall
-from structured_eval.metrics.object_validity import ObjectValidity
-from structured_eval.metrics.coverage import Coverage
-from structured_eval.metrics.overall_score import OverallScore
-from structured_eval.metrics.schema_validity import SchemaValidity
-from structured_eval.metrics.protocol import (
+from structured_eval.metrics.base import (
     ArrayMetric,
     FieldMetric,
     Metric,
@@ -31,6 +13,24 @@ from structured_eval.metrics.protocol import (
     RootMetric,
     get_metric_class,
 )
+from structured_eval.metrics.coverage import Coverage
+from structured_eval.metrics.exact import ExactMatch
+from structured_eval.metrics.faithfulness import Faithfulness
+from structured_eval.metrics.fuzzy import Fuzzy
+from structured_eval.metrics.normalized import NormalizedMatch
+from structured_eval.metrics.numeric import Numeric
+from structured_eval.metrics.object_accuracy import ObjectAccuracy
+from structured_eval.metrics.object_f1 import ObjectF1
+from structured_eval.metrics.object_precision import ObjectPrecision
+from structured_eval.metrics.object_prf1 import ObjectPRF1
+from structured_eval.metrics.object_recall import ObjectRecall
+from structured_eval.metrics.object_validity import ObjectValidity
+from structured_eval.metrics.overall_score import OverallScore
+from structured_eval.metrics.presence import Presence
+from structured_eval.metrics.rule_pass_rate import Rule, RulePassRate
+from structured_eval.metrics.schema_validity import SchemaValidity
+from structured_eval.metrics.token_f1 import TokenF1
+from structured_eval.metrics.type_match import TypeMatch
 
 __all__ = [
     # base hierarchy
@@ -67,4 +67,8 @@ __all__ = [
     "OverallScore",
     "SchemaValidity",
     "Coverage",
+    "Faithfulness",
+    "RulePassRate",
+    # rules DSL
+    "Rule",
 ]

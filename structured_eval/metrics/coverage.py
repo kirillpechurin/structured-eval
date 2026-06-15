@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from structured_eval.metrics._tree import leaves
-from structured_eval.metrics.protocol import RootMetric
-from structured_eval.nodes.base import EvalNode
+from structured_eval.metrics.base import RootMetric
+from structured_eval.model.nodes.base import EvalNode
 
 
 class Coverage(RootMetric):
@@ -18,7 +17,7 @@ class Coverage(RootMetric):
 
     def compute(self, node: EvalNode) -> float:
         expected = covered = 0
-        for leaf in leaves(node):
+        for leaf in node.leaves():
             if leaf.expected is not None:
                 expected += 1
                 if leaf.actual is not None:

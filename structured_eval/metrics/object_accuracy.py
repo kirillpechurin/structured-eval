@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from structured_eval.metrics import _match_criterion as mc
-from structured_eval.metrics.protocol import ObjectMetric
-from structured_eval.nodes.object_node import ObjectNode
+from structured_eval.metrics._shared import match_criterion as mc
+from structured_eval.metrics.base import ObjectMetric
+from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectAccuracy(ObjectMetric):

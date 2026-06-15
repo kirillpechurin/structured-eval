@@ -17,10 +17,12 @@ to point at a nested field or adapt a different object shape.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from structured_eval._evaluate import evaluate
-from structured_eval.core.config import EvalConfig
+from structured_eval.api import evaluate
+from structured_eval.integrations._adapter import verdict
+from structured_eval.model.config import EvalConfig
 
 Extractor = Callable[[Any], Any]
 
@@ -34,6 +36,38 @@ def _outputs(obj: Any) -> Any:
     return getattr(obj, "outputs", obj)
 
 
+class StructuredEvaluator:
+    """A LangSmith evaluator that scores structured outputs field-by-field.
+
+    Instances are callable with LangSmith's ``(run, example) -> dict`` contract.
+    ``key`` is the feedback key recorded in LangSmith; ``threshold`` decides the
+    boolean only for the ``comment`` — LangSmith stores the numeric
+    ``report.score`` itself. ``extract_actual`` / ``extract_expected`` adapt the
+    run/example shape (default: their ``outputs`` payload).
+    """
+
+    def __init__(
+        self,
+        config: EvalConfig | None = None,
+        *,
+        key: str = "structured_eval",
+        threshold: float = 0.5,
+        extract_actual: Extractor | None = None,
+        extract_expected: Extractor | None = None,
+    ) -> None:
+        self.config = config or EvalConfig()
+        self.key = key
+        self.threshold = threshold
+        self._get_actual = extract_actual or _outputs
+        self._get_expected = extract_expected or _outputs
+        self.__name__ = key
+
+    def __call__(self, run: Any, example: Any) -> dict:
+        report = evaluate(self._get_actual(run), self._get_expected(example), self.config)
+        score, _success, reason = verdict(report, self.threshold)
+        return {"key": self.key, "score": score, "comment": reason}
+
+
 def structured_evaluator(
     config: EvalConfig | None = None,
     *,
@@ -41,23 +75,12 @@ def structured_evaluator(
     threshold: float = 0.5,
     extract_actual: Extractor | None = None,
     extract_expected: Extractor | None = None,
-) -> Callable[[Any, Any], dict]:
-    """Build a LangSmith evaluator that scores structured outputs field-by-field.
-
-    ``key`` is the feedback key recorded in LangSmith; ``threshold`` decides the
-    boolean ``score`` is compared against only for the ``comment`` — LangSmith
-    stores the numeric ``report.score`` itself.
-    """
-    cfg = config or EvalConfig()
-    get_actual = extract_actual or _outputs
-    get_expected = extract_expected or _outputs
-
-    def evaluator(run: Any, example: Any) -> dict:
-        from structured_eval.integrations._adapter import verdict
-
-        report = evaluate(get_actual(run), get_expected(example), cfg)
-        score, _success, reason = verdict(report, threshold)
-        return {"key": key, "score": score, "comment": reason}
-
-    evaluator.__name__ = key
-    return evaluator
+) -> StructuredEvaluator:
+    """Convenience factory returning a ``StructuredEvaluator`` instance."""
+    return StructuredEvaluator(
+        config,
+        key=key,
+        threshold=threshold,
+        extract_actual=extract_actual,
+        extract_expected=extract_expected,
+    )

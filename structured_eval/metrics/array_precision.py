@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from structured_eval.metrics import _array_stats as astats
-from structured_eval.metrics import _object_stats as stats
-from structured_eval.metrics.protocol import ArrayMetric
-from structured_eval.nodes.array_node import ArrayNode
+from structured_eval.metrics._shared import array_stats as astats
+from structured_eval.metrics._shared import object_stats as stats
+from structured_eval.metrics.base import ArrayMetric
+from structured_eval.model.nodes.array_node import ArrayNode
 
 
 class ArrayPrecision(ArrayMetric):

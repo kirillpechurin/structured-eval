@@ -1,46 +1,31 @@
 """structured_eval — field-level evaluation of structured LLM outputs.
 
-NOTE: this package is mid-rewrite (v3, see rfcs/user-stories/technical_details_v3).
-Comparison is a metric; the engine and evaluate() land in Stage 6. So far the
-data structures and the field/object metric hierarchy are wired up.
+Layered architecture (dependencies point downward):
+
+- ``model``      — pure data: ``Sample``, ``EvalConfig``, ``EvalContext``,
+                   ``nodes``, ``EvalReport`` (and friends);
+- ``metrics``    — every metric as its own module/package (field/object/array/
+                   root), incl. ``SchemaValidity``, ``RulePassRate``,
+                   ``Faithfulness``; ``alignment`` / ``formats`` / ``utils``;
+- ``engine``     — ``Evaluator`` plus the phase classes (parse → build tree →
+                   run metrics → build report) and batch aggregation;
+- ``reporting``  — console rendering; ``integrations`` — host-framework adapters.
+
+``evaluate`` / ``evaluate_consistency`` are thin wrappers over ``engine.Evaluator``.
 """
 
-from structured_eval.core.config import (
-    ArrayFieldConfig,
-    ArrayStrategy,
-    EvalConfig,
-    ExtraKeysPolicy,
-    FieldConfig,
-    NullPolicy,
-    ObjectFieldConfig,
-)
-from structured_eval._evaluate import evaluate, evaluate_consistency
-from structured_eval.core.context import EvalContext
-from structured_eval.core.result import (
-    BatchEvalReport,
-    ConsistencyReport,
-    EvalReport,
-    FieldScore,
-    RegressionDiff,
-    RuleResult,
-)
-from structured_eval.core.sample import Sample
-from structured_eval.diff.structured_diff import (
-    DiffEntry,
-    DiffType,
-    StructuredDiff,
-    structured_diff,
-)
+from structured_eval.api import evaluate, evaluate_consistency
 from structured_eval.metrics import (
     ArrayAccuracy,
     ArrayCardinality,
     ArrayF1,
     ArrayMetric,
-    ArrayPRF1,
     ArrayPrecision,
+    ArrayPRF1,
     ArrayRecall,
     Coverage,
     ExactMatch,
+    Faithfulness,
     FieldMetric,
     Fuzzy,
     Metric,
@@ -50,26 +35,52 @@ from structured_eval.metrics import (
     ObjectAccuracy,
     ObjectF1,
     ObjectMetric,
-    ObjectPRF1,
     ObjectPrecision,
+    ObjectPRF1,
     ObjectRecall,
     ObjectValidity,
     OverallScore,
     Presence,
     RootMetric,
+    Rule,
+    RulePassRate,
     SchemaValidity,
     TokenF1,
     TypeMatch,
 )
-from structured_eval.nodes import (
+from structured_eval.model.config import (
+    ArrayFieldConfig,
+    ArrayStrategy,
+    EvalConfig,
+    ExtraKeysPolicy,
+    FieldConfig,
+    NullPolicy,
+    ObjectFieldConfig,
+)
+from structured_eval.model.context import EvalContext
+from structured_eval.model.nodes import (
     ArrayMatchResult,
     ArrayNode,
     EvalNode,
     ObjectNode,
     ScalarNode,
 )
-from structured_eval.rules.dsl import Rule
+from structured_eval.model.result import (
+    BatchEvalReport,
+    ConsistencyReport,
+    EvalReport,
+    FieldScore,
+    RegressionDiff,
+    RuleResult,
+)
+from structured_eval.model.sample import Sample
 from structured_eval.utils.flatten import flatten
+from structured_eval.utils.structured_diff import (
+    DiffEntry,
+    DiffType,
+    StructuredDiff,
+    structured_diff,
+)
 
 __all__ = [
     # entrypoint
@@ -130,6 +141,8 @@ __all__ = [
     "OverallScore",
     "SchemaValidity",
     "Coverage",
+    "Faithfulness",
+    "RulePassRate",
     # rules / utils / diff
     "Rule",
     "flatten",

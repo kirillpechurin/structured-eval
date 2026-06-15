@@ -1,6 +1,15 @@
-from structured_eval.engine.compute import apply_metric, run, walk
-from structured_eval.engine.match import build_tree
-from structured_eval.engine.parser import parse
-from structured_eval.engine.report_builder import build_report
+from structured_eval.engine.aggregator import BatchAggregator
+from structured_eval.engine.evaluator import Evaluator
+from structured_eval.engine.metric_runner import MetricRunner
+from structured_eval.engine.parser import Parser
+from structured_eval.engine.report_builder import ReportBuilder
+from structured_eval.engine.tree_builder import TreeBuilder
 
-__all__ = ["parse", "build_tree", "run", "walk", "apply_metric", "build_report"]
+__all__ = [
+    "Evaluator",
+    "Parser",
+    "TreeBuilder",
+    "MetricRunner",
+    "ReportBuilder",
+    "BatchAggregator",
+]
