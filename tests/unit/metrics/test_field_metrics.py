@@ -151,6 +151,26 @@ class TestFuzzy:
         score = Fuzzy().score("Acme Corporation", "Acme Corp")
         assert 0.0 < score < 1.0
 
+    def test_ratio_is_order_sensitive(self):
+        # plain ratio, unlike token_sort, is hurt by reordering
+        assert Fuzzy(method="ratio").score("world hello", "hello world") < 1.0
+
+    def test_normalize_disabled_keeps_case(self):
+        assert Fuzzy(normalize=False).score("ACME", "acme") < 1.0
+        assert Fuzzy(normalize=True).score("ACME", "acme") == 1.0
+
+
+class TestLevenshtein:
+    def test_is_ratio_alias(self):
+        from structured_eval import Levenshtein
+
+        assert Levenshtein.name == "levenshtein"
+        assert Levenshtein().score("kitten", "kitten") == 1.0
+        # matches Fuzzy ratio exactly
+        assert Levenshtein().score("kitten", "sitting") == Fuzzy(method="ratio").score(
+            "kitten", "sitting"
+        )
+
 
 class TestPresence:
     def _node(self, actual, context_factory):
