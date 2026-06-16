@@ -73,10 +73,10 @@ class TestMakeAligner:
         assert isinstance(make_aligner(ArrayStrategy.BY_INDEX), ByIndexAligner)
 
     def test_by_key(self):
-        aligner = make_aligner(ArrayStrategy.BY_KEY, key="id")
+        aligner = make_aligner(ArrayStrategy.BY_KEY, {"key": "id"})
         assert isinstance(aligner, ByKeyAligner)
 
     def test_metric_by_name(self):
         # key_metric given as a registered name string is resolved to an instance
-        aligner = make_aligner(ArrayStrategy.BY_KEY, key="id", key_metric="exact_match")
+        aligner = make_aligner(ArrayStrategy.BY_KEY, {"key": "id", "key_metric": "exact_match"})
         assert isinstance(aligner, ByKeyAligner)

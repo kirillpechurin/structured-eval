@@ -39,8 +39,7 @@ class TestDefaults:
     def test_array_config_defaults(self):
         ac = ArrayFieldConfig()
         assert ac.strategy == ArrayStrategy.BY_INDEX
-        assert ac.key is None
-        assert ac.key_threshold == 1.0
+        assert ac.params == {}
 
 
 class TestArbitraryMetrics:
@@ -64,9 +63,9 @@ class TestNesting:
         cfg = ArrayFieldConfig(
             item=ObjectFieldConfig(fields={"id": FieldConfig()}),
             strategy=ArrayStrategy.BY_KEY,
-            key="id",
+            params={"key": "id"},
         )
-        assert cfg.key == "id"
+        assert cfg.params["key"] == "id"
         assert isinstance(cfg.item, ObjectFieldConfig)
 
 

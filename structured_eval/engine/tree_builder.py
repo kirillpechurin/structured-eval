@@ -138,9 +138,7 @@ class TreeBuilder:
         is_cfg = isinstance(cfg, ArrayFieldConfig)
         aligner = make_aligner(
             strategy=cfg.strategy if is_cfg else ArrayStrategy.BY_INDEX,
-            key=cfg.key if is_cfg else None,
-            key_metric=cfg.key_metric if is_cfg else None,
-            key_threshold=cfg.key_threshold if is_cfg else 1.0,
+            params=cfg.params if is_cfg else None,
         )
         result = aligner.align(e_list, a_list)
         item_cfg = cfg.item if is_cfg else None

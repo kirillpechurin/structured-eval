@@ -75,21 +75,21 @@ class ObjectFieldConfig(BaseModel):
 class ArrayFieldConfig(BaseModel):
     """Configuration for an array (list) field.
 
-    ``item`` describes the type and config of each element. For ``BY_KEY``,
-    ``key`` names the element field used to align items (``None`` → the whole
-    element is the key); ``key_metric`` is how keys are compared (a metric
-    instance or name; ``None`` → ``ExactMatch``) and ``key_threshold`` the bar
-    for a pair to align. The generalized ``BY_KEY`` subsumes value- and
-    similarity-based matching (technical_details_v3 §5).
+    ``item`` describes the type and config of each element. ``strategy`` picks
+    the aligner; ``params`` carries that strategy's options (interpreted by the
+    aligner built in ``make_aligner``), so new strategies add no new fields here:
+
+    * ``BY_INDEX`` → ``params`` empty.
+    * ``BY_KEY`` → ``{"key": <field|None>, "key_metric": <metric|name>,
+      "threshold": <float>}``. The generalized ``BY_KEY`` subsumes value- and
+      similarity-based matching (technical_details_v3 §5).
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     item: FieldConfig | ObjectFieldConfig | None = None
     strategy: ArrayStrategy = ArrayStrategy.BY_INDEX
-    key: str | None = None  # element field used as the key; None → whole element
-    key_metric: Any = None  # Metric | name str comparing keys (None → ExactMatch)
-    key_threshold: float = 1.0
+    params: dict[str, Any] = Field(default_factory=dict)  # strategy-specific options
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
     exclude: bool = False

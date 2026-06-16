@@ -95,7 +95,7 @@ def test_by_key_alignment_reorders(tree_factory):
         expected,
         item_cfg=item,
         strategy=ArrayStrategy.BY_KEY,
-        key="id",
+        params={"key": "id"},
     )
     assert ArrayF1().compute(node) == 1.0
     assert ArrayAccuracy().compute(node) == 1.0
@@ -109,6 +109,6 @@ def test_by_key_missing_element(tree_factory):
         [{"id": "a"}, {"id": "b"}],
         item_cfg=item,
         strategy=ArrayStrategy.BY_KEY,
-        key="id",
+        params={"key": "id"},
     )
     assert ArrayRecall().compute(node) == pytest.approx(0.5)

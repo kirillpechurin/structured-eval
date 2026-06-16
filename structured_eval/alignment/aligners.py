@@ -116,11 +116,14 @@ class ByKeyAligner(ArrayAligner):
 
 def make_aligner(
     strategy: ArrayStrategy = ArrayStrategy.BY_INDEX,
-    key: str | None = None,
-    key_metric: Any = None,
-    key_threshold: float = 1.0,
+    params: dict[str, Any] | None = None,
 ) -> ArrayAligner:
-    """Build the aligner for an array config's strategy."""
+    """Build the aligner for an array config's ``strategy`` from its ``params``.
+
+    ``params`` keys match the chosen aligner's constructor arguments; an unknown
+    key surfaces as a ``TypeError`` from that constructor.
+    """
+    params = params or {}
     if strategy == ArrayStrategy.BY_INDEX:
         return ByIndexAligner()
-    return ByKeyAligner(key, key_metric, key_threshold)
+    return ByKeyAligner(**params)

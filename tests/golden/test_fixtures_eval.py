@@ -63,7 +63,7 @@ def test_ner_array_by_key():
         fields={
             "entities": ArrayFieldConfig(
                 strategy=ArrayStrategy.BY_KEY,
-                key="text",
+                params={"key": "text"},
                 item=ObjectFieldConfig(fields={"text": FieldConfig(), "label": FieldConfig()}),
             )
         },
