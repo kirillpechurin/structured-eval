@@ -28,6 +28,7 @@ from structured_eval.metrics import (
     Faithfulness,
     FieldMetric,
     Fuzzy,
+    Levenshtein,
     Metric,
     NodeMetric,
     NormalizedMatch,
@@ -121,6 +122,7 @@ __all__ = [
     "Numeric",
     "TokenF1",
     "Fuzzy",
+    "Levenshtein",
     "Presence",
     "TypeMatch",
     # metrics — object

@@ -17,6 +17,7 @@ from structured_eval.metrics.coverage import Coverage
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.faithfulness import Faithfulness
 from structured_eval.metrics.fuzzy import Fuzzy
+from structured_eval.metrics.levenshtein import Levenshtein
 from structured_eval.metrics.normalized import NormalizedMatch
 from structured_eval.metrics.numeric import Numeric
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
@@ -47,6 +48,7 @@ __all__ = [
     "Numeric",
     "TokenF1",
     "Fuzzy",
+    "Levenshtein",
     "Presence",
     "TypeMatch",
     # object metrics

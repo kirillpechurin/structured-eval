@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
 
-Mode = Literal["relative", "absolute"]
+
+class NumericMode(StrEnum):
+    """Tolerance band for the single-band form of :class:`Numeric`."""
+
+    RELATIVE = "relative"  # |a - e| / |e|
+    ABSOLUTE = "absolute"  # |a - e|
+
 
 # Everything that is not a digit, sign, or decimal point — currency symbols,
 # thousands separators, whitespace, percent signs, etc.
@@ -34,12 +41,12 @@ class Numeric(FieldMetric):
     def __init__(
         self,
         tolerance: float = 0.01,
-        mode: Mode = "relative",
+        mode: NumericMode = NumericMode.RELATIVE,
         relative_tolerance: float | None = None,
         absolute_tolerance: float | None = None,
     ):
         self.tolerance = tolerance
-        self.mode = mode
+        self.mode = NumericMode(mode)
         self.relative_tolerance = relative_tolerance
         self.absolute_tolerance = absolute_tolerance
 
@@ -68,7 +75,7 @@ class Numeric(FieldMetric):
             return False
 
         # Single-band form (tolerance + mode).
-        if self.mode == "relative":
+        if self.mode == NumericMode.RELATIVE:
             if e == 0:
                 deviation = 0.0 if a == 0 else float("inf")
             else:

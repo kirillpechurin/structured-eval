@@ -1,14 +1,42 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
 
 
+class FuzzyMethod(StrEnum):
+    """RapidFuzz scorer used by :class:`Fuzzy`."""
+
+    RATIO = "ratio"  # plain normalized Levenshtein ratio
+    PARTIAL_RATIO = "partial_ratio"  # best matching substring
+    TOKEN_SORT_RATIO = "token_sort_ratio"  # order-insensitive (default)
+    TOKEN_SET_RATIO = "token_set_ratio"  # set-based, ignores duplicate tokens
+
+
 class Fuzzy(FieldMetric):
-    """Fuzzy string similarity via RapidFuzz (optional dependency)."""
+    """Fuzzy string similarity via RapidFuzz (optional dependency).
+
+    ``method`` selects the RapidFuzz scorer:
+
+    * ``ratio`` — plain normalized Levenshtein ratio;
+    * ``partial_ratio`` — best matching substring;
+    * ``token_sort_ratio`` (default) — order-insensitive, sorts tokens;
+    * ``token_set_ratio`` — set-based, ignores duplicate/extra tokens.
+
+    ``normalize`` strips surrounding whitespace and lowercases before comparison.
+    """
 
     name = "fuzzy"
+
+    def __init__(
+        self,
+        method: FuzzyMethod = FuzzyMethod.TOKEN_SORT_RATIO,
+        normalize: bool = True,
+    ):
+        self.method = FuzzyMethod(method)
+        self.normalize = normalize
 
     def score(self, actual: Any, expected: Any) -> float:
         try:
@@ -18,4 +46,15 @@ class Fuzzy(FieldMetric):
                 "rapidfuzz is required for the 'fuzzy' metric. "
                 "Install it with: pip install 'structured-eval[fuzzy]'"
             ) from exc
-        return fuzz.token_sort_ratio(str(actual), str(expected)) / 100.0
+
+        scorer = {
+            "ratio": fuzz.ratio,
+            "partial_ratio": fuzz.partial_ratio,
+            "token_sort_ratio": fuzz.token_sort_ratio,
+            "token_set_ratio": fuzz.token_set_ratio,
+        }[self.method]
+
+        a, e = str(actual), str(expected)
+        if self.normalize:
+            a, e = a.strip().lower(), e.strip().lower()
+        return float(scorer(a, e)) / 100.0
