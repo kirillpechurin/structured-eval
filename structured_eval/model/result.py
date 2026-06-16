@@ -148,9 +148,7 @@ class EvalReport(BaseModel):
         with open(path, encoding="utf-8") as fh:
             return cls.model_validate_json(fh.read())
 
-    def diff_from(
-        self, other: EvalReport, metrics: list[str] | None = None
-    ) -> RegressionDiff:
+    def diff_from(self, other: EvalReport, metrics: list[str] | None = None) -> RegressionDiff:
         """Compute metric deltas relative to ``other`` (self minus other).
 
         ``deltas`` covers document-level metrics present in both reports (or the
@@ -170,9 +168,7 @@ class EvalReport(BaseModel):
             if other_fs is None:
                 continue
             per: dict[str, float] = {
-                m: fs.metrics[m] - other_fs.metrics[m]
-                for m in fs.metrics
-                if m in other_fs.metrics
+                m: fs.metrics[m] - other_fs.metrics[m] for m in fs.metrics if m in other_fs.metrics
             }
             if fs.score is not None and other_fs.score is not None:
                 per["score"] = fs.score - other_fs.score
@@ -195,14 +191,11 @@ class EvalReport(BaseModel):
         self.assert_no_parse_errors()
         if self.score is None:
             raise AssertionError(
-                "no score available (no key metric configured); "
-                "use assert_metric() instead"
+                "no score available (no key metric configured); use assert_metric() instead"
             )
         if self.score < min_score:
             label = self.score_label or "score"
-            raise AssertionError(
-                f"{label} {self.score:.4g} < required {min_score:.4g}"
-            )
+            raise AssertionError(f"{label} {self.score:.4g} < required {min_score:.4g}")
 
     def assert_field(self, path: str, min_score: float) -> None:
         """Fail if the field at ``path`` scores below ``min_score``."""
@@ -221,14 +214,10 @@ class EvalReport(BaseModel):
         """Fail if metric ``metric_name`` is missing or below ``min_value``."""
         if metric_name not in self.metrics:
             available = ", ".join(sorted(self.metrics)) or "none"
-            raise AssertionError(
-                f"metric {metric_name!r} not computed (available: {available})"
-            )
+            raise AssertionError(f"metric {metric_name!r} not computed (available: {available})")
         value = self.metrics[metric_name]
         if value < min_value:
-            raise AssertionError(
-                f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}"
-            )
+            raise AssertionError(f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}")
 
     def assert_schema_valid(self) -> None:
         """Fail if schema validation produced errors."""
@@ -256,9 +245,7 @@ class BatchEvalReport(BaseModel):
     perfect_response_rate: float = 0.0
     parse_error_rate: float = 0.0
 
-    def field_breakdown(
-        self, threshold: float | None = None
-    ) -> dict[str, dict[str, float]]:
+    def field_breakdown(self, threshold: float | None = None) -> dict[str, dict[str, float]]:
         """Per-path statistics across the batch: mean/min/max/p95/fail_rate.
 
         Only nodes with a score (a key metric applied) are counted. ``fail_rate``

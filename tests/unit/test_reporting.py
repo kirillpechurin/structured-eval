@@ -25,15 +25,15 @@ class TestConsole:
         assert isinstance(out, str) and out
 
     def test_parse_error_renders(self):
-        out = ConsoleRenderer().render(EvalReport(parse_error=True,
-                                                  parse_error_message="bad"))
+        out = ConsoleRenderer().render(EvalReport(parse_error=True, parse_error_message="bad"))
         assert "PARSE ERROR" in out
 
     def test_batch_renders(self):
         from structured_eval import Sample
 
-        report = evaluate([Sample(actual={"a": 1}, expected={"a": 1})],
-                          config=EvalConfig(key_metric=ObjectF1()))
+        report = evaluate(
+            [Sample(actual={"a": 1}, expected={"a": 1})], config=EvalConfig(key_metric=ObjectF1())
+        )
         assert ConsoleRenderer().render(report)
 
     def test_print_summary_no_crash(self, capsys):

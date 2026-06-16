@@ -57,12 +57,8 @@ class SubstringFaithfulness:
                 for i, item in enumerate(value):
                     item_path = f"{path}[{i}]"
                     if isinstance(item, dict):
-                        self._collect(
-                            item, source_lower, field_configs, item_path, out
-                        )
+                        self._collect(item, source_lower, field_configs, item_path, out)
                     elif item is not None:
-                        out[item_path] = (
-                            1.0 if str(item).lower() in source_lower else 0.0
-                        )
+                        out[item_path] = 1.0 if str(item).lower() in source_lower else 0.0
             elif value is not None:
                 out[path] = 1.0 if str(value).lower() in source_lower else 0.0

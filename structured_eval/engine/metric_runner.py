@@ -28,7 +28,7 @@ class MetricRunner:
         ScalarNode: "compute_scalar",
         ObjectNode: "compute_object",
         ArrayNode: "compute_array",
-        EvalNode: "compute_root"
+        EvalNode: "compute_root",
     }
 
     def run(self, root: EvalNode, metrics: list[Metric]) -> None:

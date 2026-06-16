@@ -23,8 +23,8 @@ def _batch(samples, cfg=None) -> BatchEvalReport:
 
 def test_batch_mean_metrics():
     samples = [
-        Sample(actual={"a": 1}, expected={"a": 1}),   # f1 1.0
-        Sample(actual={"a": 9}, expected={"a": 1}),   # f1 0.0
+        Sample(actual={"a": 1}, expected={"a": 1}),  # f1 1.0
+        Sample(actual={"a": 9}, expected={"a": 1}),  # f1 0.0
     ]
     r = _batch(samples, EvalConfig(metrics=[ObjectF1()]))
     assert r.metrics["object_f1"] == pytest.approx(0.5)

@@ -76,6 +76,27 @@ class TestNumeric:
     def test_non_numeric_is_zero(self):
         assert Numeric().score("abc", 100) == 0.0
 
+    def test_currency_and_separators_stripped(self):
+        assert Numeric(tolerance=0).score("$1,234.50", 1234.50) == 1.0
+        assert Numeric(tolerance=0).score("1 234,5".replace(",", ""), 12345) == 1.0
+
+    def test_accounting_notation_negative(self):
+        assert Numeric(tolerance=0).score("(123)", -123) == 1.0
+        assert Numeric(tolerance=0).score("(123)", 123) == 0.0
+
+    def test_bool_is_not_numeric(self):
+        assert Numeric().score(True, 1) == 0.0
+
+    def test_explicit_relative_and_absolute_bands(self):
+        # within absolute band but not relative
+        m = Numeric(relative_tolerance=0.001, absolute_tolerance=5)
+        assert m.score(103, 100) == 1.0  # |3| <= 5
+        assert m.score(200, 100) == 0.0  # outside both
+
+    def test_explicit_band_overrides_tolerance(self):
+        m = Numeric(tolerance=0, relative_tolerance=0.1)
+        assert m.score(109, 100) == 1.0
+
 
 class TestTokenF1:
     def test_identical(self):

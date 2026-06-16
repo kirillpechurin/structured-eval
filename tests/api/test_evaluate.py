@@ -23,8 +23,9 @@ def test_dict_shorthand():
 
 
 def test_sample_input():
-    r = evaluate(Sample(actual={"a": 1}, expected={"a": 1}),
-                 config=EvalConfig(metrics=[ObjectF1()]))
+    r = evaluate(
+        Sample(actual={"a": 1}, expected={"a": 1}), config=EvalConfig(metrics=[ObjectF1()])
+    )
     assert isinstance(r, EvalReport)
 
 
@@ -48,7 +49,8 @@ def test_source_kwarg_enables_faithfulness():
     from structured_eval import Faithfulness
 
     r = evaluate(
-        {"vendor": "Globex"}, None,
+        {"vendor": "Globex"},
+        None,
         config=EvalConfig(metrics=[Faithfulness()]),
         source="Invoice from Acme Corp",
     )

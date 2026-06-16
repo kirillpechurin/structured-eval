@@ -55,8 +55,8 @@ class TestByKey:
         actual = [{"id": "a"}, {"id": "c"}]
         r = ByKeyAligner(key="id").align(expected, actual)
         assert r.matched == [(0, 0)]
-        assert r.missed == [1]      # b
-        assert r.spurious == [1]    # c
+        assert r.missed == [1]  # b
+        assert r.spurious == [1]  # c
 
     def test_strategy_recorded(self):
         assert ByKeyAligner().align([], []).strategy == ArrayStrategy.BY_KEY

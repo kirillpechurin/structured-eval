@@ -13,9 +13,7 @@ class RuleProcessor:
     results and the pass rate (1.0 when there are no rules).
     """
 
-    def run(
-        self, rules: list[Any], document: dict[str, Any]
-    ) -> tuple[list[RuleResult], float]:
+    def run(self, rules: list[Any], document: dict[str, Any]) -> tuple[list[RuleResult], float]:
         results: list[RuleResult] = [rule.evaluate(document) for rule in rules]
         if not results:
             return results, 1.0

@@ -34,9 +34,7 @@ class TestSubstringFaithfulness:
         assert hallucinated == ["vendor"]
 
     def test_case_insensitive(self):
-        score, _ = SubstringFaithfulness().compute(
-            {"vendor": "acme corp"}, SOURCE, EvalConfig()
-        )
+        score, _ = SubstringFaithfulness().compute({"vendor": "acme corp"}, SOURCE, EvalConfig())
         assert score == 1.0
 
     def test_partial(self):

@@ -54,9 +54,7 @@ class ConsoleRenderer:
         for fs in report.field_scores.values():
             if fs.score is None:
                 continue
-            metric_name = next(
-                (k for k, v in fs.metrics.items() if v == fs.score), "score"
-            )
+            metric_name = next((k for k, v in fs.metrics.items() if v == fs.score), "score")
             rows.append(
                 [
                     fs.path,
@@ -139,9 +137,7 @@ class ConsoleRenderer:
                 for path, s in ranked
             ]
             out.append("  Field breakdown (worst first)")
-            out += self._table(
-                ["Field", "mean", "p95", "fail_rate"], rows, ["<", ">", ">", ">"]
-            )
+            out += self._table(["Field", "mean", "p95", "fail_rate"], rows, ["<", ">", ">", ">"])
             out.append(bar)
         return "\n".join(out)
 
@@ -159,9 +155,7 @@ class ConsoleRenderer:
             f"  unstable         {', '.join(report.unstable_fields) or '—'}",
             bar,
         ]
-        ranked = sorted(
-            report.field_variance.items(), key=lambda kv: kv[1], reverse=True
-        )
+        ranked = sorted(report.field_variance.items(), key=lambda kv: kv[1], reverse=True)
         if ranked:
             rows = [[path, f"{var:.4f}"] for path, var in ranked]
             out += self._table(["Field", "variance"], rows, ["<", ">"])

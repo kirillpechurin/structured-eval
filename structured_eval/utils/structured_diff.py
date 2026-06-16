@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 
 class DiffType(StrEnum):
-    ADDED = "added"      # present in actual, absent in expected
+    ADDED = "added"  # present in actual, absent in expected
     REMOVED = "removed"  # present in expected, absent in actual
     CHANGED = "changed"  # present in both but value differs
 
@@ -84,52 +84,64 @@ def structured_diff(
     entries: list[DiffEntry] = []
 
     for raw_path, value in diff.get("dictionary_item_added", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.ADDED,
-            actual=value,
-            expected=None,
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.ADDED,
+                actual=value,
+                expected=None,
+            )
+        )
 
     for raw_path, value in diff.get("dictionary_item_removed", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.REMOVED,
-            actual=None,
-            expected=value,
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.REMOVED,
+                actual=None,
+                expected=value,
+            )
+        )
 
     for raw_path, change in diff.get("values_changed", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.CHANGED,
-            actual=change["new_value"],
-            expected=change["old_value"],
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.CHANGED,
+                actual=change["new_value"],
+                expected=change["old_value"],
+            )
+        )
 
     for raw_path, change in diff.get("type_changes", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.CHANGED,
-            actual=change["new_value"],
-            expected=change["old_value"],
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.CHANGED,
+                actual=change["new_value"],
+                expected=change["old_value"],
+            )
+        )
 
     for raw_path, value in diff.get("iterable_item_added", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.ADDED,
-            actual=value,
-            expected=None,
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.ADDED,
+                actual=value,
+                expected=None,
+            )
+        )
 
     for raw_path, value in diff.get("iterable_item_removed", {}).items():
-        entries.append(DiffEntry(
-            path=_to_readable_path(raw_path),
-            diff_type=DiffType.REMOVED,
-            actual=None,
-            expected=value,
-        ))
+        entries.append(
+            DiffEntry(
+                path=_to_readable_path(raw_path),
+                diff_type=DiffType.REMOVED,
+                actual=None,
+                expected=value,
+            )
+        )
 
     entries.sort(key=lambda e: e.path)
     return StructuredDiff(entries=entries)

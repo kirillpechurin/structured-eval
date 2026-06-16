@@ -31,12 +31,8 @@ pytestmark = pytest.mark.unit
 
 def _array_node(tree_factory, actual_items, expected_items, item_cfg=None, **kwargs):
     """Build a doc {"items": [...]} and return its ArrayNode."""
-    cfg = EvalConfig(
-        fields={"items": ArrayFieldConfig(item=item_cfg, **kwargs)}
-    )
-    root = tree_factory(
-        {"items": actual_items}, {"items": expected_items}, cfg
-    )
+    cfg = EvalConfig(fields={"items": ArrayFieldConfig(item=item_cfg, **kwargs)})
+    root = tree_factory({"items": actual_items}, {"items": expected_items}, cfg)
     node = root.children["items"]
     assert isinstance(node, ArrayNode)
     return node
@@ -94,8 +90,12 @@ def test_by_key_alignment_reorders(tree_factory):
     actual = [{"id": "b", "v": 2}, {"id": "a", "v": 1}]
     expected = [{"id": "a", "v": 1}, {"id": "b", "v": 2}]
     node = _array_node(
-        tree_factory, actual, expected, item_cfg=item,
-        strategy=ArrayStrategy.BY_KEY, key="id",
+        tree_factory,
+        actual,
+        expected,
+        item_cfg=item,
+        strategy=ArrayStrategy.BY_KEY,
+        key="id",
     )
     assert ArrayF1().compute(node) == 1.0
     assert ArrayAccuracy().compute(node) == 1.0
@@ -104,7 +104,11 @@ def test_by_key_alignment_reorders(tree_factory):
 def test_by_key_missing_element(tree_factory):
     item = ObjectFieldConfig(fields={"id": FieldConfig()})
     node = _array_node(
-        tree_factory, [{"id": "a"}], [{"id": "a"}, {"id": "b"}],
-        item_cfg=item, strategy=ArrayStrategy.BY_KEY, key="id",
+        tree_factory,
+        [{"id": "a"}],
+        [{"id": "a"}, {"id": "b"}],
+        item_cfg=item,
+        strategy=ArrayStrategy.BY_KEY,
+        key="id",
     )
     assert ArrayRecall().compute(node) == pytest.approx(0.5)

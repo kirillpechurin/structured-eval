@@ -20,13 +20,30 @@ pytestmark = pytest.mark.unit
 
 # Concrete, named metrics in the public catalog (abstract bases excluded).
 NAMED_METRICS = [
-    "ExactMatch", "NormalizedMatch", "Numeric", "TokenF1", "Fuzzy",
-    "Presence", "TypeMatch",
-    "ObjectAccuracy", "ObjectPrecision", "ObjectRecall", "ObjectF1",
-    "ObjectPRF1", "ObjectValidity",
-    "ArrayAccuracy", "ArrayPrecision", "ArrayRecall", "ArrayF1",
-    "ArrayPRF1", "ArrayCardinality",
-    "OverallScore", "SchemaValidity", "Coverage", "Faithfulness", "RulePassRate",
+    "ExactMatch",
+    "NormalizedMatch",
+    "Numeric",
+    "TokenF1",
+    "Fuzzy",
+    "Presence",
+    "TypeMatch",
+    "ObjectAccuracy",
+    "ObjectPrecision",
+    "ObjectRecall",
+    "ObjectF1",
+    "ObjectPRF1",
+    "ObjectValidity",
+    "ArrayAccuracy",
+    "ArrayPrecision",
+    "ArrayRecall",
+    "ArrayF1",
+    "ArrayPRF1",
+    "ArrayCardinality",
+    "OverallScore",
+    "SchemaValidity",
+    "Coverage",
+    "Faithfulness",
+    "RulePassRate",
 ]
 
 

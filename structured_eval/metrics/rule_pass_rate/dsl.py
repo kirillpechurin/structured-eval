@@ -9,9 +9,9 @@ from typing import Any
 from structured_eval.model.result import RuleResult
 
 # Matches a bare JSONPath like "$.field" or "$.nested.child"
-_PLAIN_PATH_RE = re.compile(r'^\$(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+$')
+_PLAIN_PATH_RE = re.compile(r"^\$(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+$")
 # Matches any JSONPath fragment inside a larger expression
-_PATH_IN_EXPR_RE = re.compile(r'\$(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+')
+_PATH_IN_EXPR_RE = re.compile(r"\$(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+")
 
 _ARITH_OPS: dict[type[ast.operator], Any] = {
     ast.Add: operator.add,
@@ -170,9 +170,7 @@ class Rule:
 
     def evaluate(self, document: dict[str, Any]) -> RuleResult:
         if self._op is None:
-            raise ValueError(
-                f"Rule {self._path!r} has no comparison — call .eq(), .lt(), etc."
-            )
+            raise ValueError(f"Rule {self._path!r} has no comparison — call .eq(), .lt(), etc.")
 
         try:
             lhs = _resolve_path(self._path, document)

@@ -58,6 +58,4 @@ def evaluate_consistency(
     across runs are reported as stable, the rest as unstable. Thin wrapper over
     ``Evaluator``.
     """
-    return Evaluator(config).evaluate_consistency(
-        runs, variance_threshold=variance_threshold
-    )
+    return Evaluator(config).evaluate_consistency(runs, variance_threshold=variance_threshold)

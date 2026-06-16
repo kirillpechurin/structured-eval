@@ -43,7 +43,5 @@ def verdict(report: EvalReport, threshold: float) -> tuple[float | None, bool, s
     when ``score`` is ``None`` the pass/fail bar cannot be applied → ``False``.
     """
     score = report.score
-    success = (
-        not report.parse_error and score is not None and score >= threshold
-    )
+    success = not report.parse_error and score is not None and score >= threshold
     return score, success, reason_text(report)

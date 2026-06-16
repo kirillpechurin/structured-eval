@@ -80,10 +80,16 @@ class TestSideChannels:
         assert r.schema_errors
 
     def test_rule_results_surface(self, evaluate_one):
-        cfg = EvalConfig(metrics=[RulePassRate(rules=[
-            Rule("$.total").eq("$.subtotal + $.tax"),
-            Rule("$.status").eq("paid"),
-        ])])
+        cfg = EvalConfig(
+            metrics=[
+                RulePassRate(
+                    rules=[
+                        Rule("$.total").eq("$.subtotal + $.tax"),
+                        Rule("$.status").eq("paid"),
+                    ]
+                )
+            ]
+        )
         doc = {"total": 110.0, "subtotal": 100.0, "tax": 10.0, "status": "paid"}
         r = evaluate_one(doc, None, cfg)
         assert r.metrics["rule_pass_rate"] == 1.0
@@ -128,9 +134,7 @@ class TestMultiMetric:
             fields={"name": FieldConfig(metrics=[TokenF1()], key_metric=TokenF1())},
             metrics=[ObjectF1()],
         )
-        r = evaluate_one(
-            {"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg
-        )
+        r = evaluate_one({"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg)
         assert 0.0 < r.field_scores["name"].metrics["token_f1"] < 1.0
 
 

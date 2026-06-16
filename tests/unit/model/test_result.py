@@ -91,8 +91,9 @@ class TestAssertions:
     def test_assert_schema_valid(self):
         EvalReport(metrics={"schema_validity": 1.0}).assert_schema_valid()
         with pytest.raises(AssertionError):
-            EvalReport(metrics={"schema_validity": 0.0},
-                       schema_errors=["type: total"]).assert_schema_valid()
+            EvalReport(
+                metrics={"schema_validity": 0.0}, schema_errors=["type: total"]
+            ).assert_schema_valid()
 
 
 class TestDiff:

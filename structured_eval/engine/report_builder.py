@@ -18,9 +18,7 @@ class ReportBuilder:
         ArrayNode: NodeType.ARRAY,
     }
 
-    def build(
-        self, root: EvalNode, context: EvalContext, warnings: list[str]
-    ) -> EvalReport:
+    def build(self, root: EvalNode, context: EvalContext, warnings: list[str]) -> EvalReport:
         field_scores = {}
         array_matches = {}
         for node in root.walk():

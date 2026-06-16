@@ -96,9 +96,7 @@ class SchemaValidator:
 
         for err in errors:
             loc = (
-                ".".join(str(p) for p in err.absolute_path)
-                if err.absolute_path
-                else err.json_path
+                ".".join(str(p) for p in err.absolute_path) if err.absolute_path else err.json_path
             )
             if err.validator == "required":
                 # err.message names the missing field directly

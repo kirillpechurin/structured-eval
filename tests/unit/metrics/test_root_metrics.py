@@ -39,21 +39,15 @@ def test_overall_score_half(tree_factory):
 
 
 def test_overall_score_weighted(tree_factory):
-    cfg = EvalConfig(
-        fields={"a": FieldConfig(weight=3.0), "b": FieldConfig(weight=1.0)}
-    )
+    cfg = EvalConfig(fields={"a": FieldConfig(weight=3.0), "b": FieldConfig(weight=1.0)})
     # a correct (w3), b wrong (w1) → 3/(3+1)
     root = tree_factory({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
     assert OverallScore().compute(root) == pytest.approx(0.75)
 
 
 def test_overall_score_uses_key_metric(tree_factory):
-    cfg = EvalConfig(
-        fields={"name": FieldConfig(metrics=[TokenF1()], key_metric=TokenF1())}
-    )
-    root = tree_factory(
-        {"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg
-    )
+    cfg = EvalConfig(fields={"name": FieldConfig(metrics=[TokenF1()], key_metric=TokenF1())})
+    root = tree_factory({"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg)
     score = OverallScore().compute(root)
     assert 0.0 < score < 1.0
 

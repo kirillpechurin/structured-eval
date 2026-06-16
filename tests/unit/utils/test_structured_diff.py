@@ -1,4 +1,3 @@
-
 from structured_eval.utils.structured_diff import (
     DiffEntry,
     DiffType,

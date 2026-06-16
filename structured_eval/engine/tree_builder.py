@@ -93,9 +93,7 @@ class TreeBuilder:
             return self._array(apath, epath, cfg, actual, expected)
         return self._scalar(apath, epath, cfg)
 
-    def _object(
-        self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any
-    ) -> ObjectNode:
+    def _object(self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any) -> ObjectNode:
         a_keys = set(actual) if isinstance(actual, dict) else set()
         e_keys = set(expected) if isinstance(expected, dict) else set()
         both = a_keys & e_keys
@@ -116,16 +114,12 @@ class TreeBuilder:
         children: dict[str, Any] = {}
         matched: list[Any] = []
         for key in sorted(a_keys | e_keys):
-            child = self.node(
-                self._child(apath, key), self._child(epath, key), fields.get(key)
-            )
+            child = self.node(self._child(apath, key), self._child(epath, key), fields.get(key))
             children[key] = child
             if key in both:
                 matched.append(child)
         for key in missing:
-            self.warnings.append(
-                f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual"
-            )
+            self.warnings.append(f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual")
 
         return ObjectNode(
             path=apath,
@@ -138,9 +132,7 @@ class TreeBuilder:
             children=children,
         )
 
-    def _array(
-        self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any
-    ) -> ArrayNode:
+    def _array(self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any) -> ArrayNode:
         a_list = actual if isinstance(actual, list) else []
         e_list = expected if isinstance(expected, list) else []
         is_cfg = isinstance(cfg, ArrayFieldConfig)
@@ -167,9 +159,7 @@ class TreeBuilder:
 
     def _scalar(self, apath: str, epath: str, cfg: Any) -> ScalarNode:
         threshold = (
-            cfg.threshold
-            if isinstance(cfg, FieldConfig) and cfg.threshold is not None
-            else 1.0
+            cfg.threshold if isinstance(cfg, FieldConfig) and cfg.threshold is not None else 1.0
         )
         node = ScalarNode(
             path=apath,

@@ -21,9 +21,7 @@ class TestDeepeval:
 
         from structured_eval.integrations.deepeval import StructuredMetric
 
-        metric = StructuredMetric(
-            config=EvalConfig(key_metric=ObjectF1()), threshold=0.8
-        )
+        metric = StructuredMetric(config=EvalConfig(key_metric=ObjectF1()), threshold=0.8)
         tc = LLMTestCase(
             input="x",
             actual_output='{"a": 1}',

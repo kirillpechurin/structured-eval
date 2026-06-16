@@ -78,7 +78,5 @@ class NodeMetric(Metric):
 def get_metric_class(name: str) -> type:
     """Resolve a metric class by its ``name`` (e.g. ``"object_f1"``)."""
     if name not in _METRIC_REGISTRY:
-        raise KeyError(
-            f"Unknown metric: {name!r}. Known: {sorted(_METRIC_REGISTRY)}"
-        )
+        raise KeyError(f"Unknown metric: {name!r}. Known: {sorted(_METRIC_REGISTRY)}")
     return _METRIC_REGISTRY[name]

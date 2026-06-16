@@ -41,16 +41,12 @@ class TestJsonl:
 
 class TestYaml:
     def test_parses_mapping(self):
-        yaml_parser = pytest.importorskip(
-            "structured_eval.formats.yaml_parser"
-        )
+        yaml_parser = pytest.importorskip("structured_eval.formats.yaml_parser")
         parser = yaml_parser.YamlParser()
         assert parser.parse("a: 1\nb: two") == {"a": 1, "b": "two"}
 
     def test_invalid_raises(self):
-        yaml_parser = pytest.importorskip(
-            "structured_eval.formats.yaml_parser"
-        )
+        yaml_parser = pytest.importorskip("structured_eval.formats.yaml_parser")
         with pytest.raises(ParseError):
             yaml_parser.YamlParser().parse("a: [1, 2\n  - broken")
 

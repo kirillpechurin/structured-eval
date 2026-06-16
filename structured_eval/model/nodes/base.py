@@ -101,10 +101,7 @@ class EvalNode(BaseModel):
 
     def is_leaf(self) -> bool:
         """True for a scalar node (no object children, no array items)."""
-        return (
-            getattr(self, "children", None) is None
-            and getattr(self, "items", None) is None
-        )
+        return getattr(self, "children", None) is None and getattr(self, "items", None) is None
 
     def walk(self) -> Iterator[EvalNode]:
         """Depth-first traversal yielding this node and every descendant."""

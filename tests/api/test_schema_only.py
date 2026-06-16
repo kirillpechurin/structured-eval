@@ -51,20 +51,32 @@ class TestSchemaOnly:
 
 class TestRulesOnly:
     def test_all_pass(self):
-        cfg = EvalConfig(metrics=[RulePassRate(rules=[
-            Rule("$.status").eq("paid"),
-            Rule("$.total").eq("$.subtotal + $.tax"),
-        ])])
+        cfg = EvalConfig(
+            metrics=[
+                RulePassRate(
+                    rules=[
+                        Rule("$.status").eq("paid"),
+                        Rule("$.total").eq("$.subtotal + $.tax"),
+                    ]
+                )
+            ]
+        )
         doc = {"status": "paid", "total": 110.0, "subtotal": 100.0, "tax": 10.0}
         r = evaluate(doc, config=cfg)
         assert r.metrics["rule_pass_rate"] == 1.0
         assert len(r.rule_results) == 2
 
     def test_partial(self):
-        cfg = EvalConfig(metrics=[RulePassRate(rules=[
-            Rule("$.status").eq("paid"),
-            Rule("$.total").gt(0),
-        ])])
+        cfg = EvalConfig(
+            metrics=[
+                RulePassRate(
+                    rules=[
+                        Rule("$.status").eq("paid"),
+                        Rule("$.total").gt(0),
+                    ]
+                )
+            ]
+        )
         r = evaluate({"status": "draft", "total": 50.0}, config=cfg)
         assert r.metrics["rule_pass_rate"] == pytest.approx(0.5)
 

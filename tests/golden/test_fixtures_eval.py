@@ -45,22 +45,28 @@ def test_invoice_object_f1(case):
 
 
 def test_ner_array_by_key():
-    actual = {"entities": [
-        {"text": "Acme", "label": "ORG"},
-        {"text": "Berlin", "label": "LOC"},
-        {"text": "ghost", "label": "MISC"},
-    ]}
-    expected = {"entities": [
-        {"text": "Berlin", "label": "LOC"},
-        {"text": "Acme", "label": "ORG"},
-        {"text": "2024", "label": "DATE"},
-    ]}
+    actual = {
+        "entities": [
+            {"text": "Acme", "label": "ORG"},
+            {"text": "Berlin", "label": "LOC"},
+            {"text": "ghost", "label": "MISC"},
+        ]
+    }
+    expected = {
+        "entities": [
+            {"text": "Berlin", "label": "LOC"},
+            {"text": "Acme", "label": "ORG"},
+            {"text": "2024", "label": "DATE"},
+        ]
+    }
     cfg = EvalConfig(
-        fields={"entities": ArrayFieldConfig(
-            strategy=ArrayStrategy.BY_KEY,
-            key="text",
-            item=ObjectFieldConfig(fields={"text": FieldConfig(), "label": FieldConfig()}),
-        )},
+        fields={
+            "entities": ArrayFieldConfig(
+                strategy=ArrayStrategy.BY_KEY,
+                key="text",
+                item=ObjectFieldConfig(fields={"text": FieldConfig(), "label": FieldConfig()}),
+            )
+        },
         metrics=[ArrayF1()],
     )
     r = evaluate(actual, expected, config=cfg)
