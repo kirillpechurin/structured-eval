@@ -4,8 +4,8 @@ from typing import Any
 
 from structured_eval.metrics.base import (
     ArrayMetric,
+    BaseMetric,
     FieldMetric,
-    Metric,
     ObjectMetric,
     RootMetric,
 )
@@ -19,9 +19,10 @@ class MetricRunner:
     """Phase 2: apply each requested metric across the tree, in place.
 
     Typed metric base classes dispatch by node type; ``RootMetric`` fires only
-    on the root. ``NodeMetric`` (and custom classes) are duck-typed via
-    ``compute_scalar`` / ``compute_object`` / ``compute_array``. A metric that
-    returns ``None`` (e.g. ``Faithfulness`` without a source) is skipped.
+    on the root. ``GenericMetric`` (and custom classes) are duck-typed via
+    ``compute_scalar`` / ``compute_object`` / ``compute_array`` / ``compute_root``.
+    A metric that returns ``None`` (e.g. ``Faithfulness`` without a source) is
+    skipped.
     """
 
     _DUCK_METHOD = {
@@ -31,14 +32,14 @@ class MetricRunner:
         EvalNode: "compute_root",
     }
 
-    def run(self, root: EvalNode, metrics: list[Metric]) -> None:
+    def run(self, root: EvalNode, metrics: list[BaseMetric]) -> None:
         for metric in metrics:
             for node in root.walk():
                 result = self.apply(metric, node)
                 if result is not None:
                     self._store(node, metric, result)
 
-    def apply(self, metric: Metric, node: EvalNode) -> float | dict[str, float] | None:
+    def apply(self, metric: BaseMetric, node: EvalNode) -> float | dict[str, float] | None:
         """Run ``metric`` on ``node`` if it applies, else return ``None``."""
         if isinstance(metric, FieldMetric) and isinstance(node, ScalarNode):
             return metric.compute(node)
@@ -56,7 +57,7 @@ class MetricRunner:
         return None
 
     @staticmethod
-    def _store(node: EvalNode, metric: Metric, result: float | dict[str, float]) -> None:
+    def _store(node: EvalNode, metric: BaseMetric, result: float | dict[str, float]) -> None:
         results: dict[str, Any] = node.metric_results
         if isinstance(result, dict):
             results.update(result)

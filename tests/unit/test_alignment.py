@@ -10,6 +10,7 @@ import pytest
 from structured_eval.alignment import (
     ByIndexAligner,
     ByKeyAligner,
+    HungarianAligner,
     make_aligner,
 )
 from structured_eval.model.config import ArrayStrategy
@@ -68,9 +69,55 @@ class TestByKey:
         assert r.spurious == [1]
 
 
+class TestHungarian:
+    def test_strategy_recorded(self):
+        assert HungarianAligner().align([1], [1]).strategy == ArrayStrategy.HUNGARIAN
+
+    def test_optimal_reorder(self):
+        # numeric closeness pairs equal values regardless of order
+        r = HungarianAligner().align([10, 20, 30], [30, 10, 20])
+        assert sorted(r.matched) == [(0, 1), (1, 2), (2, 0)]
+        assert r.missed == [] and r.spurious == []
+
+    def test_below_threshold_unmatched(self):
+        # 100 vs 5 similarity is far below 0.8 → missed + spurious, no match
+        r = HungarianAligner(threshold=0.8).align([100], [5])
+        assert r.matched == []
+        assert r.missed == [0] and r.spurious == [0]
+
+    def test_empty_sides(self):
+        r = HungarianAligner().align([1, 2], [])
+        assert r.matched == [] and r.missed == [0, 1] and r.spurious == []
+
+    def test_dict_elements_mean_agreement(self):
+        expected = [{"id": "a", "v": 1}, {"id": "b", "v": 2}]
+        actual = [{"id": "b", "v": 2}, {"id": "a", "v": 1}]
+        r = HungarianAligner(threshold=0.9).align(expected, actual)
+        assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+    def test_scorer_on_key_field(self):
+        expected = [{"id": "acme"}, {"id": "globex"}]
+        actual = [{"id": "globe"}, {"id": "acme"}]
+        r = HungarianAligner(key="id", threshold=0.6).align(expected, actual)
+        assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+    def test_per_field_scorer_dict(self):
+        # a dict scorer compares arrays of objects field by field
+        expected = [{"name": "acme", "amount": 100}, {"name": "globex", "amount": 200}]
+        actual = [{"name": "globe", "amount": 205}, {"name": "acme", "amount": 99}]
+        r = HungarianAligner(
+            scorer={"name": "fuzzy", "amount": "numeric_closeness"}, threshold=0.7
+        ).align(expected, actual)
+        assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+
 class TestMakeAligner:
     def test_by_index(self):
         assert isinstance(make_aligner(ArrayStrategy.BY_INDEX), ByIndexAligner)
+
+    def test_hungarian(self):
+        aligner = make_aligner(ArrayStrategy.HUNGARIAN, {"threshold": 0.9})
+        assert isinstance(aligner, HungarianAligner)
 
     def test_by_key(self):
         aligner = make_aligner(ArrayStrategy.BY_KEY, {"key": "id"})

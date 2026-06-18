@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment import make_aligner
-from structured_eval.metrics.base import FieldMetric, get_metric_class
+from structured_eval.metrics.base import Metric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.model.config import (
     ArrayFieldConfig,
@@ -12,25 +12,13 @@ from structured_eval.model.config import (
     ExtraKeysPolicy,
     FieldConfig,
     ObjectFieldConfig,
+    weight_of,
 )
 from structured_eval.model.context import EvalContext
 from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.base import MISSING, EvalNode, _navigate
+from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
-
-
-def _resolve_metric(spec: Any) -> FieldMetric:
-    if isinstance(spec, str):
-        instance = get_metric_class(spec)()
-        assert isinstance(instance, FieldMetric)
-        return instance
-    assert isinstance(spec, FieldMetric)
-    return spec
-
-
-def _weight(cfg: Any) -> float:
-    return getattr(cfg, "weight", 1.0) if cfg is not None else 1.0
 
 
 class TreeBuilder:
@@ -59,24 +47,24 @@ class TreeBuilder:
             return ObjectFieldConfig(fields=dict(self.config.fields))
         return None
 
-    def _field_metrics(self, cfg: Any) -> list[FieldMetric]:
+    def _field_metrics(self, cfg: Any) -> list[Metric[Any]]:
         if isinstance(cfg, FieldConfig) and cfg.metrics is not None:
             specs = cfg.metrics
         elif self.config.default_metrics is not None:
             specs = self.config.default_metrics
         else:
             specs = [ExactMatch()]
-        return [_resolve_metric(s) for s in specs]
+        return [resolve_metric(s) for s in specs]
 
-    def _key_metric(self, cfg: Any) -> FieldMetric | None:
+    def _key_metric(self, cfg: Any) -> Metric[Any] | None:
         if isinstance(cfg, FieldConfig) and cfg.key_metric is not None:
-            return _resolve_metric(cfg.key_metric)
+            return resolve_metric(cfg.key_metric)
         return None
 
     # ── tree construction ────────────────────────────────────────────────
 
     def _value(self, doc: Any, path: str) -> Any:
-        value = _navigate(doc, path)
+        value = navigate(doc, path)
         return None if value is MISSING else value
 
     def _child(self, path: str, key: str) -> str:
@@ -125,7 +113,7 @@ class TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
-            weight=_weight(cfg),
+            weight=weight_of(cfg),
             matched=matched,
             missing=missing,
             spurious=spurious,
@@ -150,7 +138,7 @@ class TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
-            weight=_weight(cfg),
+            weight=weight_of(cfg),
             match_result=result,
             items=items,
         )
@@ -163,12 +151,14 @@ class TreeBuilder:
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
-            weight=_weight(cfg),
+            weight=weight_of(cfg),
             key_metric=self._key_metric(cfg),
             threshold=threshold,
         )
         for metric in self._field_metrics(cfg):
             result = metric.compute(node)
+            if result is None:
+                continue
             if isinstance(result, dict):
                 node.metric_results.update(result)
             else:

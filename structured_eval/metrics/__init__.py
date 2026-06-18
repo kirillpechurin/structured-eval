@@ -6,12 +6,14 @@ from structured_eval.metrics.array_prf1 import ArrayPRF1
 from structured_eval.metrics.array_recall import ArrayRecall
 from structured_eval.metrics.base import (
     ArrayMetric,
+    BaseMetric,
     FieldMetric,
+    GenericMetric,
     Metric,
-    NodeMetric,
     ObjectMetric,
     RootMetric,
     get_metric_class,
+    resolve_metric,
 )
 from structured_eval.metrics.coverage import Coverage
 from structured_eval.metrics.exact import ExactMatch
@@ -20,6 +22,7 @@ from structured_eval.metrics.fuzzy import Fuzzy
 from structured_eval.metrics.levenshtein import Levenshtein
 from structured_eval.metrics.normalized import NormalizedMatch
 from structured_eval.metrics.numeric import Numeric
+from structured_eval.metrics.numeric_closeness import NumericCloseness
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
 from structured_eval.metrics.object_f1 import ObjectF1
 from structured_eval.metrics.object_precision import ObjectPrecision
@@ -35,17 +38,20 @@ from structured_eval.metrics.type_match import TypeMatch
 
 __all__ = [
     # base hierarchy
+    "BaseMetric",
     "Metric",
     "FieldMetric",
     "ObjectMetric",
     "ArrayMetric",
     "RootMetric",
-    "NodeMetric",
+    "GenericMetric",
     "get_metric_class",
+    "resolve_metric",
     # field metrics
     "ExactMatch",
     "NormalizedMatch",
     "Numeric",
+    "NumericCloseness",
     "TokenF1",
     "Fuzzy",
     "Levenshtein",

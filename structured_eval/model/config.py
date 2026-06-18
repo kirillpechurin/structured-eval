@@ -32,7 +32,8 @@ class ArrayStrategy(StrEnum):
     """How to align actual array items with expected ones."""
 
     BY_INDEX = "by_index"  # pair the i-th with the i-th
-    BY_KEY = "by_key"  # match on a shared unique field (see ArrayFieldConfig.key)
+    BY_KEY = "by_key"  # match on a shared unique field (see ArrayFieldConfig.params)
+    HUNGARIAN = "hungarian"  # optimal one-to-one assignment by element similarity
 
 
 # ── Field configs ───────────────────────────────────────────────────────────
@@ -83,6 +84,9 @@ class ArrayFieldConfig(BaseModel):
     * ``BY_KEY`` → ``{"key": <field|None>, "key_metric": <metric|name>,
       "threshold": <float>}``. The generalized ``BY_KEY`` subsumes value- and
       similarity-based matching (technical_details_v3 §5).
+    * ``HUNGARIAN`` → ``{"scorer": <Scorer | dict[str, Scorer] | None>,
+      "threshold": <float>, "key": <field|None>}``. Optimal one-to-one
+      assignment; ``scorer`` as a per-field dict scores arrays of objects.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -97,6 +101,11 @@ class ArrayFieldConfig(BaseModel):
 
 
 AnyFieldConfig = FieldConfig | ObjectFieldConfig | ArrayFieldConfig
+
+
+def weight_of(cfg: AnyFieldConfig | None) -> float:
+    """The aggregation weight a field config contributes (``1.0`` when absent)."""
+    return cfg.weight if cfg is not None else DEFAULT_FIELD_WEIGHT
 
 
 # ── Eval config ───────────────────────────────────────────────────────────────

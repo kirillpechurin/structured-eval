@@ -23,7 +23,7 @@ class Faithfulness(RootMetric):
         self.processor = SubstringFaithfulness()
         self.hallucinated_fields: list[str] = []
 
-    def compute(self, node: EvalNode) -> float | None:  # type: ignore[override]
+    def compute(self, node: EvalNode) -> float | None:
         source = node.context.source
         if source is None:
             return None

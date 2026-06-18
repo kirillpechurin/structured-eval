@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from structured_eval.metrics.base import FieldMetric, get_metric_class
+from structured_eval.metrics.base import resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.model.nodes.scalar import ScalarNode
 
@@ -22,15 +22,6 @@ from structured_eval.model.nodes.scalar import ScalarNode
 def leaf_name(path: str) -> str:
     """Last path segment without any trailing index, e.g. ``"a.b[0]"`` → ``"b"``."""
     return path.rsplit(".", 1)[-1].split("[", 1)[0]
-
-
-def _resolve_metric(spec: Any) -> FieldMetric:
-    if isinstance(spec, str):
-        instance = get_metric_class(spec)()
-        assert isinstance(instance, FieldMetric)
-        return instance
-    assert isinstance(spec, FieldMetric)
-    return spec
 
 
 def _resolve_threshold(thresholds: Any, name: str, fallback: float) -> float:
@@ -51,7 +42,7 @@ def field_verdict(
 
     spec = (score_policy or {}).get(name)
     if spec is not None:
-        metric = _resolve_metric(spec)
+        metric = resolve_metric(spec)
     elif node.key_metric is not None:
         metric = node.key_metric
     else:

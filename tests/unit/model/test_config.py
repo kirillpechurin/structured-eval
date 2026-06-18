@@ -77,4 +77,4 @@ class TestEnums:
         assert {p.value for p in ExtraKeysPolicy} == {"ignore", "penalize"}
 
     def test_array_strategy_values(self):
-        assert {s.value for s in ArrayStrategy} == {"by_index", "by_key"}
+        assert {s.value for s in ArrayStrategy} == {"by_index", "by_key", "hungarian"}

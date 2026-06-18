@@ -1,14 +1,14 @@
 """Unit tests for the EvalNode tree: lazy navigation, traversal, leaves.
 
 Nodes never copy data — ``actual``/``expected`` resolve by navigating the shared
-context. ``_navigate`` distinguishes 'absent' (MISSING → surfaced as None).
+context. ``navigate`` distinguishes 'absent' (MISSING → surfaced as None).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from structured_eval.model.nodes.base import MISSING, EvalNode, _navigate
+from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 
 pytestmark = pytest.mark.unit
 
@@ -16,28 +16,28 @@ pytestmark = pytest.mark.unit
 class TestNavigate:
     def test_root(self):
         obj = {"a": 1}
-        assert _navigate(obj, "$") is obj
+        assert navigate(obj, "$") is obj
 
     def test_dot_path(self):
-        assert _navigate({"a": {"b": 1}}, "a.b") == 1
+        assert navigate({"a": {"b": 1}}, "a.b") == 1
 
     def test_bracket_index(self):
-        assert _navigate({"items": [10, 20]}, "items[1]") == 20
+        assert navigate({"items": [10, 20]}, "items[1]") == 20
 
     def test_negative_index(self):
-        assert _navigate({"items": [10, 20]}, "items[-1]") == 20
+        assert navigate({"items": [10, 20]}, "items[-1]") == 20
 
     def test_missing_key(self):
-        assert _navigate({"a": 1}, "b") is MISSING
+        assert navigate({"a": 1}, "b") is MISSING
 
     def test_out_of_range(self):
-        assert _navigate({"items": [1]}, "items[5]") is MISSING
+        assert navigate({"items": [1]}, "items[5]") is MISSING
 
     def test_non_int_index(self):
-        assert _navigate({"items": [1]}, "items[x]") is MISSING
+        assert navigate({"items": [1]}, "items[x]") is MISSING
 
     def test_index_into_non_list(self):
-        assert _navigate({"a": 1}, "a[0]") is MISSING
+        assert navigate({"a": 1}, "a[0]") is MISSING
 
 
 class TestNodeAccessors:
