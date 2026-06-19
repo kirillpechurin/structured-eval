@@ -136,6 +136,7 @@ class HungarianAligner(ArrayAligner):
         if callable(scorer) and not isinstance(scorer, (str, Metric)):
             return float(scorer(actual, expected))
         metric = resolve_metric(scorer)
+        assert isinstance(metric, Metric)  # a scorer compares values via score()
         result = metric.score(actual, expected)
         assert not isinstance(result, dict)  # element scorers return a scalar
         return float(result)

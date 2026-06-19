@@ -84,8 +84,9 @@ class GenericMetric(BaseMetric):
     """Metrics spanning several node types, outside the single-``compute`` shape.
 
     Override whichever of ``compute_scalar`` / ``compute_object`` /
-    ``compute_array`` / ``compute_root`` apply; the engine dispatches by node
-    type. (Replaces the former ``NodeMetric``.)
+    ``compute_array`` apply; ``MetricRunner`` dispatches by node type and
+    ``TreeBuilder`` admits it onto a node only when the matching method exists.
+    (Replaces the former ``NodeMetric``.)
     """
 
 
@@ -96,17 +97,17 @@ def get_metric_class(name: str) -> type:
     return _METRIC_REGISTRY[name]
 
 
-def resolve_metric(spec: Any) -> Metric[Any]:
-    """Coerce a metric spec to a ``Metric`` instance.
+def resolve_metric(spec: Any) -> BaseMetric:
+    """Coerce a metric spec to a ``BaseMetric`` instance.
 
     Accepts an instance as-is or a registered name string (instantiated with no
     args). The single resolver shared by the engine, array alignment, and the
     match-criterion helper. ``None`` is *not* handled here — callers supply
-    their own default (``ExactMatch`` for criteria, type-aware for alignment).
+    their own default. Score-needing call sites narrow the result to ``Metric``.
     """
     if isinstance(spec, str):
         instance = get_metric_class(spec)()
-        assert isinstance(instance, Metric)
+        assert isinstance(instance, BaseMetric)
         return instance
-    assert isinstance(spec, Metric)
+    assert isinstance(spec, BaseMetric)
     return spec

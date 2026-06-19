@@ -22,7 +22,7 @@ class ObjectAccuracy(ObjectMetric):
         self.score_policy = score_policy
 
     def compute(self, node: ObjectNode) -> float:
-        verdicts = mc.matched_scalar_verdicts(node, self.score_policy)
+        verdicts = mc.matched_verdicts(node, self.score_policy)
         denom = len(verdicts) + len(node.missing)
         if denom == 0:
             return 1.0

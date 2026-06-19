@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from structured_eval.metrics._shared.match_criterion import field_verdict
+from structured_eval.metrics._shared.match_criterion import repr_score
 from structured_eval.metrics.base import RootMetric
 from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.scalar import ScalarNode
@@ -22,5 +22,5 @@ class OverallScore(RootMetric):
         for leaf in node.leaves():
             assert isinstance(leaf, ScalarNode)
             total_weight += leaf.weight
-            weighted += leaf.weight * field_verdict(leaf)[0]
+            weighted += leaf.weight * repr_score(leaf)
         return weighted / total_weight if total_weight else 1.0

@@ -42,16 +42,16 @@ class ArrayStrategy(StrEnum):
 class FieldConfig(BaseModel):
     """Configuration for a scalar (leaf) field.
 
-    In v3 comparison is a metric: ``metrics`` is the field's metric list
-    (``None`` → ``EvalConfig.default_metrics``). ``key_metric`` names which of
-    them is the match criterion the parent object/array uses (a metric instance
-    or its registered name; ``None`` → ``ExactMatch``); ``threshold`` is the bar
-    it must clear to count as a true positive.
+    In v3 comparison is a metric: ``metrics`` is the field's metric list, *added*
+    to the metrics cascading from ``EvalConfig.metrics``. ``key_metric`` names
+    which of them is the match criterion the parent object/array uses (a metric
+    instance or its registered name; ``None`` → ``ExactMatch``); ``threshold`` is
+    the bar it must clear to count as a true positive.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    metrics: list[Any] | None = None  # list[Metric]; None → EvalConfig.default_metrics
+    metrics: list[Any] | None = None  # list[Metric]; added to the cascading config.metrics
     key_metric: Any = None  # Metric | name str used as the parent's match criterion
     threshold: float | None = None
     weight: float = DEFAULT_FIELD_WEIGHT
@@ -122,10 +122,9 @@ class EvalConfig(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    metrics: list[Any] = Field(default_factory=list)  # list[Metric]
+    metrics: list[Any] = Field(default_factory=list)  # list[Metric]; cascade by type to all nodes
     fields: dict[str, AnyFieldConfig] = Field(default_factory=dict)
     root: ObjectFieldConfig | ArrayFieldConfig | None = None
-    default_metrics: list[Any] | None = None  # for fields without explicit metrics
     key_metric: Any = None  # Metric whose value becomes report.score
     null_policy: NullPolicy = NullPolicy.PENALIZE
     extra_keys: ExtraKeysPolicy = ExtraKeysPolicy.IGNORE

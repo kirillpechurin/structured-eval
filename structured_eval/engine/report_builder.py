@@ -28,11 +28,9 @@ class ReportBuilder:
 
         metrics = dict(root.metric_results)  # root carries document-level metrics
         config = context.config
-        score: float | None = None
-        score_label: str | None = None
-        if config.key_metric is not None:
-            score_label = config.key_metric.name
-            score = metrics.get(score_label)
+        # The headline number is the root node's representative (key) metric.
+        score_label = root.key_metric.name if root.key_metric is not None else None
+        score = metrics.get(score_label) if score_label is not None else None
 
         # Metrics expose extra detail as side channels; collect it uniformly.
         schema_errors: list[str] = []
@@ -56,16 +54,12 @@ class ReportBuilder:
         )
 
     def _field_score(self, node: EvalNode) -> FieldScore:
-        score: float | None = None
-        threshold: float | None = None
-        if isinstance(node, ScalarNode):
-            score, threshold = mc.field_verdict(node)  # key (match-criterion) value
         return FieldScore(
             path=node.path,
             node_type=self._NODE_TYPE.get(type(node), NodeType.SCALAR),
             actual=node.actual,
             expected=node.expected,
             metrics=dict(node.metric_results),
-            score=score,
-            threshold=threshold,
+            score=mc.repr_score(node),  # the node's representative (key-metric) value
+            threshold=node.threshold,
         )

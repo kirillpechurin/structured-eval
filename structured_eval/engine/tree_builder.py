@@ -3,14 +3,23 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment import make_aligner
-from structured_eval.metrics.base import Metric, resolve_metric
+from structured_eval.metrics.base import (
+    ArrayMetric,
+    BaseMetric,
+    FieldMetric,
+    GenericMetric,
+    Metric,
+    ObjectMetric,
+    RootMetric,
+    resolve_metric,
+)
 from structured_eval.metrics.exact import ExactMatch
+from structured_eval.metrics.mean_score import MeanScore
 from structured_eval.model.config import (
     ArrayFieldConfig,
     ArrayStrategy,
     EvalConfig,
     ExtraKeysPolicy,
-    FieldConfig,
     ObjectFieldConfig,
     weight_of,
 )
@@ -20,19 +29,32 @@ from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
 
+# Node class → the GenericMetric method that handles it.
+_GENERIC_METHOD: dict[type, str] = {
+    ScalarNode: "compute_scalar",
+    ObjectNode: "compute_object",
+    ArrayNode: "compute_array",
+    EvalNode: "compute_node",
+}
+
 
 class TreeBuilder:
-    """Phase 1: build the EvalNode tree and compute leaf (field) metrics.
+    """Phase 1: build the EvalNode tree and resolve each node's metric list.
 
-    ``build`` returns ``(root_node, warnings)``. Each node carries an
-    ``actual``-side ``path`` and, when arrays reorder elements, a diverging
-    ``expected_path`` so each side navigates its own index.
+    ``build`` returns ``(root_node, warnings)``. This phase is purely
+    structural: it shapes the tree, resolves which metrics apply to each node
+    (cascading the config's global metrics by type and adding any per-node
+    ``cfg.metrics``), and attaches them to ``node.metrics``. Computation happens
+    later, uniformly, in ``MetricRunner``. Each node carries an ``actual``-side
+    ``path`` and, when arrays reorder elements, a diverging ``expected_path`` so
+    each side navigates its own index.
     """
 
     def __init__(self, context: EvalContext):
         self.context = context
         self.config: EvalConfig = context.config
         self.warnings: list[str] = []
+        self._globals = self._resolve_globals()
 
     def build(self) -> tuple[EvalNode, list[str]]:
         root = self.node("$", "$", self.root_config())
@@ -43,23 +65,84 @@ class TreeBuilder:
     def root_config(self) -> Any:
         if self.config.root is not None:
             return self.config.root
-        if self.config.fields:
+        if self.config.fields:  # TODO: Remove fields, remain only root
             return ObjectFieldConfig(fields=dict(self.config.fields))
         return None
 
-    def _field_metrics(self, cfg: Any) -> list[Metric[Any]]:
-        if isinstance(cfg, FieldConfig) and cfg.metrics is not None:
-            specs = cfg.metrics
-        elif self.config.default_metrics is not None:
-            specs = self.config.default_metrics
-        else:
-            specs = [ExactMatch()]
-        return [resolve_metric(s) for s in specs]
+    @staticmethod
+    def _applies_to(metric: BaseMetric, node_cls: type, is_root: bool) -> bool:
+        """Whether ``metric`` should be resolved onto a node of ``node_cls``.
 
-    def _key_metric(self, cfg: Any) -> Metric[Any] | None:
-        if isinstance(cfg, FieldConfig) and cfg.key_metric is not None:
-            return resolve_metric(cfg.key_metric)
-        return None
+        Typed metrics match their node type (a ``RootMetric`` only at the root);
+        a ``GenericMetric`` matches iff it defines the node's ``compute_<kind>``.
+        """
+        if isinstance(metric, RootMetric):
+            return is_root
+        if isinstance(metric, FieldMetric):
+            return issubclass(node_cls, ScalarNode)
+        if isinstance(metric, ObjectMetric):
+            return issubclass(node_cls, ObjectNode)
+        if isinstance(metric, ArrayMetric):
+            return issubclass(node_cls, ArrayNode)
+        if isinstance(metric, GenericMetric):
+            method = _GENERIC_METHOD.get(node_cls)
+            return method is not None and hasattr(metric, method)
+        return False
+
+    def _resolve_globals(self) -> list[BaseMetric]:
+        """The cascade set: ``config.metrics``, deduped by identity.
+
+        ``key_metric`` is *not* cascaded here — it is each node's representative
+        metric, resolved per node by ``_key_metric`` (and computed last).
+        """
+        out: list[BaseMetric] = []
+        for spec in self.config.metrics:
+            metric = resolve_metric(spec)
+            if not any(metric is seen for seen in out):
+                out.append(metric)
+        return out
+
+    def _resolve_metrics(self, node_cls: type, cfg: Any, is_root: bool) -> list[BaseMetric]:
+        """Metrics for one node: applicable globals + this node's own (additive).
+
+        Globals cascade by type (a ``RootMetric`` only at the root); per-node
+        ``cfg.metrics`` are *added* (not a replacement), deduped by identity. A
+        scalar with no field metric falls back to ``ExactMatch`` so every leaf is
+        always compared (a different default is set by putting a field metric in
+        ``config.metrics``, which cascades to every scalar).
+        """
+        out: list[BaseMetric] = []
+
+        # TODO: Find a better way to simplify it
+        def add(metric: BaseMetric) -> None:
+            if self._applies_to(metric, node_cls, is_root) and not any(metric is s for s in out):
+                out.append(metric)
+
+        for metric in self._globals:
+            add(metric)
+        for spec in getattr(cfg, "metrics", None) or []:
+            add(resolve_metric(spec))
+
+        if issubclass(node_cls, ScalarNode) and not any(isinstance(m, FieldMetric) for m in out):
+            add(ExactMatch())  # TODO: This is default field metric should be defined in constants
+            # It also can be redefined by parent config using `default_field_metrics`
+        return out
+
+    def _key_metric(self, node_cls: type, cfg: Any, is_root: bool) -> Metric[Any]:
+        """The node's representative metric (computed last).
+
+        Prefers an explicit ``cfg.key_metric``, then a distributable
+        ``config.key_metric`` (each applied only where its type fits), else the
+        default ``MeanScore`` (the mean of the node's own metrics).
+        """
+        for spec in (getattr(cfg, "key_metric", None), self.config.key_metric):
+            if spec is None:
+                continue
+            metric = resolve_metric(spec)
+            if self._applies_to(metric, node_cls, is_root):
+                assert isinstance(metric, Metric)  # a key metric has compute()/score()
+                return metric
+        return MeanScore()
 
     # ── tree construction ────────────────────────────────────────────────
 
@@ -109,11 +192,15 @@ class TreeBuilder:
         for key in missing:
             self.warnings.append(f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual")
 
+        is_root = apath == "$"
         return ObjectNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
+            metrics=self._resolve_metrics(ObjectNode, cfg, is_root),
+            key_metric=self._key_metric(ObjectNode, cfg, is_root),
+            threshold=self._threshold(cfg),
             matched=matched,
             missing=missing,
             spurious=spurious,
@@ -134,33 +221,32 @@ class TreeBuilder:
             self.node(f"{apath}[{aidx}]", f"{epath}[{eidx}]", item_cfg)
             for eidx, aidx in result.matched
         ]
+        is_root = apath == "$"
         return ArrayNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
+            metrics=self._resolve_metrics(ArrayNode, cfg, is_root),
+            key_metric=self._key_metric(ArrayNode, cfg, is_root),
+            threshold=self._threshold(cfg),
             match_result=result,
             items=items,
         )
 
     def _scalar(self, apath: str, epath: str, cfg: Any) -> ScalarNode:
-        threshold = (
-            cfg.threshold if isinstance(cfg, FieldConfig) and cfg.threshold is not None else 1.0
-        )
-        node = ScalarNode(
+        is_root = apath == "$"
+        return ScalarNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
-            key_metric=self._key_metric(cfg),
-            threshold=threshold,
+            metrics=self._resolve_metrics(ScalarNode, cfg, is_root),
+            key_metric=self._key_metric(ScalarNode, cfg, is_root),
+            threshold=self._threshold(cfg),
         )
-        for metric in self._field_metrics(cfg):
-            result = metric.compute(node)
-            if result is None:
-                continue
-            if isinstance(result, dict):
-                node.metric_results.update(result)
-            else:
-                node.metric_results[metric.name] = result
-        return node
+
+    @staticmethod
+    def _threshold(cfg: Any) -> float:
+        threshold = getattr(cfg, "threshold", None)
+        return float(threshold) if threshold is not None else 1.0

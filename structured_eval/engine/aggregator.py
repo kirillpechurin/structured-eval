@@ -8,6 +8,7 @@ from structured_eval.model.result import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,
+    NodeType,
 )
 
 
@@ -44,7 +45,10 @@ class BatchAggregator:
         by_path: dict[str, list[float]] = {}
         for r in ok:
             for path, fs in r.field_scores.items():
-                if fs.score is None:
+                # Field-level stability tracks leaf fields; object/array nodes
+                # now carry an aggregate representative score that would be noise.
+                if fs.score is None or fs.node_type != NodeType.SCALAR:
+                    # TODO: Why only leaves?
                     continue
                 by_path.setdefault(path, []).append(fs.score)
 

@@ -25,9 +25,9 @@ class ByKeyAligner(ArrayAligner):
         threshold: float = 1.0,
     ):
         self.key = key
-        self.metric: Metric[Any] = (
-            ExactMatch() if key_metric is None else resolve_metric(key_metric)
-        )
+        metric = ExactMatch() if key_metric is None else resolve_metric(key_metric)
+        assert isinstance(metric, Metric)  # a key criterion compares values via score()
+        self.metric: Metric[Any] = metric
         self.threshold = threshold
 
     def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:

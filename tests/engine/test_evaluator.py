@@ -137,6 +137,36 @@ class TestMultiMetric:
         r = evaluate_one({"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg)
         assert 0.0 < r.field_scores["name"].metrics["token_f1"] < 1.0
 
+    def test_per_node_metric_at_depth(self, evaluate_one):
+        # ObjectFieldConfig.metrics now applies to a nested object (recursive,
+        # each node owns its metrics) — not only the global/root list.
+        from structured_eval import ObjectFieldConfig
+
+        cfg = EvalConfig(fields={"inner": ObjectFieldConfig(metrics=[ObjectF1()])})
+        r = evaluate_one({"inner": {"a": 1, "b": 2}}, {"inner": {"a": 1, "b": 99}}, cfg)
+        assert r.field_scores["inner"].metrics["object_f1"] == 0.5
+        # the nested metric is local: it is not forced onto the root object
+        assert "object_f1" not in r.field_scores["$"].metrics
+
+    def test_nested_representative_bubbles_into_parent(self, evaluate_one):
+        # A nested object's representative (key_metric = MeanScore over its
+        # ObjectF1) is what the parent's ObjectF1 aggregates — object-in-object
+        # is counted exactly like a scalar, not silently dropped.
+        cfg = EvalConfig(metrics=[ObjectF1()])
+        r = evaluate_one({"u": {"a": 1, "b": 9}, "x": 1}, {"u": {"a": 1, "b": 2}, "x": 1}, cfg)
+        assert r.field_scores["u"].score == 0.5  # nested object's representative
+        # root: x is a TP (1.0), u is not (0.5 < 1.0) → f1 = 0.5
+        assert r.metrics["object_f1"] == 0.5
+
+    def test_default_key_metric_is_mean_of_node_metrics(self, evaluate_one):
+        # report.score defaults to MeanScore: the mean of the root's own metrics.
+        from structured_eval import ObjectAccuracy
+
+        cfg = EvalConfig(metrics=[ObjectF1(), ObjectAccuracy()])
+        r = evaluate_one({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
+        assert r.score_label == "score"
+        assert r.score == pytest.approx((r.metrics["object_f1"] + r.metrics["object_accuracy"]) / 2)
+
 
 class TestNested:
     def test_nested_object_and_array(self, evaluate_one):

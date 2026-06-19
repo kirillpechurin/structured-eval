@@ -71,7 +71,7 @@ def test_accuracy_missing_counts_zero(tree_factory):
 def test_soft_mode_fractional(tree_factory):
     from structured_eval import TokenF1
 
-    cfg = EvalConfig(default_metrics=[TokenF1()])
+    cfg = EvalConfig(metrics=[TokenF1()])  # field metric cascades to every scalar
     root = tree_factory({"name": "the quick brown fox"}, {"name": "the quick fox"}, cfg)
     soft = ObjectF1(score_policy={"name": "token_f1"}, mode="soft").compute(root)
     assert 0.0 < soft < 1.0

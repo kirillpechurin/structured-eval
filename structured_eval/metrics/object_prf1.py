@@ -29,7 +29,7 @@ class ObjectPRF1(ObjectMetric):
         self.mode = mode
 
     def compute(self, node: ObjectNode) -> dict[str, float]:
-        verdicts = mc.matched_scalar_verdicts(node, self.score_policy, self.threshold)
+        verdicts = mc.matched_verdicts(node, self.score_policy, self.threshold)
         tp, predicted, expected = stats.prf_counts(
             verdicts, len(node.missing), len(node.spurious), self.mode
         )

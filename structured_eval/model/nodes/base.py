@@ -22,6 +22,11 @@ class EvalNode(BaseModel):
     only for array items aligned out of order (``expected[1]`` ↔ ``actual[0]``),
     so each side navigates its own index. ``metric_results`` accumulates each
     requested metric's value at this node (filled by the engine in phase 2).
+
+    ``key_metric`` is the node's *representative* metric — the single score that
+    bubbles up to a parent's aggregation (and, at the root, to ``report.score``).
+    It is computed last (its logic may depend on the node's other metrics) and
+    defaults to ``MeanScore`` (the arithmetic mean of the node's own metrics).
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -30,6 +35,9 @@ class EvalNode(BaseModel):
     context: EvalContext
     expected_path: str | None = None
     weight: float = 1.0  # relative importance for weighted aggregation (OverallScore)
+    metrics: list[Any] = Field(default_factory=list)  # list[BaseMetric] resolved for this node
+    key_metric: Any = None  # BaseMetric: this node's representative score (parents read it)
+    threshold: float = 1.0  # bar the representative score must clear to count as a TP
     metric_results: dict[str, float] = Field(default_factory=dict)
 
     @property
