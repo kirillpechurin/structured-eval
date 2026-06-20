@@ -16,9 +16,10 @@ jsonschema = ["jsonschema>=4.26.0"]
 rules = ["jsonpath-ng>=1.6"]
 diff = ["deepdiff>=9.1.0"]
 report = ["rich>=13.0"]
+align = ["scipy>=1.12"]
 deepeval = ["deepeval>=1.0"]
 langsmith = ["langsmith>=0.1"]
-all = ["pyyaml>=6.0", "rapidfuzz>=3.0", "jsonschema>=4.26.0", "jsonpath-ng>=1.6", "deepdiff>=9.1.0", "rich>=13.0"]
+all = ["pyyaml>=6.0", "rapidfuzz>=3.0", "jsonschema>=4.26.0", "jsonpath-ng>=1.6", "deepdiff>=9.1.0", "rich>=13.0", "scipy>=1.12"]
 
 [dependency-groups]
 dev = [
@@ -33,6 +34,8 @@ dev = [
     "types-jsonschema>=4.26.0.20260518",
     "jsonpath-ng>=1.6",
     "deepdiff>=9.1.0",
+    "scipy>=1.12",
+    "scipy-stubs>=1.12",
 ]
 
 [tool.mypy]
