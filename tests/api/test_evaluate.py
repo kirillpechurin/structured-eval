@@ -11,6 +11,7 @@ from structured_eval import (
     ObjectF1,
     Sample,
     evaluate,
+    evaluate_batch,
 )
 
 pytestmark = pytest.mark.engine
@@ -34,9 +35,15 @@ def test_json_string_input():
     assert r.metrics["object_f1"].representative() == 1.0
 
 
-def test_list_of_samples_is_batch():
-    r = evaluate([Sample(actual={"a": 1}, expected={"a": 1})])
+def test_evaluate_batch():
+    r = evaluate_batch([Sample(actual={"a": 1}, expected={"a": 1})])
     assert isinstance(r, BatchEvalReport)
+
+
+def test_evaluate_rejects_list_of_samples():
+    # a batch must go through evaluate_batch, not evaluate
+    with pytest.raises(TypeError, match="evaluate_batch"):
+        evaluate([Sample(actual={"a": 1}, expected={"a": 1})])
 
 
 def test_bare_list_is_single_document():

@@ -29,10 +29,10 @@ class TestConsole:
         assert "PARSE ERROR" in out
 
     def test_batch_renders(self):
-        from structured_eval import Sample
+        from structured_eval import Sample, evaluate_batch
 
-        report = evaluate(
-            [Sample(actual={"a": 1}, expected={"a": 1})], config=EvalConfig(key_metric=ObjectF1())
+        report = evaluate_batch(
+            [Sample(actual={"a": 1}, expected={"a": 1})], EvalConfig(key_metric=ObjectF1())
         )
         assert ConsoleRenderer().render(report)
 

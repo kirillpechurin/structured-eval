@@ -11,10 +11,10 @@ Layered architecture (dependencies point downward):
                    run metrics → build report) and batch aggregation;
 - ``reporting``  — console rendering; ``integrations`` — host-framework adapters.
 
-``evaluate`` / ``evaluate_consistency`` are thin wrappers over ``engine.Evaluator``.
+``evaluate`` / ``evaluate_batch`` / ``evaluate_consistency`` are thin wrappers over ``engine.Evaluator``.
 """
 
-from structured_eval.api import evaluate, evaluate_consistency
+from structured_eval.api import evaluate, evaluate_batch, evaluate_consistency
 from structured_eval.metrics import (
     ArrayAccuracy,
     ArrayCardinality,
@@ -90,6 +90,7 @@ from structured_eval.utils.structured_diff import (
 __all__ = [
     # entrypoint
     "evaluate",
+    "evaluate_batch",
     "evaluate_consistency",
     # core
     "Sample",

@@ -1,4 +1,4 @@
-"""Tests for batch aggregation via evaluate(list[Sample]) → BatchEvalReport."""
+"""Tests for batch aggregation via evaluate_batch(list[Sample]) → BatchEvalReport."""
 
 from __future__ import annotations
 
@@ -9,14 +9,14 @@ from structured_eval import (
     EvalConfig,
     ObjectF1,
     Sample,
-    evaluate,
+    evaluate_batch,
 )
 
 pytestmark = pytest.mark.engine
 
 
 def _batch(samples, cfg=None) -> BatchEvalReport:
-    report = evaluate(samples, config=cfg)
+    report = evaluate_batch(samples, cfg)
     assert isinstance(report, BatchEvalReport)
     return report
 
@@ -70,10 +70,9 @@ def test_field_breakdown_across_batch():
     assert bd["a"]["fail_rate"] == pytest.approx(0.5)
 
 
-def test_positional_config_tolerated():
-    # evaluate(samples, cfg) positionally — cfg lands in `expected` slot
+def test_positional_config():
     samples = [Sample(actual={"a": 1}, expected={"a": 1})]
-    r = evaluate(samples, EvalConfig(metrics=[ObjectF1()]))
+    r = evaluate_batch(samples, EvalConfig(metrics=[ObjectF1()]))
     assert isinstance(r, BatchEvalReport)
     assert r.metrics["object_f1"] == 1.0
 

@@ -19,30 +19,40 @@ def evaluate(
     config: EvalConfig | None = None,
     *,
     source: str | None = None,
-) -> EvalReport | BatchEvalReport:
-    """Evaluate one document, or a batch, against expected references.
+) -> EvalReport:
+    """Evaluate one document against an expected reference → ``EvalReport``.
 
-    Three call shapes:
+    Two call shapes:
     - ``evaluate(actual, expected, config=...)`` — shorthand for one document;
-    - ``evaluate(sample, config=...)`` — one ``Sample``;
-    - ``evaluate([Sample(...), ...], config=...)`` — a batch → ``BatchEvalReport``.
+    - ``evaluate(sample, config=...)`` — one ``Sample``.
 
-    A bare ``list`` passed as ``actual`` is a single document with an array root,
-    not a batch; wrap documents in ``Sample`` to evaluate a batch. Thin wrapper
-    over ``Evaluator``.
+    A bare ``list`` is a single document with an array root, not a batch. To
+    evaluate several samples use :func:`evaluate_batch`. Thin wrapper over
+    ``Evaluator``.
     """
     if _is_batch(actual):
-        # a batch has no `expected`; tolerate evaluate(samples, cfg) positionally
-        if config is None and isinstance(expected, EvalConfig):
-            config = expected
-        return Evaluator(config).evaluate_batch(actual)
-
+        raise TypeError(
+            "evaluate() takes a single document; pass a list of Samples to evaluate_batch()"
+        )
     sample = (
         actual
         if isinstance(actual, Sample)
         else Sample(actual=actual, expected=expected, source=source)
     )
     return Evaluator(config).evaluate_one(sample)
+
+
+def evaluate_batch(
+    samples: list[Sample],
+    config: EvalConfig | None = None,
+) -> BatchEvalReport:
+    """Evaluate a list of ``Sample`` s → ``BatchEvalReport``.
+
+    Each sample carries its own ``actual`` / ``expected`` / ``source``; the
+    aggregate report exposes per-sample reports plus batch-level metrics. Thin
+    wrapper over ``Evaluator``.
+    """
+    return Evaluator(config).evaluate_batch(samples)
 
 
 def evaluate_consistency(
