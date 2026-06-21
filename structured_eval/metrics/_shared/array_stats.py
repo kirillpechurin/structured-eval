@@ -7,12 +7,11 @@ how object fields are graded. ``missed`` items are FN, ``spurious`` items FP.
 
 from __future__ import annotations
 
-from structured_eval.metrics._shared.match_criterion import repr_score
 from structured_eval.model.nodes.array_node import ArrayNode
 
 
 def verdicts(node: ArrayNode, threshold: float) -> list[tuple[float, float]]:
-    return [(repr_score(item), threshold) for item in node.items]
+    return [(item.representative, threshold) for item in node.items]
 
 
 def missing_spurious(node: ArrayNode) -> tuple[int, int]:

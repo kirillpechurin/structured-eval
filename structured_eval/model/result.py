@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from structured_eval.model.metric_result import MetricCollection, MetricResult
 from structured_eval.model.nodes.array_node import ArrayMatchResult
 from structured_eval.reporting.console import render
 
@@ -48,8 +49,10 @@ class FieldScore(BaseModel):
     """Evaluation result for one node of the tree (flat, dot-notation path).
 
     ``metrics`` holds only the metrics that were requested and applied to this
-    node (e.g. ``{"exact_match": 0.0, "token_f1": 0.62}``). ``score`` is the
-    value of the key metric at this path, ``threshold`` the bar applied to it.
+    node (e.g. ``{"exact_match": 0.0, "token_f1": 0.62}``). Each value is a
+    ``MetricResult`` — a ``float`` that also carries ``.extra`` (structured
+    detail the metric chose to surface). ``score`` is the value of the key metric
+    at this path, ``threshold`` the bar applied to it.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -58,9 +61,9 @@ class FieldScore(BaseModel):
     node_type: NodeType
     actual: Any = None
     expected: Any = None
-    metrics: dict[str, float] = Field(default_factory=dict)
-    score: float | None = None
-    threshold: float | None = None
+    metrics: dict[str, MetricResult] = Field(default_factory=dict)
+    score: float | None = None  # TODO: Should be required by default key metric
+    threshold: float | None = None  # TODO: Reconsider default arguments - all possible should be defined in model as defaults...
 
 
 # ── Regression diff ─────────────────────────────────────────────────────────
@@ -83,23 +86,22 @@ class RegressionDiff(BaseModel):
 class EvalReport(BaseModel):
     """Full evaluation result for a single document.
 
-    ``metrics`` contains only the requested metrics. ``field_scores`` is a flat
-    map of every tree node keyed by its path. On a parse error, ``parse_error``
-    is True and the metrics are left empty.
+    ``metrics`` maps each metric name to a ``MetricCollection`` — its value at
+    every node that produced it, plus that metric's structured detail (schema
+    errors, hallucinated paths, per-rule outcomes, …) on each value's ``.extra``.
+    ``field_scores`` is a flat map of every tree node keyed by its path. On a
+    parse error, ``parse_error`` is True and the metrics are left empty.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     score: float | None = None
     score_label: str | None = None
-    metrics: dict[str, float] = Field(default_factory=dict)
+    metrics: dict[str, MetricCollection] = Field(default_factory=dict)
     field_scores: dict[str, FieldScore] = Field(default_factory=dict)
     array_matches: dict[str, ArrayMatchResult] = Field(default_factory=dict)
-    rule_results: list[RuleResult] = Field(default_factory=list)
     parse_error: bool = False
     parse_error_message: str | None = None
-    schema_errors: list[str] = Field(default_factory=list)
-    hallucinated_fields: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
     # ── Queries ───────────────────────────────────────────────────────────
@@ -111,6 +113,7 @@ class EvalReport(BaseModel):
         ``threshold``, else a perfect-match bar of 1.0. Fields without a score
         (no key metric applied) are skipped.
         """
+        # TODO: Should return dict failed fields
         failed: list[FieldScore] = []
         for fs in self.field_scores.values():
             if fs.score is None:
@@ -157,7 +160,7 @@ class EvalReport(BaseModel):
         """
         names = metrics if metrics is not None else sorted(self.metrics)
         deltas = {
-            name: self.metrics[name] - other.metrics[name]
+            name: self.metrics[name].representative() - other.metrics[name].representative()
             for name in names
             if name in self.metrics and name in other.metrics
         }
@@ -211,19 +214,27 @@ class EvalReport(BaseModel):
             )
 
     def assert_metric(self, metric_name: str, min_value: float) -> None:
-        """Fail if metric ``metric_name`` is missing or below ``min_value``."""
+        """Fail if metric ``metric_name`` is missing or below ``min_value``.
+
+        Compares the metric's document-level value (the root, else its mean
+        across the tree).
+        """
         if metric_name not in self.metrics:
             available = ", ".join(sorted(self.metrics)) or "none"
             raise AssertionError(f"metric {metric_name!r} not computed (available: {available})")
-        value = self.metrics[metric_name]
+        value = self.metrics[metric_name].representative()
         if value < min_value:
             raise AssertionError(f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}")
 
     def assert_schema_valid(self) -> None:
         """Fail if schema validation produced errors."""
-        if self.metrics.get("schema_validity") == 0.0 or self.schema_errors:
-            errors = "; ".join(self.schema_errors) or "schema validation failed"
-            raise AssertionError(f"schema invalid: {errors}")
+        coll = self.metrics.get("schema_validity")
+        if coll is None:
+            return
+        errors = coll.extra_values("schema_errors")
+        if coll.representative() == 0.0 or errors:
+            message = "; ".join(errors) or "schema validation failed"
+            raise AssertionError(f"schema invalid: {message}")
 
 
 # ── Batch / consistency reports ───────────────────────────────────────────────

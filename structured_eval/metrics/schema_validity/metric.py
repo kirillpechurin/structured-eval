@@ -11,21 +11,20 @@ class SchemaValidity(RootMetric):
     """Does the actual document validate against ``schema``? 1.0 / 0.0.
 
     ``schema`` is a Pydantic model class or a JSON Schema dict. Validation
-    errors are collected in ``self.schema_errors`` and surfaced by the engine
-    into ``report.schema_errors``.
+    errors are returned as the result's ``extra["schema_errors"]`` — read via
+    ``report.metrics["schema_validity"].extra_values("schema_errors")``.
     """
 
     name = "schema_validity"
 
     def __init__(self, schema: Any):
         self.validator = SchemaValidator(schema)
-        self.schema_errors: list[str] = []
 
-    def compute(self, node: EvalNode) -> float:
+    def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:
         result = self.validator.validate(node.actual)
-        self.schema_errors = (
+        errors = (
             [f"type: {e}" for e in result.type_errors]
             + [f"missing: {m}" for m in result.missing_required]
             + [f"extra: {x}" for x in result.extra_fields]
         )
-        return 1.0 if result.valid else 0.0
+        return (1.0 if result.valid else 0.0), {"schema_errors": errors}

@@ -86,22 +86,25 @@ def test_coverage_no_expected_vacuous(tree_factory):
 def test_schema_valid_pydantic(tree_factory):
     metric = SchemaValidity(Invoice)
     root = tree_factory({"id": "1", "total": 100.0, "status": "paid"}, None)
-    assert metric.compute(root) == 1.0
-    assert metric.schema_errors == []
+    score, extra = metric.compute(root)
+    assert score == 1.0
+    assert extra["schema_errors"] == []
 
 
 def test_schema_invalid_type(tree_factory):
     metric = SchemaValidity(Invoice)
     root = tree_factory({"id": "1", "total": "not-a-float", "status": "paid"}, None)
-    assert metric.compute(root) == 0.0
-    assert any("total" in e for e in metric.schema_errors)
+    score, extra = metric.compute(root)
+    assert score == 0.0
+    assert any("total" in e for e in extra["schema_errors"])
 
 
 def test_schema_invalid_missing(tree_factory):
     metric = SchemaValidity(Invoice)
     root = tree_factory({"id": "1"}, None)
-    assert metric.compute(root) == 0.0
-    assert any("missing" in e for e in metric.schema_errors)
+    score, extra = metric.compute(root)
+    assert score == 0.0
+    assert any("missing" in e for e in extra["schema_errors"])
 
 
 def test_schema_jsonschema_dict(tree_factory):
@@ -111,8 +114,8 @@ def test_schema_jsonschema_dict(tree_factory):
         "required": ["id", "n"],
     }
     metric = SchemaValidity(schema)
-    assert metric.compute(tree_factory({"id": "x", "n": 1}, None)) == 1.0
-    assert metric.compute(tree_factory({"id": "x", "n": "bad"}, None)) == 0.0
+    assert metric.compute(tree_factory({"id": "x", "n": 1}, None))[0] == 1.0
+    assert metric.compute(tree_factory({"id": "x", "n": "bad"}, None))[0] == 0.0
 
 
 def test_schema_bad_type_raises():

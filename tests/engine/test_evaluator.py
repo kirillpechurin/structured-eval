@@ -38,7 +38,7 @@ class TestBasicEval:
         actual, expected = invoice_pair
         r = evaluate_one(actual, expected, EvalConfig(metrics=[ObjectF1()]))
         # total differs (99 vs 100) → not perfect
-        assert r.metrics["object_f1"] == pytest.approx(0.75)
+        assert r.metrics["object_f1"].representative() == pytest.approx(0.75)
 
     def test_field_scores_populated(self, evaluate_one, invoice_pair):
         actual, expected = invoice_pair
@@ -51,7 +51,7 @@ class TestBasicEval:
         cfg = EvalConfig(key_metric=ObjectF1())
         r = evaluate_one(actual, expected, cfg)
         assert r.score_label == "object_f1"
-        assert r.score == r.metrics["object_f1"]
+        assert r.score == r.metrics["object_f1"].representative()
 
 
 class TestParseErrors:
@@ -64,20 +64,20 @@ class TestParseErrors:
     def test_valid_json_string_parsed(self, evaluate_one):
         r = evaluate_one('{"a": 1}', {"a": 1}, EvalConfig(metrics=[ObjectF1()]))
         assert not r.parse_error
-        assert r.metrics["object_f1"] == 1.0
+        assert r.metrics["object_f1"].representative() == 1.0
 
     def test_yaml_fallback(self, evaluate_one):
         r = evaluate_one("a: 1\nb: 2", {"a": 1, "b": 2}, EvalConfig(metrics=[ObjectF1()]))
         assert not r.parse_error
-        assert r.metrics["object_f1"] == 1.0
+        assert r.metrics["object_f1"].representative() == 1.0
 
 
 class TestSideChannels:
     def test_schema_errors_surface(self, evaluate_one):
         cfg = EvalConfig(metrics=[SchemaValidity(Invoice)])
         r = evaluate_one({"id": "1"}, None, cfg)
-        assert r.metrics["schema_validity"] == 0.0
-        assert r.schema_errors
+        assert r.metrics["schema_validity"].representative() == 0.0
+        assert r.metrics["schema_validity"].extra_values("schema_errors")
 
     def test_rule_results_surface(self, evaluate_one):
         cfg = EvalConfig(
@@ -92,19 +92,19 @@ class TestSideChannels:
         )
         doc = {"total": 110.0, "subtotal": 100.0, "tax": 10.0, "status": "paid"}
         r = evaluate_one(doc, None, cfg)
-        assert r.metrics["rule_pass_rate"] == 1.0
-        assert len(r.rule_results) == 2
+        assert r.metrics["rule_pass_rate"].representative() == 1.0
+        assert len(r.metrics["rule_pass_rate"].extra_values("rule_results")) == 2
 
     def test_hallucinations_surface(self, evaluate_one, invoice_source):
         cfg = EvalConfig(metrics=[Faithfulness()])
         r = evaluate_one({"vendor": "Globex"}, None, cfg, source=invoice_source)
-        assert r.metrics["faithfulness"] == 0.0
-        assert r.hallucinated_fields == ["vendor"]
+        assert r.metrics["faithfulness"].representative() == 0.0
+        assert r.metrics["faithfulness"].extra_values("hallucinated_fields") == ["vendor"]
 
-    def test_faithfulness_omitted_without_source(self, evaluate_one):
+    def test_faithfulness_requires_source(self, evaluate_one):
         cfg = EvalConfig(metrics=[Faithfulness()])
-        r = evaluate_one({"vendor": "Globex"}, None, cfg)
-        assert "faithfulness" not in r.metrics
+        with pytest.raises(ValueError, match="source"):
+            evaluate_one({"vendor": "Globex"}, None, cfg)
 
 
 class TestWarnings:
@@ -119,7 +119,7 @@ class TestWarnings:
     def test_extra_key_penalized(self, evaluate_one):
         cfg = EvalConfig(metrics=[ObjectF1()], extra_keys=ExtraKeysPolicy.PENALIZE)
         r = evaluate_one({"a": 1, "extra": 2}, {"a": 1}, cfg)
-        assert r.metrics["object_f1"] < 1.0
+        assert r.metrics["object_f1"].representative() < 1.0
 
 
 class TestMultiMetric:
@@ -156,7 +156,7 @@ class TestMultiMetric:
         r = evaluate_one({"u": {"a": 1, "b": 9}, "x": 1}, {"u": {"a": 1, "b": 2}, "x": 1}, cfg)
         assert r.field_scores["u"].score == 0.5  # nested object's representative
         # root: x is a TP (1.0), u is not (0.5 < 1.0) → f1 = 0.5
-        assert r.metrics["object_f1"] == 0.5
+        assert r.metrics["object_f1"].representative() == 0.5
 
     def test_default_key_metric_is_mean_of_node_metrics(self, evaluate_one):
         # report.score defaults to MeanScore: the mean of the root's own metrics.
@@ -164,8 +164,11 @@ class TestMultiMetric:
 
         cfg = EvalConfig(metrics=[ObjectF1(), ObjectAccuracy()])
         r = evaluate_one({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
-        assert r.score_label == "score"
-        assert r.score == pytest.approx((r.metrics["object_f1"] + r.metrics["object_accuracy"]) / 2)
+        assert r.score_label == "mean_score"
+        assert r.score == pytest.approx(
+            (r.metrics["object_f1"].representative() + r.metrics["object_accuracy"].representative())
+            / 2
+        )
 
 
 class TestNested:

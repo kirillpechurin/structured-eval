@@ -3,10 +3,22 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
+from structured_eval.model.metric_result import MetricResult
 from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
+
+# What a metric's ``compute`` may return; ``MetricRunner._apply`` normalizes any
+# of these to a ``MetricResult``. A bare value / dict of sub-scores, optionally
+# paired with structured ``extra`` via a tuple, or a ready ``MetricResult``.
+MetricOutput = (
+    float
+    | dict[str, float]
+    | tuple[float | dict[str, float], dict[str, Any]]
+    | MetricResult
+    | None
+)
 
 # Name → metric class. Populated automatically as BaseMetric subclasses are
 # declared; used by EvalConfig.from_yaml() to resolve string names (Stage 10).
@@ -43,7 +55,7 @@ class Metric[NodeT: EvalNode](BaseMetric):
     type a subtype operates on (``ScalarNode`` for fields, ``ObjectNode`` …).
     """
 
-    def compute(self, node: NodeT) -> float | dict[str, float] | None:
+    def compute(self, node: NodeT) -> MetricOutput:
         return self.score(node.actual, node.expected)
 
     def score(self, actual: Any, expected: Any) -> float | dict[str, float]:
@@ -63,21 +75,21 @@ class ObjectMetric(Metric[ObjectNode]):
     """Applies to each ObjectNode (root and nested)."""
 
     @abstractmethod
-    def compute(self, node: ObjectNode) -> float | dict[str, float] | None: ...
+    def compute(self, node: ObjectNode) -> MetricOutput: ...
 
 
 class ArrayMetric(Metric[ArrayNode]):
     """Applies to each ArrayNode."""
 
     @abstractmethod
-    def compute(self, node: ArrayNode) -> float | dict[str, float] | None: ...
+    def compute(self, node: ArrayNode) -> MetricOutput: ...
 
 
 class RootMetric(Metric[EvalNode]):
     """Applies only to the root node (path == "$"); receives any EvalNode."""
 
     @abstractmethod
-    def compute(self, node: EvalNode) -> float | dict[str, float] | None: ...
+    def compute(self, node: EvalNode) -> MetricOutput: ...
 
 
 class GenericMetric(BaseMetric):

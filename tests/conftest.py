@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 from structured_eval import EvalConfig, EvalReport, evaluate
+from structured_eval.engine.metric_runner import MetricRunner
 from structured_eval.engine.tree_builder import TreeBuilder
 from structured_eval.model.context import EvalContext
 from structured_eval.model.nodes.base import EvalNode
@@ -59,9 +60,15 @@ def build_tree(
     *,
     source: str | None = None,
 ) -> EvalNode:
-    """Build the EvalNode tree (with leaf metrics) — for object/array metric tests."""
+    """Build and compute the EvalNode tree — for object/array/root metric tests.
+
+    Runs ``MetricRunner`` so every node's ``metric_results`` (and hence each
+    child's ``representative``) is populated, exactly as in the real engine; an
+    aggregating metric called on the returned tree can read its children.
+    """
     ctx = make_context(actual, expected, config, source=source)
     root, _warnings = TreeBuilder(ctx).build()
+    MetricRunner().run(root)
     return root
 
 

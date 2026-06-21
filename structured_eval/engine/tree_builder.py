@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment import make_aligner
+from structured_eval.metrics.array_accuracy import ArrayAccuracy
 from structured_eval.metrics.base import (
     ArrayMetric,
     BaseMetric,
@@ -15,6 +16,7 @@ from structured_eval.metrics.base import (
 )
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.mean_score import MeanScore
+from structured_eval.metrics.object_accuracy import ObjectAccuracy
 from structured_eval.model.config import (
     ArrayFieldConfig,
     ArrayStrategy,
@@ -36,6 +38,12 @@ _GENERIC_METHOD: dict[type, str] = {
     ArrayNode: "compute_array",
     EvalNode: "compute_node",
 }
+
+# Metric a node falls back to when the user configured none of its type, so every
+# node always carries at least one metric for its key_metric (MeanScore) to mean.
+DEFAULT_SCALAR_METRIC = ExactMatch
+DEFAULT_OBJECT_METRIC = ObjectAccuracy
+DEFAULT_ARRAY_METRIC = ArrayAccuracy
 
 
 class TreeBuilder:
@@ -106,14 +114,16 @@ class TreeBuilder:
         """Metrics for one node: applicable globals + this node's own (additive).
 
         Globals cascade by type (a ``RootMetric`` only at the root); per-node
-        ``cfg.metrics`` are *added* (not a replacement), deduped by identity. A
-        scalar with no field metric falls back to ``ExactMatch`` so every leaf is
-        always compared (a different default is set by putting a field metric in
-        ``config.metrics``, which cascades to every scalar).
+        ``cfg.metrics`` are *added* (not a replacement), deduped by identity.
+        ``out`` only ever holds metrics applicable to this node (``add`` filters
+        by ``_applies_to``); if it ends up empty the node gets the default for
+        its type so every node always carries at least one metric for its
+        ``key_metric`` to summarise (a different default is set by putting a
+        metric of that type in ``config.metrics``, which cascades).
         """
         out: list[BaseMetric] = []
 
-        # TODO: Find a better way to simplify it
+        # TODO: Find a better way to simplify it. Это слишком сложно - функция в методе
         def add(metric: BaseMetric) -> None:
             if self._applies_to(metric, node_cls, is_root) and not any(metric is s for s in out):
                 out.append(metric)
@@ -123,22 +133,37 @@ class TreeBuilder:
         for spec in getattr(cfg, "metrics", None) or []:
             add(resolve_metric(spec))
 
-        if issubclass(node_cls, ScalarNode) and not any(isinstance(m, FieldMetric) for m in out):
-            add(ExactMatch())  # TODO: This is default field metric should be defined in constants
-            # It also can be redefined by parent config using `default_field_metrics`
+        if not out:
+            if issubclass(node_cls, ScalarNode):
+                add(DEFAULT_SCALAR_METRIC())
+            elif issubclass(node_cls, ObjectNode):
+                add(DEFAULT_OBJECT_METRIC())
+            elif issubclass(node_cls, ArrayNode):
+                add(DEFAULT_ARRAY_METRIC())
         return out
 
-    def _key_metric(self, node_cls: type, cfg: Any, is_root: bool) -> Metric[Any]:
+    def _key_metric(
+        self, node_cls: type, cfg: Any, is_root: bool, metrics: list[BaseMetric]
+    ) -> Metric[Any]:
         """The node's representative metric (computed last).
 
         Prefers an explicit ``cfg.key_metric``, then a distributable
         ``config.key_metric`` (each applied only where its type fits), else the
         default ``MeanScore`` (the mean of the node's own metrics).
+
+        A *name string* is resolved against the node's already-resolved
+        ``metrics`` first: an equally-named metric is **reused as-is** (same
+        instance, same params, no duplicate computation). It is instantiated
+        fresh only when the name is not already on the node.
         """
         for spec in (getattr(cfg, "key_metric", None), self.config.key_metric):
             if spec is None:
                 continue
-            metric = resolve_metric(spec)
+            # Reuse an equally-named metric already on the node; else resolve fresh.
+            metric = next(
+                (m for m in metrics if isinstance(spec, str) and m.name == spec),
+                None,
+            ) or resolve_metric(spec)
             if self._applies_to(metric, node_cls, is_root):
                 assert isinstance(metric, Metric)  # a key metric has compute()/score()
                 return metric
@@ -176,6 +201,7 @@ class TreeBuilder:
         else:
             spurious = []
             for key in extra:
+                # TODO: Warnings should be structurized by type, not string. We know types of warnings
                 self.warnings.append(
                     f"[EXTRA_KEY] {self._child(apath, key)!r} not in expected "
                     "(ExtraKeysPolicy.IGNORE)"
@@ -193,13 +219,14 @@ class TreeBuilder:
             self.warnings.append(f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual")
 
         is_root = apath == "$"
+        metrics = self._resolve_metrics(ObjectNode, cfg, is_root)
         return ObjectNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
-            metrics=self._resolve_metrics(ObjectNode, cfg, is_root),
-            key_metric=self._key_metric(ObjectNode, cfg, is_root),
+            metrics=metrics,
+            key_metric=self._key_metric(ObjectNode, cfg, is_root, metrics),
             threshold=self._threshold(cfg),
             matched=matched,
             missing=missing,
@@ -222,13 +249,14 @@ class TreeBuilder:
             for eidx, aidx in result.matched
         ]
         is_root = apath == "$"
+        metrics = self._resolve_metrics(ArrayNode, cfg, is_root)
         return ArrayNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
-            metrics=self._resolve_metrics(ArrayNode, cfg, is_root),
-            key_metric=self._key_metric(ArrayNode, cfg, is_root),
+            metrics=metrics,
+            key_metric=self._key_metric(ArrayNode, cfg, is_root, metrics),
             threshold=self._threshold(cfg),
             match_result=result,
             items=items,
@@ -236,13 +264,14 @@ class TreeBuilder:
 
     def _scalar(self, apath: str, epath: str, cfg: Any) -> ScalarNode:
         is_root = apath == "$"
+        metrics = self._resolve_metrics(ScalarNode, cfg, is_root)
         return ScalarNode(
             path=apath,
             context=self.context,
             expected_path=epath if epath != apath else None,
             weight=weight_of(cfg),
-            metrics=self._resolve_metrics(ScalarNode, cfg, is_root),
-            key_metric=self._key_metric(ScalarNode, cfg, is_root),
+            metrics=metrics,
+            key_metric=self._key_metric(ScalarNode, cfg, is_root, metrics),
             threshold=self._threshold(cfg),
         )
 

@@ -30,8 +30,10 @@ def reason_text(report: EvalReport) -> str:
         parts.append(f"… +{len(failed) - _MAX_REASONS} more")
 
     head = f"{len(failed)} field(s) failed: "
-    if report.schema_errors:
-        head = f"schema: {'; '.join(report.schema_errors)} | " + head
+    schema = report.metrics.get("schema_validity")
+    schema_errors = schema.extra_values("schema_errors") if schema else []
+    if schema_errors:
+        head = f"schema: {'; '.join(schema_errors)} | " + head
     return head + "; ".join(parts)
 
 

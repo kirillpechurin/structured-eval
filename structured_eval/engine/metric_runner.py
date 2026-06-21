@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.metrics.base import BaseMetric, GenericMetric, Metric
+from structured_eval.model.metric_result import MetricResult
 from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.object_node import ObjectNode
@@ -44,23 +45,39 @@ class MetricRunner:
             self._apply(key_metric, node)
 
     def _apply(self, metric: BaseMetric, node: EvalNode) -> None:
-        result = self._compute(metric, node)
-        if result is None:
-            return
-        results: dict[str, Any] = node.metric_results
-        if isinstance(result, dict):
-            results.update(result)
-        else:
-            results[metric.name] = result
+        node.metric_results.update(self._normalize(metric.name, self._compute(metric, node)))
 
     @staticmethod
-    def _compute(metric: BaseMetric, node: EvalNode) -> float | dict[str, float] | None:
-        """Run ``metric`` on ``node`` — ``Metric.compute`` or the generic ``compute_<kind>``."""
+    def _normalize(name: str, result: Any) -> dict[str, MetricResult]:
+        """Coerce any ``compute`` return into ``{key: MetricResult}``.
+
+        Accepts ``None`` (skip), a bare value, a ``dict`` of sub-scores, a
+        ``MetricResult``, or a ``(value | dict, extra)`` tuple — so a metric can
+        attach structured ``extra`` regardless of how it shapes its score. A
+        tuple's ``extra`` is attached to every key it produces.
+        """
+        if result is None:
+            return {}
+        extra: dict[str, Any] = {}
+        if isinstance(result, tuple):
+            result, extra = result
+        if isinstance(result, dict):
+            return {k: MetricResult(v, {**getattr(v, "extra", {}), **extra}) for k, v in result.items()}
+        if isinstance(result, MetricResult):
+            return {name: MetricResult(result, {**result.extra, **extra}) if extra else result}
+        return {name: MetricResult(result, extra)}
+
+    @staticmethod
+    def _compute(metric: BaseMetric, node: EvalNode) -> Any:
+        """Run ``metric`` on ``node`` — ``Metric.compute`` or the generic ``compute_<kind>``.
+
+        Returns the metric's raw output (value / dict / ``(value, extra)`` tuple /
+        ``MetricResult`` / ``None``); ``_normalize`` shapes it.
+        """
         if isinstance(metric, GenericMetric):
             method = _GENERIC_METHOD.get(type(node))
             if method is None or not hasattr(metric, method):
                 return None
-            result: float | dict[str, float] | None = getattr(metric, method)(node)
-            return result
+            return getattr(metric, method)(node)
         assert isinstance(metric, Metric)  # every non-generic metric has compute(node)
         return metric.compute(node)

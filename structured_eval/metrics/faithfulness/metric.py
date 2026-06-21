@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from structured_eval.metrics.base import RootMetric
 from structured_eval.metrics.faithfulness.substring import SubstringFaithfulness
 from structured_eval.model.nodes.base import EvalNode
@@ -10,26 +12,28 @@ class Faithfulness(RootMetric):
 
     Fraction of checkable leaf values that appear verbatim (case-insensitive)
     in the sample's ``source`` text. Fields marked ``FieldConfig(derived=True)``
-    are excluded. The paths of unsupported values are collected in
-    ``self.hallucinated_fields`` and surfaced into ``report.hallucinated_fields``.
+    are excluded. The paths of unsupported values are returned as the result's
+    ``extra["hallucinated_fields"]`` — read via
+    ``report.metrics["faithfulness"].extra_values("hallucinated_fields")``.
 
-    Returns ``None`` (the engine then omits the metric) when the sample carries
-    no ``source`` — faithfulness is undefined without a grounding text.
+    Requires a grounding ``source`` on the sample — faithfulness is undefined
+    without one, so a missing ``source`` is a configuration error (``ValueError``)
+    rather than a silently omitted metric.
     """
 
     name = "faithfulness"
 
     def __init__(self) -> None:
         self.processor = SubstringFaithfulness()
-        self.hallucinated_fields: list[str] = []
 
-    def compute(self, node: EvalNode) -> float | None:
+    def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:
         source = node.context.source
         if source is None:
-            return None
+            raise ValueError(
+                "Faithfulness requires a grounding `source`; pass source=... to evaluate()"
+            )
         actual = node.actual
         score, hallucinated = self.processor.compute(
             actual if isinstance(actual, dict) else {}, source, node.context.config
         )
-        self.hallucinated_fields = hallucinated
-        return score
+        return score, {"hallucinated_fields": hallucinated}

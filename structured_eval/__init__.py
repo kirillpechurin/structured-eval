@@ -62,6 +62,7 @@ from structured_eval.model.config import (
     ObjectFieldConfig,
 )
 from structured_eval.model.context import EvalContext
+from structured_eval.model.metric_result import MetricCollection, MetricResult
 from structured_eval.model.nodes import (
     ArrayMatchResult,
     ArrayNode,
@@ -106,6 +107,8 @@ __all__ = [
     "FieldScore",
     "RegressionDiff",
     "RuleResult",
+    "MetricResult",
+    "MetricCollection",
     # nodes
     "EvalNode",
     "ScalarNode",

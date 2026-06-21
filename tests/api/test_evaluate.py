@@ -19,7 +19,7 @@ pytestmark = pytest.mark.engine
 def test_dict_shorthand():
     r = evaluate({"a": 1}, {"a": 1}, config=EvalConfig(metrics=[ObjectF1()]))
     assert isinstance(r, EvalReport)
-    assert r.metrics["object_f1"] == 1.0
+    assert r.metrics["object_f1"].representative() == 1.0
 
 
 def test_sample_input():
@@ -31,7 +31,7 @@ def test_sample_input():
 
 def test_json_string_input():
     r = evaluate('{"a": 1}', '{"a": 1}', config=EvalConfig(metrics=[ObjectF1()]))
-    assert r.metrics["object_f1"] == 1.0
+    assert r.metrics["object_f1"].representative() == 1.0
 
 
 def test_list_of_samples_is_batch():
@@ -54,7 +54,7 @@ def test_source_kwarg_enables_faithfulness():
         config=EvalConfig(metrics=[Faithfulness()]),
         source="Invoice from Acme Corp",
     )
-    assert r.metrics["faithfulness"] == 0.0
+    assert r.metrics["faithfulness"].representative() == 0.0
 
 
 def test_no_config_runs_with_defaults():

@@ -77,6 +77,6 @@ class BatchAggregator:
         for r in reports:
             if r.parse_error:
                 continue
-            for name, value in r.metrics.items():
-                buckets.setdefault(name, []).append(value)
+            for name, coll in r.metrics.items():
+                buckets.setdefault(name, []).append(coll.representative())
         return {name: mean(vals) for name, vals in buckets.items() if vals}

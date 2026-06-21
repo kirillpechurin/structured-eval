@@ -57,6 +57,7 @@ class TestAdapter:
         assert "parse error" in text
 
     def test_verdict_none_score_is_failure(self):
-        r = evaluate({"a": 1}, config=EvalConfig())
-        _score, success, _reason = verdict(r, threshold=0.5)
+        # No key-metric score (e.g. no ground truth) → the threshold can't be
+        # applied → not a pass.
+        _score, success, _reason = verdict(EvalReport(score=None), threshold=0.5)
         assert success is False

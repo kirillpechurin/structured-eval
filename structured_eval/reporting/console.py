@@ -44,7 +44,11 @@ class ConsoleRenderer:
         else:
             out.append("  OVERALL   —   (no ground truth)")
 
-        grid = self._metric_grid(report.metrics, skip=report.score_label)
+        # Document-level metrics: those a metric produced at the root ("$").
+        doc_metrics = {
+            name: coll.root() for name, coll in report.metrics.items() if coll.root() is not None
+        }
+        grid = self._metric_grid(doc_metrics, skip=report.score_label)
         if grid:
             out += ["", *grid]
         out.append(bar)
@@ -66,7 +70,7 @@ class ConsoleRenderer:
             )
         if rows:
             out += self._table(
-                ["Field", "Metric", "Score", "Bar", ""],
+                ["Field", "Metric", "Score", "Threshold", "Mark"],
                 rows,
                 ["<", "<", ">", ">", "^"],
             )
@@ -86,7 +90,7 @@ class ConsoleRenderer:
 
         # failures detail
         failures = report.failed_fields()
-        if failures:
+        if failures:  # TODO: Strange
             out.append("  Failures")
             for fs in failures:
                 if fs.node_type == "scalar":
@@ -102,9 +106,11 @@ class ConsoleRenderer:
                         out.append(f"  ✗ {fs.path}   score {self._num(fs.score)}")
             out.append(bar)
 
-        if report.schema_errors:
+        schema = report.metrics.get("schema_validity")
+        schema_errors = schema.extra_values("schema_errors") if schema else []
+        if schema_errors:
             out.append("  ⚠ schema errors")
-            out += [f"  [SCHEMA] {e}" for e in report.schema_errors]
+            out += [f"  [SCHEMA] {e}" for e in schema_errors]
             out.append(bar)
 
         if report.warnings:

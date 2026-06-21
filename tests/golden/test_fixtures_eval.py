@@ -38,7 +38,7 @@ def _load(name: str) -> dict:
 @pytest.mark.parametrize("case", _load("invoices.json")["cases"], ids=lambda c: c["name"])
 def test_invoice_object_f1(case):
     r = evaluate(case["actual"], case["expected"], config=EvalConfig(metrics=[ObjectF1()]))
-    assert r.metrics["object_f1"] == pytest.approx(case["expect_object_f1"])
+    assert r.metrics["object_f1"].representative() == pytest.approx(case["expect_object_f1"])
 
 
 # ── NER: list of typed spans, aligned by (text,label) ───────────────────────
@@ -86,7 +86,7 @@ def test_tool_call_nested():
     cfg = EvalConfig(metrics=[ObjectF1(), OverallScore()])
     r = evaluate(actual, expected, config=cfg)
     # name correct, arguments.city correct, arguments.unit wrong → 2/3 leaves
-    assert r.metrics["overall_score"] == pytest.approx(2 / 3)
+    assert r.metrics["overall_score"].representative() == pytest.approx(2 / 3)
     assert r.field_scores["arguments.unit"].score == 0.0
 
 
@@ -99,4 +99,4 @@ def test_deep_nested():
     r = evaluate(actual, expected, config=EvalConfig(metrics=[OverallScore()]))
     assert r.field_scores["a.b.c.d"].score == 1.0
     assert r.field_scores["a.b.c.e"].score == 0.0
-    assert r.metrics["overall_score"] == pytest.approx(0.5)
+    assert r.metrics["overall_score"].representative() == pytest.approx(0.5)

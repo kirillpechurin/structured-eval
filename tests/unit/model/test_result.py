@@ -13,10 +13,17 @@ from structured_eval import (
     ConsistencyReport,
     EvalReport,
     FieldScore,
+    MetricCollection,
+    MetricResult,
 )
 from structured_eval.model.result import NodeType
 
 pytestmark = pytest.mark.unit
+
+
+def _coll(name, value, extra=None):
+    """A single-node MetricCollection rooted at "$" (document-level)."""
+    return MetricCollection(name=name, by_path={"$": MetricResult(value, extra)})
 
 
 def _fs(path, score, threshold=1.0, metrics=None, actual=None, expected=None):
@@ -34,7 +41,7 @@ def _fs(path, score, threshold=1.0, metrics=None, actual=None, expected=None):
 def _report(score=None, metrics=None, fields=None, **kwargs):
     return EvalReport(
         score=score,
-        metrics=metrics or {},
+        metrics={k: _coll(k, v) for k, v in (metrics or {}).items()},
         field_scores={fs.path: fs for fs in (fields or [])},
         **kwargs,
     )
@@ -89,11 +96,10 @@ class TestAssertions:
             r.assert_metric("missing", 0.1)
 
     def test_assert_schema_valid(self):
-        EvalReport(metrics={"schema_validity": 1.0}).assert_schema_valid()
+        EvalReport(metrics={"schema_validity": _coll("schema_validity", 1.0)}).assert_schema_valid()
         with pytest.raises(AssertionError):
-            EvalReport(
-                metrics={"schema_validity": 0.0}, schema_errors=["type: total"]
-            ).assert_schema_valid()
+            bad = _coll("schema_validity", 0.0, {"schema_errors": ["type: total"]})
+            EvalReport(metrics={"schema_validity": bad}).assert_schema_valid()
 
 
 class TestDiff:
@@ -121,7 +127,7 @@ class TestSerialization:
         r = _report(score=0.5, metrics={"object_f1": 0.5}, fields=[_fs("a", 0.5)])
         d = r.to_dict()
         assert d["score"] == 0.5
-        assert d["metrics"]["object_f1"] == 0.5
+        assert d["metrics"]["object_f1"]["by_path"]["$"] == 0.5
 
     def test_json_roundtrip(self, tmp_path):
         r = _report(score=0.5, metrics={"object_f1": 0.5}, fields=[_fs("a", 0.5)])
@@ -129,7 +135,7 @@ class TestSerialization:
         r.to_json(str(path))
         loaded = EvalReport.from_json(str(path))
         assert loaded.score == 0.5
-        assert loaded.metrics == {"object_f1": 0.5}
+        assert loaded.metrics["object_f1"].root() == 0.5
 
     def test_from_dict(self):
         r = _report(score=1.0)

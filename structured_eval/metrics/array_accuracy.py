@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from structured_eval.metrics._shared.match_criterion import structural_score
 from structured_eval.metrics.base import ArrayMetric
 from structured_eval.model.nodes.array_node import ArrayNode
 
@@ -8,12 +7,18 @@ from structured_eval.model.nodes.array_node import ArrayNode
 class ArrayAccuracy(ArrayMetric):
     """Mean element score over the aligned items (soft).
 
-    How good the matched elements are, regardless of how many were produced.
-    Missed expected items count as 0.0; an empty/fully-missed array is
-    vacuously 1.0. This is exactly the array branch of ``structural_score``.
+    How good the matched elements are, regardless of how many were produced:
+    the mean of each matched item's representative score over (items + missed).
+    Missed expected items count as 0.0; an empty/fully-missed array is vacuously
+    1.0. The default array metric, and the array branch of the old
+    ``structural_score``.
     """
 
     name = "array_accuracy"
 
     def compute(self, node: ArrayNode) -> float:
-        return structural_score(node)
+        n_missing = len(node.match_result.missed) if node.match_result else 0
+        denom = len(node.items) + n_missing
+        if denom == 0:
+            return 1.0
+        return sum(item.representative for item in node.items) / denom

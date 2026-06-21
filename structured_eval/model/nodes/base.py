@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from structured_eval.model.context import EvalContext
+from structured_eval.model.metric_result import MetricResult
 from structured_eval.utils.paths import MISSING, navigate
 
 # Re-exported for back-compat: ``navigate`` / ``MISSING`` now live in
@@ -38,7 +39,7 @@ class EvalNode(BaseModel):
     metrics: list[Any] = Field(default_factory=list)  # list[BaseMetric] resolved for this node
     key_metric: Any = None  # BaseMetric: this node's representative score (parents read it)
     threshold: float = 1.0  # bar the representative score must clear to count as a TP
-    metric_results: dict[str, float] = Field(default_factory=dict)
+    metric_results: dict[str, MetricResult] = Field(default_factory=dict)
 
     @property
     def actual(self) -> Any:
@@ -51,6 +52,24 @@ class EvalNode(BaseModel):
             return None
         value = navigate(self.context.expected, self.expected_path or self.path)
         return None if value is MISSING else value
+
+    @property
+    def representative(self) -> float:
+        """The node's single representative score: its ``key_metric``'s value.
+
+        Every node always carries a ``key_metric`` (the engine defaults it to
+        ``MeanScore``) and at least one metric for it to summarise, so by the
+        time anyone reads this the value exists. A parent reads its already
+        computed children's representatives to aggregate (post-order); the root's
+        is ``report.score``. Missing is a programming error, not a fallback.
+        """
+        km = self.key_metric
+        if km is None:
+            raise ValueError(f"node {self.path!r} has no key_metric")
+        value = self.metric_results.get(km.name)
+        if value is None:
+            raise ValueError(f"node {self.path!r}: key_metric {km.name!r} has no computed value")
+        return float(value)
 
     # ── traversal ──────────────────────────────────────────────────────────
     # Children are discovered by duck-typing (``children`` on objects, ``items``

@@ -69,12 +69,16 @@ class TestSubstringFaithfulness:
 
 
 class TestFaithfulnessRootMetric:
-    def test_none_without_source(self, tree_factory):
+    def test_requires_source(self, tree_factory):
+        import pytest
+
         root = tree_factory({"vendor": "Globex"}, None)
-        assert Faithfulness().compute(root) is None
+        with pytest.raises(ValueError, match="source"):
+            Faithfulness().compute(root)
 
     def test_score_and_hallucinations(self, tree_factory):
         root = tree_factory({"vendor": "Globex"}, None, source=SOURCE)
         metric = Faithfulness()
-        assert metric.compute(root) == 0.0
-        assert metric.hallucinated_fields == ["vendor"]
+        score, extra = metric.compute(root)
+        assert score == 0.0
+        assert extra["hallucinated_fields"] == ["vendor"]
