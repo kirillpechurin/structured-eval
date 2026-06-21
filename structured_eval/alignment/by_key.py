@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment.base import ArrayAligner, key_value
-from structured_eval.metrics.base import Metric, resolve_metric
+from structured_eval.metrics.base import resolve_metric
 from structured_eval.metrics.exact import ExactMatch
+from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.model.config import ArrayStrategy
 from structured_eval.model.nodes.array_node import ArrayMatchResult
 
@@ -26,8 +27,7 @@ class ByKeyAligner(ArrayAligner):
     ):
         self.key = key
         metric = ExactMatch() if key_metric is None else resolve_metric(key_metric)
-        assert isinstance(metric, Metric)  # a key criterion compares values via score()
-        self.metric: Metric[Any] = metric
+        self.scorer = MetricInvoker(metric)
         self.threshold = threshold
 
     def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
@@ -56,8 +56,7 @@ class ByKeyAligner(ArrayAligner):
         for ai, a_item in enumerate(actual):
             if ai in used:
                 continue
-            key_score = self.metric.score(key_value(a_item, self.key), e_key)
-            assert not isinstance(key_score, dict)  # criterion metrics return a scalar
+            key_score = self.scorer.scalar_on_values(key_value(a_item, self.key), e_key)
             if key_score >= self.threshold:
                 return ai
         return None

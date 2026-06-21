@@ -15,6 +15,7 @@ from structured_eval.metrics.base import (
     resolve_metric,
 )
 from structured_eval.metrics.exact import ExactMatch
+from structured_eval.metrics.invoker import GENERIC_NODE_METHOD
 from structured_eval.metrics.mean_score import MeanScore
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
 from structured_eval.model.config import (
@@ -30,14 +31,6 @@ from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
-
-# Node class → the GenericMetric method that handles it.
-_GENERIC_METHOD: dict[type, str] = {
-    ScalarNode: "compute_scalar",
-    ObjectNode: "compute_object",
-    ArrayNode: "compute_array",
-    EvalNode: "compute_node",
-}
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.
@@ -93,7 +86,7 @@ class TreeBuilder:
         if isinstance(metric, ArrayMetric):
             return issubclass(node_cls, ArrayNode)
         if isinstance(metric, GenericMetric):
-            method = _GENERIC_METHOD.get(node_cls)
+            method = GENERIC_NODE_METHOD.get(node_cls)
             return method is not None and hasattr(metric, method)
         return False
 

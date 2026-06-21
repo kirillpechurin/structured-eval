@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from structured_eval.metrics.base import ObjectMetric
+from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.type_match import TypeMatch
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
@@ -17,11 +18,11 @@ class ObjectValidity(ObjectMetric):
     name = "object_validity"
 
     def __init__(self) -> None:
-        self._type_match = TypeMatch()
+        self._type_match = MetricInvoker(TypeMatch())
 
     def compute(self, node: ObjectNode) -> float:
         present = [n for n in node.matched if isinstance(n, ScalarNode)]
         if not present:
             return 1.0
-        valid = sum(self._type_match.score(n.actual, n.expected) for n in present)
+        valid = sum(self._type_match.scalar_on_node(n) for n in present)
         return valid / len(present)

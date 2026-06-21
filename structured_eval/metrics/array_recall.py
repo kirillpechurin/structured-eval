@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from structured_eval.metrics._shared import array_stats as astats
-from structured_eval.metrics._shared import object_stats as stats
 from structured_eval.metrics.base import ArrayMetric
+from structured_eval.metrics.utils import array as astats
+from structured_eval.metrics.utils import calculate as stats
 from structured_eval.model.nodes.array_node import ArrayNode
 
 
@@ -15,9 +15,9 @@ class ArrayRecall(ArrayMetric):
 
     name = "array_recall"
 
-    def __init__(self, threshold: float = 1.0, mode: str = "hard"):
+    def __init__(self, threshold: float = 1.0, mode: stats.MatchMode = stats.MatchMode.HARD):
         self.threshold = threshold
-        self.mode = mode
+        self.mode = stats.MatchMode(mode)
 
     def compute(self, node: ArrayNode) -> float:
         n_missing, n_spurious = astats.missing_spurious(node)

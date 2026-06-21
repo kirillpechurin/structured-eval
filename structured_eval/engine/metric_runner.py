@@ -2,19 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from structured_eval.metrics.base import BaseMetric, GenericMetric, Metric
+from structured_eval.metrics.base import BaseMetric
+from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.model.metric_result import MetricResult
-from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import EvalNode
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.scalar import ScalarNode
-
-# Node class → the GenericMetric method that handles it.
-_GENERIC_METHOD: dict[type, str] = {
-    ScalarNode: "compute_scalar",
-    ObjectNode: "compute_object",
-    ArrayNode: "compute_array",
-}
 
 
 class MetricRunner:
@@ -45,7 +36,8 @@ class MetricRunner:
             self._apply(key_metric, node)
 
     def _apply(self, metric: BaseMetric, node: EvalNode) -> None:
-        node.metric_results.update(self._normalize(metric.name, self._compute(metric, node)))
+        result = MetricInvoker(metric).on_node(node)
+        node.metric_results.update(self._normalize(metric.name, result))
 
     @staticmethod
     def _normalize(name: str, result: Any) -> dict[str, MetricResult]:
@@ -66,18 +58,3 @@ class MetricRunner:
         if isinstance(result, MetricResult):
             return {name: MetricResult(result, {**result.extra, **extra}) if extra else result}
         return {name: MetricResult(result, extra)}
-
-    @staticmethod
-    def _compute(metric: BaseMetric, node: EvalNode) -> Any:
-        """Run ``metric`` on ``node`` — ``Metric.compute`` or the generic ``compute_<kind>``.
-
-        Returns the metric's raw output (value / dict / ``(value, extra)`` tuple /
-        ``MetricResult`` / ``None``); ``_normalize`` shapes it.
-        """
-        if isinstance(metric, GenericMetric):
-            method = _GENERIC_METHOD.get(type(node))
-            if method is None or not hasattr(metric, method):
-                return None
-            return getattr(metric, method)(node)
-        assert isinstance(metric, Metric)  # every non-generic metric has compute(node)
-        return metric.compute(node)

@@ -95,10 +95,12 @@ class RootMetric(Metric[EvalNode]):
 class GenericMetric(BaseMetric):
     """Metrics spanning several node types, outside the single-``compute`` shape.
 
-    Override whichever of ``compute_scalar`` / ``compute_object`` /
-    ``compute_array`` apply; ``MetricRunner`` dispatches by node type and
-    ``TreeBuilder`` admits it onto a node only when the matching method exists.
-    (Replaces the former ``NodeMetric``.)
+    Override whichever per-kind methods apply: ``compute_scalar`` /
+    ``compute_object`` / ``compute_array`` for node mode, and (optionally)
+    ``score_scalar`` / ``score_object`` / ``score_array`` for value mode.
+    ``MetricInvoker`` dispatches by kind; ``TreeBuilder`` admits the metric onto
+    a node only when the matching ``compute_<kind>`` exists. (Replaces the former
+    ``NodeMetric``.)
     """
 
 

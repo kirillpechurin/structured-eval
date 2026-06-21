@@ -7,6 +7,7 @@ from typing import Any
 from structured_eval.alignment.base import ArrayAligner, key_value
 from structured_eval.metrics.base import FieldMetric, Metric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
+from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.numeric_closeness import NumericCloseness
 from structured_eval.model.config import ArrayStrategy
 from structured_eval.model.nodes.array_node import ArrayMatchResult
@@ -135,11 +136,7 @@ class HungarianAligner(ArrayAligner):
     def _apply(scorer: Scorer, expected: Any, actual: Any) -> float:
         if callable(scorer) and not isinstance(scorer, (str, Metric)):
             return float(scorer(actual, expected))
-        metric = resolve_metric(scorer)
-        assert isinstance(metric, Metric)  # a scorer compares values via score()
-        result = metric.score(actual, expected)
-        assert not isinstance(result, dict)  # element scorers return a scalar
-        return float(result)
+        return MetricInvoker(resolve_metric(scorer)).scalar_on_values(actual, expected)
 
     @staticmethod
     def _default_scorer(expected: Any, actual: Any) -> FieldMetric:

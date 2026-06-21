@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from structured_eval.metrics._shared import match_criterion as mc
 from structured_eval.metrics.base import ObjectMetric
+from structured_eval.metrics.utils import object_utils as obj
 from structured_eval.model.nodes.object_node import ObjectNode
 
 
@@ -22,7 +22,7 @@ class ObjectAccuracy(ObjectMetric):
         self.score_policy = score_policy
 
     def compute(self, node: ObjectNode) -> float:
-        verdicts = mc.matched_verdicts(node, self.score_policy)
+        verdicts = obj.matched_verdicts(node, self.score_policy)
         denom = len(verdicts) + len(node.missing)
         if denom == 0:
             return 1.0
