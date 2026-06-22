@@ -50,17 +50,18 @@ def _report(score=None, metrics=None, fields=None, **kwargs):
 class TestFailedFields:
     def test_below_own_threshold(self):
         r = _report(fields=[_fs("a", 1.0), _fs("b", 0.0)])
-        assert [f.path for f in r.failed_fields()] == ["b"]
+        assert list(r.failed_fields()) == ["b"]
+        assert r.failed_fields()["b"].path == "b"
 
     def test_explicit_threshold(self):
         r = _report(fields=[_fs("a", 0.8, threshold=0.5)])
-        assert r.failed_fields() == []
-        assert [f.path for f in r.failed_fields(threshold=0.9)] == ["a"]
+        assert r.failed_fields() == {}
+        assert list(r.failed_fields(threshold=0.9)) == ["a"]
 
     def test_skips_scoreless(self):
         fs = FieldScore(path="x", node_type=NodeType.OBJECT, score=None)
         r = EvalReport(field_scores={"x": fs})
-        assert r.failed_fields() == []
+        assert r.failed_fields() == {}
 
 
 class TestAssertions:

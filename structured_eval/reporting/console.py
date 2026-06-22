@@ -76,48 +76,6 @@ class ConsoleRenderer:
             )
             out.append(bar)
 
-        # object/array aggregate metrics per path
-        struct = []
-        for fs in report.field_scores.values():
-            if fs.node_type == "scalar" or not fs.metrics or fs.path in ("$", ""):
-                continue  # root metrics already shown in the header
-            summary = "  ".join(f"{k} {self._num(v)}" for k, v in fs.metrics.items())
-            struct.append([fs.path, summary])
-        if struct:
-            out.append("  Structure")
-            out += self._table(["Path", "Metrics"], struct)
-            out.append(bar)
-
-        # failures detail
-        failures = report.failed_fields()
-        if failures:  # TODO: Strange
-            out.append("  Failures")
-            for fs in failures:
-                if fs.node_type == "scalar":
-                    out.append(f"  ✗ {fs.path}   {fs.actual!r}  →  {fs.expected!r}")
-                else:
-                    m = report.array_matches.get(fs.path)
-                    if m is not None:
-                        out.append(
-                            f"  ✗ {fs.path}   P {m.precision:.2f}  R {m.recall:.2f}  "
-                            f"({len(m.missed)} missing, {len(m.spurious)} spurious)"
-                        )
-                    else:
-                        out.append(f"  ✗ {fs.path}   score {self._num(fs.score)}")
-            out.append(bar)
-
-        schema = report.metrics.get("schema_validity")
-        schema_errors = schema.extra_values("schema_errors") if schema else []
-        if schema_errors:
-            out.append("  ⚠ schema errors")
-            out += [f"  [SCHEMA] {e}" for e in schema_errors]
-            out.append(bar)
-
-        if report.warnings:
-            out.append("  ⚠ warnings")
-            out += [f"  {w}" for w in report.warnings]
-            out.append(bar)
-
         return "\n".join(out)
 
     # ── BatchEvalReport ───────────────────────────────────────────────────

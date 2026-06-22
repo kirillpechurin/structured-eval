@@ -21,19 +21,15 @@ def reason_text(report: EvalReport) -> str:
         return "all fields passed"
 
     parts = []
-    for fs in failed[:_MAX_REASONS]:
+    for fs in list(failed.values())[:_MAX_REASONS]:
         if fs.node_type == "scalar":
             parts.append(f"{fs.path}: {fs.actual!r} != {fs.expected!r}")
         else:
             parts.append(f"{fs.path}: score {fs.score:.2g}" if fs.score is not None else fs.path)
     if len(failed) > _MAX_REASONS:
-        parts.append(f"… +{len(failed) - _MAX_REASONS} more")
+        parts.append(f"... +{len(failed) - _MAX_REASONS} more")
 
     head = f"{len(failed)} field(s) failed: "
-    schema = report.metrics.get("schema_validity")
-    schema_errors = schema.extra_values("schema_errors") if schema else []
-    if schema_errors:
-        head = f"schema: {'; '.join(schema_errors)} | " + head
     return head + "; ".join(parts)
 
 

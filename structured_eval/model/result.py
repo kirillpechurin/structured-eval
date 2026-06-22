@@ -106,23 +106,23 @@ class EvalReport(BaseModel):
 
     # ── Queries ───────────────────────────────────────────────────────────
 
-    def failed_fields(self, threshold: float | None = None) -> list[FieldScore]:
+    def failed_fields(self, threshold: float | None = None) -> dict[str, FieldScore]:
         """Return fields whose score falls below the applicable threshold.
 
-        Precedence per field: the ``threshold`` argument, else the field's own
-        ``threshold``, else a perfect-match bar of 1.0. Fields without a score
-        (no key metric applied) are skipped.
+        Keyed by field path (the same keys as ``field_scores``). Precedence per
+        field: the ``threshold`` argument, else the field's own ``threshold``,
+        else a perfect-match bar of 1.0. Fields without a score (no key metric
+        applied) are skipped.
         """
-        # TODO: Should return dict failed fields
-        failed: list[FieldScore] = []
-        for fs in self.field_scores.values():
+        failed: dict[str, FieldScore] = {}
+        for path, fs in self.field_scores.items():
             if fs.score is None:
                 continue
             bar = threshold if threshold is not None else fs.threshold
             if bar is None:
                 bar = 1.0
             if fs.score < bar:
-                failed.append(fs)
+                failed[path] = fs
         return failed
 
     # ── Reporting / serialization ─────────────────────────────────────────
