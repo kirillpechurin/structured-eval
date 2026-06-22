@@ -68,6 +68,28 @@ class TestByKey:
         assert r.matched == [(0, 0)]
         assert r.spurious == [1]
 
+    def test_soft_key_picks_best_not_first(self):
+        # A soft (graded) key: both actuals clear the threshold, but the pairing
+        # is greedy *best-first* — the closer id wins, not the first one seen.
+        expected = [{"id": 10}]
+        actual = [{"id": 5}, {"id": 9}]  # closeness 0.5 vs 0.9
+        r = ByKeyAligner(key="id", key_metric="numeric_closeness", threshold=0.4).align(
+            expected, actual
+        )
+        assert r.matched == [(0, 1)]  # 9 (best), not 5 (first)
+        assert r.spurious == [0]
+
+    def test_soft_key_global_greedy_is_order_independent(self):
+        # Two expected each best-match a different actual; global best-first
+        # resolves the assignment without an order bias.
+        expected = [{"id": 10}, {"id": 8}]
+        actual = [{"id": 8}, {"id": 10}]
+        r = ByKeyAligner(key="id", key_metric="numeric_closeness", threshold=0.5).align(
+            expected, actual
+        )
+        assert sorted(r.matched) == [(0, 1), (1, 0)]  # 10↔10, 8↔8
+        assert r.missed == [] and r.spurious == []
+
 
 class TestHungarian:
     def test_strategy_recorded(self):
