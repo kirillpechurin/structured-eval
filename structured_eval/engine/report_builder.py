@@ -6,7 +6,7 @@ from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
-from structured_eval.model.result import EvalReport, FieldScore, NodeType
+from structured_eval.model.result import EvalReport, EvalWarning, FieldScore, NodeType
 
 
 class ReportBuilder:
@@ -18,7 +18,9 @@ class ReportBuilder:
         ArrayNode: NodeType.ARRAY,
     }
 
-    def build(self, root: EvalNode, context: EvalContext, warnings: list[str]) -> EvalReport:
+    def build(
+        self, root: EvalNode, context: EvalContext, warnings: list[EvalWarning]
+    ) -> EvalReport:
         field_scores = {}
         array_matches = {}
         # report.metrics is a cross-field view: each metric name → its value at

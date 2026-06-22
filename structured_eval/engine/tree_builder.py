@@ -31,6 +31,7 @@ from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.model.result import EvalWarning, WarningType
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.
@@ -54,10 +55,10 @@ class TreeBuilder:
     def __init__(self, context: EvalContext):
         self.context = context
         self.config: EvalConfig = context.config
-        self.warnings: list[str] = []
+        self.warnings: list[EvalWarning] = []
         self._globals = self._resolve_globals()
 
-    def build(self) -> tuple[EvalNode, list[str]]:
+    def build(self) -> tuple[EvalNode, list[EvalWarning]]:
         root = self.node("$", "$", self.root_config())
         return root, self.warnings
 
@@ -194,10 +195,13 @@ class TreeBuilder:
         else:
             spurious = []
             for key in extra:
-                # TODO: Warnings should be structurized by type, not string. We know types of warnings
+                path = self._child(apath, key)
                 self.warnings.append(
-                    f"[EXTRA_KEY] {self._child(apath, key)!r} not in expected "
-                    "(ExtraKeysPolicy.IGNORE)"
+                    EvalWarning(
+                        type=WarningType.EXTRA_KEY,
+                        path=path,
+                        message=f"{path!r} not in expected (ExtraKeysPolicy.IGNORE)",
+                    )
                 )
 
         fields = cfg.fields if isinstance(cfg, ObjectFieldConfig) else {}
@@ -209,7 +213,14 @@ class TreeBuilder:
             if key in both:
                 matched.append(child)
         for key in missing:
-            self.warnings.append(f"[MISSING_FIELD] {self._child(apath, key)!r} absent in actual")
+            path = self._child(apath, key)
+            self.warnings.append(
+                EvalWarning(
+                    type=WarningType.MISSING_FIELD,
+                    path=path,
+                    message=f"{path!r} absent in actual",
+                )
+            )
 
         is_root = apath == "$"
         metrics = self._resolve_metrics(ObjectNode, cfg, is_root)

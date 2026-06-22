@@ -31,6 +31,28 @@ def _percentile(values: list[float], q: float) -> float:
     return ordered[lo] + (ordered[hi] - ordered[lo]) * frac
 
 
+# ── Warnings ────────────────────────────────────────────────────────────────
+
+
+class WarningType(StrEnum):
+    """The kind of structural warning the engine raised while building the tree."""
+
+    EXTRA_KEY = "extra_key"  # key present in actual but not expected (ExtraKeysPolicy.IGNORE)
+    MISSING_FIELD = "missing_field"  # key present in expected but absent in actual
+
+
+class EvalWarning(BaseModel):
+    """A structural warning, typed by ``WarningType`` and located by ``path``."""
+
+    type: WarningType
+    path: str
+    message: str = ""
+
+    def __str__(self) -> str:
+        tag = f"[{self.type.name}]"
+        return f"{tag} {self.message}" if self.message else f"{tag} {self.path}"
+
+
 # ── Rules ─────────────────────────────────────────────────────────────────────
 
 
@@ -102,7 +124,7 @@ class EvalReport(BaseModel):
     array_matches: dict[str, ArrayMatchResult] = Field(default_factory=dict)
     parse_error: bool = False
     parse_error_message: str | None = None
-    warnings: list[str] = Field(default_factory=list)
+    warnings: list[EvalWarning] = Field(default_factory=list)
 
     # ── Queries ───────────────────────────────────────────────────────────
 

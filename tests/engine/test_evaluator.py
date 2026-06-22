@@ -21,6 +21,7 @@ from structured_eval import (
     RulePassRate,
     SchemaValidity,
     TokenF1,
+    WarningType,
 )
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 
@@ -110,11 +111,13 @@ class TestSideChannels:
 class TestWarnings:
     def test_extra_key_warning(self, evaluate_one):
         r = evaluate_one({"a": 1, "extra": 2}, {"a": 1}, EvalConfig(metrics=[ObjectF1()]))
-        assert any("EXTRA_KEY" in w for w in r.warnings)
+        extra = [w for w in r.warnings if w.type == WarningType.EXTRA_KEY]
+        assert [w.path for w in extra] == ["extra"]
 
     def test_missing_field_warning(self, evaluate_one):
         r = evaluate_one({"a": 1}, {"a": 1, "b": 2}, EvalConfig(metrics=[ObjectF1()]))
-        assert any("MISSING_FIELD" in w for w in r.warnings)
+        missing = [w for w in r.warnings if w.type == WarningType.MISSING_FIELD]
+        assert [w.path for w in missing] == ["b"]
 
     def test_extra_key_penalized(self, evaluate_one):
         cfg = EvalConfig(metrics=[ObjectF1()], extra_keys=ExtraKeysPolicy.PENALIZE)

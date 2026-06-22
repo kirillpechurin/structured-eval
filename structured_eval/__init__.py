@@ -74,9 +74,11 @@ from structured_eval.model.result import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,
+    EvalWarning,
     FieldScore,
     RegressionDiff,
     RuleResult,
+    WarningType,
 )
 from structured_eval.model.sample import Sample
 from structured_eval.utils.flatten import flatten
@@ -108,6 +110,8 @@ __all__ = [
     "FieldScore",
     "RegressionDiff",
     "RuleResult",
+    "EvalWarning",
+    "WarningType",
     "MetricResult",
     "MetricCollection",
     # nodes
