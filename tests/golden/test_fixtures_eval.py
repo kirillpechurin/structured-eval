@@ -19,7 +19,7 @@ from structured_eval import (
     FieldConfig,
     ObjectF1,
     ObjectFieldConfig,
-    OverallScore,
+    OverallLeafScore,
     evaluate,
 )
 
@@ -83,10 +83,10 @@ def test_ner_array_by_key():
 def test_tool_call_nested():
     actual = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "celsius"}}
     expected = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "fahrenheit"}}
-    cfg = EvalConfig(metrics=[ObjectF1(), OverallScore()])
+    cfg = EvalConfig(metrics=[ObjectF1(), OverallLeafScore()])
     r = evaluate(actual, expected, config=cfg)
     # name correct, arguments.city correct, arguments.unit wrong → 2/3 leaves
-    assert r.metrics["overall_score"].representative() == pytest.approx(2 / 3)
+    assert r.metrics["overall_leaf_score"].representative() == pytest.approx(2 / 3)
     assert r.field_scores["arguments.unit"].score == 0.0
 
 
@@ -96,7 +96,7 @@ def test_tool_call_nested():
 def test_deep_nested():
     actual = {"a": {"b": {"c": {"d": 1, "e": 2}}}}
     expected = {"a": {"b": {"c": {"d": 1, "e": 9}}}}
-    r = evaluate(actual, expected, config=EvalConfig(metrics=[OverallScore()]))
+    r = evaluate(actual, expected, config=EvalConfig(metrics=[OverallLeafScore()]))
     assert r.field_scores["a.b.c.d"].score == 1.0
     assert r.field_scores["a.b.c.e"].score == 0.0
-    assert r.metrics["overall_score"].representative() == pytest.approx(0.5)
+    assert r.metrics["overall_leaf_score"].representative() == pytest.approx(0.5)

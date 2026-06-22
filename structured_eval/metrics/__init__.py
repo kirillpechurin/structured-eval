@@ -15,7 +15,7 @@ from structured_eval.metrics.base import (
     get_metric_class,
     resolve_metric,
 )
-from structured_eval.metrics.coverage import Coverage
+from structured_eval.metrics.coverage_leaf_score import CoverageLeafScore
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.faithfulness import Faithfulness
 from structured_eval.metrics.fuzzy import Fuzzy
@@ -29,8 +29,8 @@ from structured_eval.metrics.object_f1 import ObjectF1
 from structured_eval.metrics.object_precision import ObjectPrecision
 from structured_eval.metrics.object_prf1 import ObjectPRF1
 from structured_eval.metrics.object_recall import ObjectRecall
-from structured_eval.metrics.object_validity import ObjectValidity
-from structured_eval.metrics.overall_score import OverallScore
+from structured_eval.metrics.object_type_validity import ObjectTypeValidity
+from structured_eval.metrics.overall_leaf_score import OverallLeafScore
 from structured_eval.metrics.presence import Presence
 from structured_eval.metrics.rule_pass_rate import Rule, RulePassRate
 from structured_eval.metrics.schema_validity import SchemaValidity
@@ -65,7 +65,7 @@ __all__ = [
     "ObjectRecall",
     "ObjectF1",
     "ObjectPRF1",
-    "ObjectValidity",
+    "ObjectTypeValidity",
     # array metrics
     "ArrayAccuracy",
     "ArrayPrecision",
@@ -74,9 +74,9 @@ __all__ = [
     "ArrayPRF1",
     "ArrayCardinality",
     # root metrics
-    "OverallScore",
+    "OverallLeafScore",
     "SchemaValidity",
-    "Coverage",
+    "CoverageLeafScore",
     "Faithfulness",
     "RulePassRate",
     # rules DSL

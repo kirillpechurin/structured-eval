@@ -1,9 +1,13 @@
-"""Verdicts for array metrics: aligned items → ``(score, threshold)`` pairs.
+"""Verdicts for array metrics: aligned items → ``(score, threshold, weight)``.
 
 An aligned item is graded by its representative score against a single
 ``threshold`` (hard) or contributes that score fractionally (soft) — mirroring
 how object fields are graded. ``missed`` items are FN, ``spurious`` items FP.
 The verdicts feed ``calculate.prf_counts``.
+
+Array elements share one ``item`` config, so they carry no individual weights:
+every item (and every missed/spurious slot) weighs ``1.0`` and array metrics are
+effectively count-based.
 """
 
 from __future__ import annotations
@@ -11,9 +15,9 @@ from __future__ import annotations
 from structured_eval.model.nodes.array_node import ArrayNode
 
 
-def verdicts(node: ArrayNode, threshold: float) -> list[tuple[float, float]]:
-    """``(representative, threshold)`` for each aligned item of an array."""
-    return [(item.representative, threshold) for item in node.items]
+def verdicts(node: ArrayNode, threshold: float) -> list[tuple[float, float, float]]:
+    """``(representative, threshold, weight=1.0)`` for each aligned item."""
+    return [(item.representative, threshold, 1.0) for item in node.items]
 
 
 def missing_spurious(node: ArrayNode) -> tuple[int, int]:

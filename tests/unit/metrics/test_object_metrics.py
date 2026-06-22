@@ -17,7 +17,7 @@ from structured_eval import (
     ObjectPrecision,
     ObjectPRF1,
     ObjectRecall,
-    ObjectValidity,
+    ObjectTypeValidity,
 )
 
 pytestmark = pytest.mark.unit
@@ -80,15 +80,55 @@ def test_soft_mode_fractional(tree_factory):
 def test_validity_type_check(tree_factory):
     # "100" (str) vs 100 (number): present but wrong type → 0
     root = tree_factory({"a": "100", "b": 2}, {"a": 100, "b": 2})
-    assert ObjectValidity().compute(root) == pytest.approx(0.5)
+    assert ObjectTypeValidity().compute(root) == pytest.approx(0.5)
 
 
 def test_validity_vacuous_when_no_scalars(tree_factory):
     root = tree_factory({}, {})
-    assert ObjectValidity().compute(root) == 1.0
+    assert ObjectTypeValidity().compute(root) == 1.0
 
 
 def test_empty_object_vacuously_perfect(tree_factory):
     root = tree_factory({}, {})
     assert ObjectF1().compute(root) == 1.0
     assert ObjectAccuracy().compute(root) == 1.0
+
+
+# ── weighting (weight_mode) ─────────────────────────────────────────────────
+
+
+def _weighted_tree(tree_factory):
+    from structured_eval import FieldConfig
+
+    # a correct, b wrong; b is 3× as important as a.
+    cfg = EvalConfig(fields={"a": FieldConfig(weight=1.0), "b": FieldConfig(weight=3.0)})
+    return tree_factory({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
+
+
+def test_f1_weighted_by_default(tree_factory):
+    root = _weighted_tree(tree_factory)
+    # tp=1 (a, w1), predicted=expected=4 (w1+w3) → 0.25 (vs 0.5 unweighted)
+    assert ObjectF1().compute(root) == pytest.approx(0.25)
+
+
+def test_f1_weight_mode_none_restores_plain(tree_factory):
+    root = _weighted_tree(tree_factory)
+    assert ObjectF1(weight_mode="none").compute(root) == pytest.approx(0.5)
+
+
+def test_accuracy_weighted_by_default(tree_factory):
+    root = _weighted_tree(tree_factory)
+    # numer = 1*1 + 3*0 = 1, denom = 1+3 = 4 → 0.25 (vs 0.5 unweighted)
+    assert ObjectAccuracy().compute(root) == pytest.approx(0.25)
+    assert ObjectAccuracy(weight_mode="none").compute(root) == pytest.approx(0.5)
+
+
+def test_weighted_missing_field(tree_factory):
+    from structured_eval import FieldConfig
+
+    # a present+correct (w1), b missing (w3): weighted recall/accuracy drop more.
+    cfg = EvalConfig(fields={"a": FieldConfig(weight=1.0), "b": FieldConfig(weight=3.0)})
+    root = tree_factory({"a": 1}, {"a": 1, "b": 2}, cfg)
+    # accuracy: numer=1, denom=1(matched)+3(missing)=4 → 0.25 (vs 0.5 unweighted)
+    assert ObjectAccuracy().compute(root) == pytest.approx(0.25)
+    assert ObjectRecall().compute(root) == pytest.approx(0.25)

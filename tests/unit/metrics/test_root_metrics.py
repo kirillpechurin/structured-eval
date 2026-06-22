@@ -1,4 +1,4 @@
-"""Unit tests for root (document-level) metrics: OverallScore, Coverage,
+"""Unit tests for root (document-level) metrics: OverallLeafScore, CoverageLeafScore,
 SchemaValidity. Run on the built tree root, mirroring how the engine fires them.
 """
 
@@ -8,10 +8,10 @@ import pytest
 from pydantic import BaseModel
 
 from structured_eval import (
-    Coverage,
+    CoverageLeafScore,
     EvalConfig,
     FieldConfig,
-    OverallScore,
+    OverallLeafScore,
     SchemaValidity,
     TokenF1,
 )
@@ -25,59 +25,59 @@ class Invoice(BaseModel):
     status: str
 
 
-# ── OverallScore ──────────────────────────────────────────────────────────
+# ── OverallLeafScore ──────────────────────────────────────────────────────────
 
 
 def test_overall_score_perfect(tree_factory):
     root = tree_factory({"a": 1, "b": 2}, {"a": 1, "b": 2})
-    assert OverallScore().compute(root) == 1.0
+    assert OverallLeafScore().compute(root) == 1.0
 
 
 def test_overall_score_half(tree_factory):
     root = tree_factory({"a": 1, "b": 9}, {"a": 1, "b": 2})
-    assert OverallScore().compute(root) == pytest.approx(0.5)
+    assert OverallLeafScore().compute(root) == pytest.approx(0.5)
 
 
 def test_overall_score_weighted(tree_factory):
     cfg = EvalConfig(fields={"a": FieldConfig(weight=3.0), "b": FieldConfig(weight=1.0)})
     # a correct (w3), b wrong (w1) → 3/(3+1)
     root = tree_factory({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
-    assert OverallScore().compute(root) == pytest.approx(0.75)
+    assert OverallLeafScore().compute(root) == pytest.approx(0.75)
 
 
 def test_overall_score_uses_key_metric(tree_factory):
     cfg = EvalConfig(fields={"name": FieldConfig(metrics=[TokenF1()], key_metric=TokenF1())})
     root = tree_factory({"name": "the quick fox"}, {"name": "the quick brown fox"}, cfg)
-    score = OverallScore().compute(root)
+    score = OverallLeafScore().compute(root)
     assert 0.0 < score < 1.0
 
 
 def test_overall_score_empty_vacuous(tree_factory):
     root = tree_factory({}, {})
-    assert OverallScore().compute(root) == 1.0
+    assert OverallLeafScore().compute(root) == 1.0
 
 
-# ── Coverage ──────────────────────────────────────────────────────────────
+# ── CoverageLeafScore ──────────────────────────────────────────────────────────────
 
 
 def test_coverage_full(tree_factory):
     root = tree_factory({"a": 1, "b": 2}, {"a": 1, "b": 2})
-    assert Coverage().compute(root) == 1.0
+    assert CoverageLeafScore().compute(root) == 1.0
 
 
 def test_coverage_partial_missing(tree_factory):
     root = tree_factory({"a": 1}, {"a": 1, "b": 2})
-    assert Coverage().compute(root) == pytest.approx(0.5)
+    assert CoverageLeafScore().compute(root) == pytest.approx(0.5)
 
 
 def test_coverage_null_not_covered(tree_factory):
     root = tree_factory({"a": 1, "b": None}, {"a": 1, "b": 2})
-    assert Coverage().compute(root) == pytest.approx(0.5)
+    assert CoverageLeafScore().compute(root) == pytest.approx(0.5)
 
 
 def test_coverage_no_expected_vacuous(tree_factory):
     root = tree_factory({"a": 1}, {})
-    assert Coverage().compute(root) == 1.0
+    assert CoverageLeafScore().compute(root) == 1.0
 
 
 # ── SchemaValidity ────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
 
 
-class ObjectValidity(ObjectMetric):
+class ObjectTypeValidity(ObjectMetric):
     """Fraction of present scalar fields that are type-valid.
 
     A structural sanity check independent of value correctness: of the fields
@@ -15,7 +15,7 @@ class ObjectValidity(ObjectMetric):
     An object with no present scalar fields is vacuously 1.0.
     """
 
-    name = "object_validity"
+    name = "object_type_validity"
 
     def __init__(self) -> None:
         self._type_match = MetricInvoker(TypeMatch())

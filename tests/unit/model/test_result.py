@@ -117,10 +117,10 @@ class TestDiff:
         assert diff.field_deltas["x"]["score"] == pytest.approx(1.0)
 
     def test_metric_subset(self):
-        a = _report(metrics={"object_f1": 0.9, "coverage": 1.0})
-        b = _report(metrics={"object_f1": 0.7, "coverage": 0.5})
-        diff = a.diff_from(b, metrics=["coverage"])
-        assert set(diff.deltas) == {"coverage"}
+        a = _report(metrics={"object_f1": 0.9, "coverage_leaf_score": 1.0})
+        b = _report(metrics={"object_f1": 0.7, "coverage_leaf_score": 0.5})
+        diff = a.diff_from(b, metrics=["coverage_leaf_score"])
+        assert set(diff.deltas) == {"coverage_leaf_score"}
 
 
 class TestSerialization:

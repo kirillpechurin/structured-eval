@@ -11,13 +11,13 @@ import pytest
 from pydantic import BaseModel
 
 from structured_eval import (
-    Coverage,
+    CoverageLeafScore,
     EvalConfig,
     ExtraKeysPolicy,
     Faithfulness,
     FieldConfig,
     ObjectF1,
-    OverallScore,
+    OverallLeafScore,
     RulePassRate,
     SchemaValidity,
     TokenF1,
@@ -128,9 +128,9 @@ class TestWarnings:
 class TestMultiMetric:
     def test_several_metrics_one_pass(self, evaluate_one, invoice_pair):
         actual, expected = invoice_pair
-        cfg = EvalConfig(metrics=[ObjectF1(), Coverage(), OverallScore()])
+        cfg = EvalConfig(metrics=[ObjectF1(), CoverageLeafScore(), OverallLeafScore()])
         r = evaluate_one(actual, expected, cfg)
-        assert {"object_f1", "coverage", "overall_score"} <= set(r.metrics)
+        assert {"object_f1", "coverage_leaf_score", "overall_leaf_score"} <= set(r.metrics)
 
     def test_per_field_metrics(self, evaluate_one):
         cfg = EvalConfig(

@@ -16,9 +16,9 @@ class ArrayPRF1(ArrayMetric):
 
     name = "array_prf1"
 
-    def __init__(self, threshold: float = 1.0, mode: stats.MatchMode = stats.MatchMode.HARD):
+    def __init__(self, threshold: float = 1.0, mode: stats.GradingMode = stats.GradingMode.HARD):
         self.threshold = threshold
-        self.mode = stats.MatchMode(mode)
+        self.mode = stats.GradingMode(mode)
 
     def compute(self, node: ArrayNode) -> dict[str, float]:
         n_missing, n_spurious = astats.missing_spurious(node)

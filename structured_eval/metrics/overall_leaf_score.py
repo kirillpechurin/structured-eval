@@ -5,15 +5,18 @@ from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.scalar import ScalarNode
 
 
-class OverallScore(RootMetric):
+class OverallLeafScore(RootMetric):
     """Weighted mean of leaf match-criterion scores over the whole document.
 
     Each scalar field contributes its match-criterion verdict weighted by its
     configured ``weight`` (``FieldConfig.weight``). Missing expected leaves
     score 0; a document with no leaves is vacuously 1.0. The headline number.
+
+    Leaf-style: it flattens to scalar leaves across the whole tree (unlike the
+    hierarchical object metrics, which aggregate a node's direct children).
     """
 
-    name = "overall_score"
+    name = "overall_leaf_score"
 
     def compute(self, node: EvalNode) -> float:
         total_weight = 0.0

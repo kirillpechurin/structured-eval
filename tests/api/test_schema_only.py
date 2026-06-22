@@ -11,7 +11,7 @@ import pytest
 from pydantic import BaseModel
 
 from structured_eval import (
-    Coverage,
+    CoverageLeafScore,
     EvalConfig,
     Rule,
     RulePassRate,
@@ -30,10 +30,10 @@ class Invoice(BaseModel):
 
 class TestSchemaOnly:
     def test_valid(self):
-        cfg = EvalConfig(metrics=[SchemaValidity(Invoice), Coverage()])
+        cfg = EvalConfig(metrics=[SchemaValidity(Invoice), CoverageLeafScore()])
         r = evaluate({"id": "INV-1", "total": 100.0, "status": "paid"}, config=cfg)
         assert r.metrics["schema_validity"].representative() == 1.0
-        assert r.metrics["coverage"].representative() == pytest.approx(1.0)
+        assert r.metrics["coverage_leaf_score"].representative() == pytest.approx(1.0)
         assert r.metrics["schema_validity"].extra_values("schema_errors") == []
 
     def test_invalid(self):
@@ -43,10 +43,10 @@ class TestSchemaOnly:
         assert r.metrics["schema_validity"].extra_values("schema_errors")
 
     def test_coverage_partial_with_null(self):
-        # total null → not covered; but Coverage needs an expected reference
-        cfg = EvalConfig(metrics=[Coverage()])
+        # total null → not covered; but CoverageLeafScore needs an expected reference
+        cfg = EvalConfig(metrics=[CoverageLeafScore()])
         r = evaluate({"id": "1", "total": None}, {"id": "1", "total": 100.0}, config=cfg)
-        assert r.metrics["coverage"].representative() == pytest.approx(0.5)
+        assert r.metrics["coverage_leaf_score"].representative() == pytest.approx(0.5)
 
 
 class TestRulesOnly:

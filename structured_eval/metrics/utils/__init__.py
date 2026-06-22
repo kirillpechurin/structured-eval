@@ -2,7 +2,7 @@
 
 Clearly-scoped modules:
 
-* ``calculate`` — the precision / recall / F1 arithmetic (and the ``MatchMode``
+* ``calculate`` — the precision / recall / F1 arithmetic (and the ``GradingMode``
   hard/soft enum) used by every P/R/F1 metric, object and array alike.
 * ``object_utils`` — turning an object's matched fields into the
   ``(score, threshold)`` pairs that ``calculate.prf_counts`` consumes.

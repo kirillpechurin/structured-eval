@@ -6,10 +6,14 @@ add to expected (FN). So a present-but-wrong entry lowers both precision and
 recall. Nested object/array children are graded at their own node and are not
 counted here.
 
-A ``verdicts`` argument is a list of ``(score, threshold)`` from
-``structured_eval.metrics.utils.verdicts``. In ``MatchMode.HARD`` an entry is a
-TP when ``score >= threshold`` (counts 1.0); in ``MatchMode.SOFT`` each entry
-contributes its ``score`` fractionally (the threshold is ignored).
+A ``verdicts`` argument is a list of ``(score, threshold, weight)`` from
+``structured_eval.metrics.utils.verdicts``. Each entry contributes its
+``weight`` (``1.0`` by default → plain counts) rather than a flat 1: in
+``GradingMode.HARD`` an entry is a TP when ``score >= threshold`` (counts its
+weight); in ``GradingMode.SOFT`` it contributes ``weight * score`` (threshold
+ignored). ``missing_weight`` / ``spurious_weight`` are the summed weights of the
+FN / FP entries (counts when uniform). How those weights are derived is the
+caller's choice (see ``WeightMode``).
 """
 
 from __future__ import annotations
@@ -17,27 +21,38 @@ from __future__ import annotations
 from enum import StrEnum
 
 
-class MatchMode(StrEnum):
+class GradingMode(StrEnum):
     """How a verdict counts toward true positives."""
 
-    HARD = "hard"  # threshold gate: TP iff score >= threshold (counts 1.0)
-    SOFT = "soft"  # graded: the score contributes fractionally, no threshold
+    HARD = "hard"  # threshold gate: TP iff score >= threshold (counts its weight)
+    SOFT = "soft"  # graded: weight * score contributes, no threshold
+
+
+class WeightMode(StrEnum):
+    """How a node's children contribute to its weighted aggregate.
+
+    Extensible: more strategies (e.g. only first-level weights, or uniform per
+    level) can be added without touching the arithmetic below.
+    """
+
+    NONE = "none"  # ignore configured weights — every child counts 1.0
+    PROPORTIONAL = "proportional"  # weight each child by its configured ``weight``
 
 
 def prf_counts(
-    verdicts: list[tuple[float, float]],
-    n_missing: int,
-    n_spurious: int,
-    mode: MatchMode = MatchMode.HARD,
+    verdicts: list[tuple[float, float, float]],
+    missing_weight: float,
+    spurious_weight: float,
+    mode: GradingMode = GradingMode.HARD,
 ) -> tuple[float, float, float]:
-    """Return ``(tp, predicted, expected)``; ``tp`` is float in soft mode."""
-    matched = len(verdicts)
-    predicted = matched + n_spurious
-    expected = matched + n_missing
-    if mode == MatchMode.SOFT:
-        tp = sum(score for score, _ in verdicts)
+    """Return weighted ``(tp, predicted, expected)``; uniform weights → counts."""
+    matched_weight = sum(weight for _, _, weight in verdicts)
+    predicted = matched_weight + spurious_weight
+    expected = matched_weight + missing_weight
+    if mode == GradingMode.SOFT:
+        tp = sum(weight * score for score, _, weight in verdicts)
     else:
-        tp = sum(1.0 for score, threshold in verdicts if score >= threshold)
+        tp = sum(weight for score, threshold, weight in verdicts if score >= threshold)
     return tp, predicted, expected
 
 

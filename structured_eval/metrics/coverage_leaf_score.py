@@ -4,7 +4,7 @@ from structured_eval.metrics.base import RootMetric
 from structured_eval.model.nodes.base import EvalNode
 
 
-class Coverage(RootMetric):
+class CoverageLeafScore(RootMetric):
     """Fraction of expected leaf fields that are present (non-null) in actual.
 
     Completeness across the whole document, independent of value correctness.
@@ -13,7 +13,7 @@ class Coverage(RootMetric):
     node and are covered by the array metrics instead.)
     """
 
-    name = "coverage"
+    name = "coverage_leaf_score"
 
     def compute(self, node: EvalNode) -> float:
         expected = covered = 0

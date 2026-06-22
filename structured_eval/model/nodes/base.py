@@ -35,7 +35,7 @@ class EvalNode(BaseModel):
     path: str
     context: EvalContext
     expected_path: str | None = None
-    weight: float = 1.0  # relative importance for weighted aggregation (OverallScore)
+    weight: float = 1.0  # relative importance for weighted aggregation (OverallLeafScore, object metrics)
     metrics: list[Any] = Field(default_factory=list)  # list[BaseMetric] resolved for this node
     key_metric: Any = None  # BaseMetric: this node's representative score (parents read it)
     threshold: float = 1.0  # bar the representative score must clear to count as a TP
