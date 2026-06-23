@@ -22,9 +22,8 @@ class SchemaValidity(RootMetric):
 
     def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:
         result = self.validator.validate(node.actual)
-        errors = (
-            [f"type: {e}" for e in result.type_errors]
-            + [f"missing: {m}" for m in result.missing_required]
-            + [f"extra: {x}" for x in result.extra_fields]
-        )
-        return (1.0 if result.valid else 0.0), {"schema_errors": errors}
+        return (1.0 if result.valid else 0.0), {"schema_errors": {
+            "type_errors": result.type_errors,
+            "missing_required": result.missing_required,
+            "extra_fields": result.extra_fields
+        }}
