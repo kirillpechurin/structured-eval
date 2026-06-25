@@ -13,6 +13,7 @@ from structured_eval import (
     ExactMatch,
     Fuzzy,
     Numeric,
+    NumericCloseness,
     Presence,
     RegexMatch,
     TokenF1,
@@ -118,6 +119,33 @@ class TestNumeric:
         assert m.score(109, 100) == 1.0
 
 
+class TestNumericCloseness:
+    def test_graded_ratio(self):
+        # ratio similarity = min/max for same-sign values
+        assert NumericCloseness().score(10, 12) == pytest.approx(10 / 12)
+        assert NumericCloseness().score(100, 110) == pytest.approx(100 / 110)
+
+    def test_equal_is_one(self):
+        assert NumericCloseness().score(42, 42) == 1.0
+        assert NumericCloseness().score(0, 0) == 1.0
+
+    def test_opposite_signs_clamped_to_zero(self):
+        assert NumericCloseness().score(5, -5) == 0.0
+
+    def test_parses_numeric_strings(self):
+        # shares Numeric's lenient parser → strings are graded, not collapsed
+        assert NumericCloseness().score("100", 100) == 1.0
+        assert NumericCloseness().score("100", "110") == pytest.approx(100 / 110)
+        assert NumericCloseness().score("$120", 100) == pytest.approx(100 / 120)
+
+    def test_non_number_is_zero(self):
+        # applies only to numbers: any non-numeric side → 0.0, no equality fallback
+        assert NumericCloseness().score(True, 1) == 0.0  # bool is not numeric
+        assert NumericCloseness().score("abc", 100) == 0.0
+        assert NumericCloseness().score(None, None) == 0.0  # null → inapplicable
+        assert NumericCloseness().score("abc", "abc") == 0.0
+
+
 class TestTokenF1:
     def test_identical(self):
         assert TokenF1().score("the quick fox", "the quick fox") == 1.0
@@ -139,6 +167,12 @@ class TestTokenF1:
 
     def test_punctuation_ignored(self):
         assert TokenF1().score("hello, world.", "hello world") == 1.0
+
+    def test_multiset_repeated_tokens(self):
+        # SQuAD-style: repeats count with multiplicity, not collapsed to a set.
+        # "the the cat" (3 toks) vs "the cat" (2): common {the:1, cat:1} = 2
+        # p = 2/3, r = 2/2 → f1 = 2*(2/3)*1 / (2/3 + 1) = 0.8
+        assert TokenF1().score("the the cat", "the cat") == pytest.approx(0.8)
 
 
 class TestTypeMatch:

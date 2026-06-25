@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import re
 from enum import StrEnum
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.number import parse_number
 
 
 class NumericMode(StrEnum):
@@ -12,14 +12,6 @@ class NumericMode(StrEnum):
 
     RELATIVE = "relative"  # |a - e| / |e|
     ABSOLUTE = "absolute"  # |a - e|
-
-
-# Everything that is not part of a (possibly scientific) number — currency
-# symbols, thousands separators, whitespace, percent signs, etc. are dropped.
-# Kept: digits, decimal point, signs, and the exponent marker e/E, so float()
-# parses scientific notation ("1e3" → 1000.0, "1.5e-3" → 0.0015). A "%" is only
-# stripped, never interpreted: "50%" parses to 50, not 0.5.
-_NON_NUMERIC = re.compile(r"[^0-9eE.+\-]")
 
 
 class Numeric(FieldMetric):
@@ -57,8 +49,8 @@ class Numeric(FieldMetric):
         self.absolute_tolerance = absolute_tolerance
 
     def score(self, actual: Any, expected: Any) -> float:
-        a = self._to_number(actual)
-        e = self._to_number(expected)
+        a = parse_number(actual)
+        e = parse_number(expected)
         if a is None or e is None:
             return 0.0
         return 1.0 if self._within_tolerance(a, e) else 0.0
@@ -89,28 +81,3 @@ class Numeric(FieldMetric):
         else:
             deviation = abs(a - e)
         return deviation <= self.tolerance
-
-    @staticmethod
-    def _to_number(value: Any) -> float | None:
-        if isinstance(value, bool):
-            return None
-        if isinstance(value, (int, float)):
-            return float(value)
-        if not isinstance(value, str):
-            return None
-
-        text = value.strip()
-        negative = False
-        # Accounting notation: "(123)" means -123.
-        if text.startswith("(") and text.endswith(")"):
-            text = text[1:-1]
-            negative = True
-
-        text = _NON_NUMERIC.sub("", text)
-        if text in ("", "-", ".", "-."):
-            return None
-        try:
-            number = float(text)
-        except ValueError:
-            return None
-        return -number if negative else number
