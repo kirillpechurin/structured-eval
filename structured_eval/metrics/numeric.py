@@ -14,17 +14,23 @@ class NumericMode(StrEnum):
     ABSOLUTE = "absolute"  # |a - e|
 
 
-# Everything that is not a digit, sign, or decimal point — currency symbols,
-# thousands separators, whitespace, percent signs, etc.
-_NON_NUMERIC = re.compile(r"[^0-9.\-]")
+# Everything that is not part of a (possibly scientific) number — currency
+# symbols, thousands separators, whitespace, percent signs, etc. are dropped.
+# Kept: digits, decimal point, signs, and the exponent marker e/E, so float()
+# parses scientific notation ("1e3" → 1000.0, "1.5e-3" → 0.0015). A "%" is only
+# stripped, never interpreted: "50%" parses to 50, not 0.5.
+_NON_NUMERIC = re.compile(r"[^0-9eE.+\-]")
 
 
 class Numeric(FieldMetric):
     """Numeric equality within a tolerance band → 1.0, otherwise 0.0.
 
     Values are parsed leniently: currency symbols and thousands separators are
-    stripped (``"$1,234.50"`` → ``1234.50``) and accounting notation is honored
-    (``"(123)"`` → ``-123``). Non-numeric values yield 0.0.
+    stripped (``"$1,234.50"`` → ``1234.50``), accounting notation is honored
+    (``"(123)"`` → ``-123``), and scientific notation is supported
+    (``"1e3"`` → ``1000``). A percent sign is only stripped, **not** interpreted
+    (``"50%"`` → ``50``, not ``0.5``). US format is assumed (``,`` = thousands,
+    ``.`` = decimal); other shapes that don't parse cleanly yield 0.0.
 
     Tolerance can be given two ways:
 

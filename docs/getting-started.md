@@ -123,7 +123,7 @@ from structured_eval import (
     EvalConfig,
     FieldConfig,
     ObjectFieldConfig,
-    NormalizedMatch,
+    RegexMatch,
     NumericCloseness,
     TokenF1,
 )
@@ -131,7 +131,7 @@ from structured_eval import (
 config = EvalConfig(
     fields={
         "title": FieldConfig(metrics=[TokenF1()]),               # word overlap
-        "level": FieldConfig(metrics=[NormalizedMatch()]),       # case-insensitive
+        "level": FieldConfig(metrics=[RegexMatch()]),            # case-insensitive
         "duration_hours": FieldConfig(metrics=[NumericCloseness()]),  # graded closeness
         "instructor": ObjectFieldConfig(
             fields={

@@ -21,7 +21,6 @@ from structured_eval.metrics.faithfulness import Faithfulness
 from structured_eval.metrics.fuzzy import Fuzzy
 from structured_eval.metrics.levenshtein import Levenshtein
 from structured_eval.metrics.mean_score import MeanScore
-from structured_eval.metrics.normalized import NormalizedMatch
 from structured_eval.metrics.numeric import Numeric
 from structured_eval.metrics.numeric_closeness import NumericCloseness
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
@@ -32,6 +31,7 @@ from structured_eval.metrics.object_recall import ObjectRecall
 from structured_eval.metrics.object_type_validity import ObjectTypeValidity
 from structured_eval.metrics.overall_leaf_score import OverallLeafScore
 from structured_eval.metrics.presence import Presence
+from structured_eval.metrics.regex_match import RegexMatch
 from structured_eval.metrics.rule_pass_rate import Rule, RulePassRate
 from structured_eval.metrics.schema_validity import SchemaValidity
 from structured_eval.metrics.token_f1 import TokenF1
@@ -50,7 +50,7 @@ __all__ = [
     "resolve_metric",
     # field metrics
     "ExactMatch",
-    "NormalizedMatch",
+    "RegexMatch",
     "Numeric",
     "NumericCloseness",
     "TokenF1",

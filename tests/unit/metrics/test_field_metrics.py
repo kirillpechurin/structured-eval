@@ -12,9 +12,9 @@ import pytest
 from structured_eval import (
     ExactMatch,
     Fuzzy,
-    NormalizedMatch,
     Numeric,
     Presence,
+    RegexMatch,
     TokenF1,
     TypeMatch,
 )
@@ -40,19 +40,30 @@ class TestExactMatch:
         assert ExactMatch.name == "exact_match"
 
 
-class TestNormalizedMatch:
+class TestRegexMatch:
     def test_case_and_whitespace(self):
-        assert NormalizedMatch().score("  Acme   Corp ", "acme corp") == 1.0
+        assert RegexMatch().score("  Acme   Corp ", "acme corp") == 1.0
 
     def test_default_collapses_spaces(self):
-        assert NormalizedMatch().score("a\tb", "a b") == 1.0
+        assert RegexMatch().score("a\tb", "a b") == 1.0
 
     def test_still_distinguishes_values(self):
-        assert NormalizedMatch().score("Acme", "Globex") == 0.0
+        assert RegexMatch().score("Acme", "Globex") == 0.0
 
     def test_custom_pattern_drops_punctuation(self):
-        m = NormalizedMatch(pattern=r"[^\w\s]", repl="")
+        m = RegexMatch(pattern=r"[^\w\s]", repl="")
         assert m.score("hello, world!", "hello world") == 1.0
+
+    def test_string_only_non_str_is_zero(self):
+        # A string-only metric: non-str on either side scores 0.0, never coerced.
+        assert RegexMatch().score(12, 12.0) == 0.0
+        assert RegexMatch().score(None, None) == 0.0
+        assert RegexMatch().score(None, "none") == 0.0
+        assert RegexMatch().score("12", 12) == 0.0
+
+    def test_lower_and_strip_flags(self):
+        assert RegexMatch(lower=False).score("Acme", "acme") == 0.0
+        assert RegexMatch(strip=False).score(" acme ", "acme") == 0.0
 
 
 class TestNumeric:
@@ -83,6 +94,15 @@ class TestNumeric:
     def test_accounting_notation_negative(self):
         assert Numeric(tolerance=0).score("(123)", -123) == 1.0
         assert Numeric(tolerance=0).score("(123)", 123) == 0.0
+
+    def test_scientific_notation_supported(self):
+        assert Numeric(tolerance=0).score("1e3", 1000) == 1.0
+        assert Numeric(tolerance=0).score("1.5e-3", 0.0015) == 1.0
+
+    def test_percent_sign_stripped_not_interpreted(self):
+        # Deliberate: "%" is dropped, the number is unchanged ("50%" → 50, not 0.5).
+        assert Numeric(tolerance=0).score("50%", 50) == 1.0
+        assert Numeric(tolerance=0).score("50%", 0.5) == 0.0
 
     def test_bool_is_not_numeric(self):
         assert Numeric().score(True, 1) == 0.0

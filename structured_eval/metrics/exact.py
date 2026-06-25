@@ -8,8 +8,11 @@ from structured_eval.metrics.base import FieldMetric
 class ExactMatch(FieldMetric):
     """Strict equality: ``actual == expected`` → 1.0, else 0.0.
 
-    The default field comparison and the default match criterion for object
-    and array metrics.
+    The default scalar comparison, and the default key comparison in ``by_key``
+    array alignment. It does *not* score whole objects/arrays: object metrics
+    read each child's representative, and array alignment defaults are
+    type-aware — ExactMatch only ever touches a dict/list through the
+    value-level ``score`` path.
     """
 
     name = "exact_match"

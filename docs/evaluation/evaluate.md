@@ -112,7 +112,7 @@ all run against this one course-extraction example:
 ```python
 from structured_eval import (
     evaluate, EvalConfig, FieldConfig, ObjectFieldConfig,
-    NormalizedMatch, NumericCloseness, TokenF1, ObjectF1,
+    RegexMatch, NumericCloseness, TokenF1, ObjectF1,
 )
 
 expected = {
@@ -131,7 +131,7 @@ actual = {
 }
 config = EvalConfig(fields={
     "title": FieldConfig(metrics=[TokenF1()]),
-    "level": FieldConfig(metrics=[NormalizedMatch()]),
+    "level": FieldConfig(metrics=[RegexMatch()]),
     "duration_hours": FieldConfig(metrics=[NumericCloseness()]),
     "instructor": ObjectFieldConfig(
         metrics=[ObjectF1()],
@@ -227,7 +227,7 @@ report.print_summary()
 #   instructor                   object_f1           0.50       1.00   ✗
 #   instructor.experience_years  numeric_closeness   0.88       1.00   ✗
 #   instructor.name              exact_match         1.00       1.00   ✓
-#   level                        normalized_match    1.00       1.00   ✓
+#   level                        regex_match         1.00       1.00   ✓
 #   title                        token_f1            0.67       1.00   ✗
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

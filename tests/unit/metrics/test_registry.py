@@ -21,7 +21,7 @@ pytestmark = pytest.mark.unit
 # Concrete, named metrics in the public catalog (abstract bases excluded).
 NAMED_METRICS = [
     "ExactMatch",
-    "NormalizedMatch",
+    "RegexMatch",
     "Numeric",
     "TokenF1",
     "Fuzzy",
