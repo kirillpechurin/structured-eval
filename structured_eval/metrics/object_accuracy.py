@@ -9,12 +9,15 @@ from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectAccuracy(ObjectMetric):
-    """Mean field score over an object's expected scalar fields (soft).
+    """Weighted soft mean of field correctness over an object's expected fields.
 
-    Continuous (rewards partial matches), unlike threshold-based F1. The per
-    field score uses the resolved match criterion (``score_policy`` → field
-    ``key_metric`` → ``ExactMatch``). Missing expected fields count as 0.0; an
-    object with no expected scalar fields is vacuously 1.0.
+    Equivalent to **soft recall**: ``Σ weight·score / (matched_weight +
+    missing_weight)``. Each matched field contributes its ``representative``
+    (any child kind — a nested object/array counts via its representative, not
+    only scalars), or a ``score_policy`` override. Missing expected fields count
+    as 0.0. **Spurious (extra) fields are not penalized** — the denominator is
+    the expected side only (use ``ObjectF1`` for a precision-aware score). An
+    object with no expected fields is vacuously 1.0.
 
     ``weight_mode`` (default ``PROPORTIONAL``) makes this a weighted mean by each
     child's configured ``weight``; ``NONE`` restores the plain mean.

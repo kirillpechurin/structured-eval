@@ -9,11 +9,15 @@ from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectPrecision(ObjectMetric):
-    """TP / (TP + FP) over an object's scalar fields.
+    """TP / (TP + FP) over an object's fields (slot-filling precision).
 
-    The match criterion per field is resolved from ``score_policy`` →
-    field ``key_metric`` → ``ExactMatch`` (see ``_match_criterion``).
-    ``mode="soft"`` drops the threshold and uses field scores fractionally.
+    Each matched field is a TP when its ``representative`` clears its threshold
+    (any child kind — nested objects/arrays count via their representative);
+    extra fields are FP. The per-field score comes from ``score_policy`` →
+    the child's ``key_metric`` → ``ExactMatch``. Default ``mode=HARD`` with the
+    field threshold (``1.0`` unless configured), so a field counts only when its
+    score is a perfect match; ``mode="soft"`` drops the threshold and uses the
+    field score fractionally.
     """
 
     name = "object_precision"

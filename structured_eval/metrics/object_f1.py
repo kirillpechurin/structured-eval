@@ -9,9 +9,11 @@ from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectF1(ObjectMetric):
-    """Harmonic mean of object precision and recall over scalar fields.
+    """Harmonic mean of object precision and recall over an object's fields.
 
-    Match criterion and ``mode`` behave as for ``ObjectPrecision``.
+    Slot-filling F1: matched-and-correct → TP, missing → FN, extra → FP. Match
+    criterion and ``mode`` behave as for ``ObjectPrecision`` (counts all child
+    kinds via their representative).
     """
 
     name = "object_f1"

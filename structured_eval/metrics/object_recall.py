@@ -9,9 +9,10 @@ from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectRecall(ObjectMetric):
-    """TP / (TP + FN) over an object's scalar fields.
+    """TP / (TP + FN) over an object's fields (slot-filling recall).
 
-    Match criterion and ``mode`` behave as for ``ObjectPrecision``.
+    Missing expected fields are FN. Match criterion and ``mode`` behave as for
+    ``ObjectPrecision`` (counts all child kinds via their representative).
     """
 
     name = "object_recall"

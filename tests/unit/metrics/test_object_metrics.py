@@ -83,6 +83,16 @@ def test_validity_type_check(tree_factory):
     assert ObjectTypeValidity().compute(root) == pytest.approx(0.5)
 
 
+def test_validity_checks_container_types(tree_factory):
+    # all child kinds count: a list where an object is expected is type-invalid
+    root = tree_factory(
+        {"price": 199, "instructor": ["X"], "tags": ["a"]},
+        {"price": 199, "instructor": {"name": "X"}, "tags": ["a", "b"]},
+    )
+    # price: number✓, instructor: array vs object ✗, tags: array✓ → 2/3
+    assert ObjectTypeValidity().compute(root) == pytest.approx(2 / 3)
+
+
 def test_validity_vacuous_when_no_scalars(tree_factory):
     root = tree_factory({}, {})
     assert ObjectTypeValidity().compute(root) == 1.0
