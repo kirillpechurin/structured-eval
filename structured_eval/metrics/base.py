@@ -92,6 +92,23 @@ class RootMetric(Metric[EvalNode]):
     def compute(self, node: EvalNode) -> MetricOutput: ...
 
 
+class AnyNodeMetric(Metric[EvalNode]):
+    """Applies uniformly to *every* node — same ``compute`` regardless of kind.
+
+    The node-agnostic branch of the hierarchy: unlike the typed metrics
+    (``FieldMetric`` / ``ObjectMetric`` / ``ArrayMetric``) it is not pinned to
+    one node type, and unlike ``GenericMetric`` it does not dispatch per kind —
+    it runs one uniform computation on any ``EvalNode``. ``RootMetric`` is the
+    sibling that is *also* ``Metric[EvalNode]`` but admitted only at the root;
+    an ``AnyNodeMetric`` is admitted everywhere. ``MeanScore`` (the default
+    representative) lives here, and a custom uniform metric can be cascaded via
+    ``config.metrics`` or chosen as a ``key_metric``.
+    """
+
+    @abstractmethod
+    def compute(self, node: EvalNode) -> MetricOutput: ...
+
+
 class GenericMetric(BaseMetric):
     """Metrics spanning several node types, outside the single-``compute`` shape.
 

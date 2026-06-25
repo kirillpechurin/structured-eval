@@ -88,7 +88,11 @@ def test_schema_valid_pydantic(tree_factory):
     root = tree_factory({"id": "1", "total": 100.0, "status": "paid"}, None)
     score, extra = metric.compute(root)
     assert score == 1.0
-    assert extra["schema_errors"] == []
+    assert extra["schema_errors"] == {
+        "type_errors": [],
+        "missing_required": [],
+        "extra_fields": [],
+    }
 
 
 def test_schema_invalid_type(tree_factory):
@@ -96,7 +100,7 @@ def test_schema_invalid_type(tree_factory):
     root = tree_factory({"id": "1", "total": "not-a-float", "status": "paid"}, None)
     score, extra = metric.compute(root)
     assert score == 0.0
-    assert any("total" in e for e in extra["schema_errors"])
+    assert "total" in extra["schema_errors"]["type_errors"]
 
 
 def test_schema_invalid_missing(tree_factory):
@@ -104,7 +108,7 @@ def test_schema_invalid_missing(tree_factory):
     root = tree_factory({"id": "1"}, None)
     score, extra = metric.compute(root)
     assert score == 0.0
-    assert any("missing" in e for e in extra["schema_errors"])
+    assert "total" in extra["schema_errors"]["missing_required"]
 
 
 def test_schema_jsonschema_dict(tree_factory):

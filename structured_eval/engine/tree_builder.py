@@ -5,6 +5,7 @@ from typing import Any
 from structured_eval.alignment import make_aligner
 from structured_eval.metrics.array_accuracy import ArrayAccuracy
 from structured_eval.metrics.base import (
+    AnyNodeMetric,
     ArrayMetric,
     BaseMetric,
     FieldMetric,
@@ -76,10 +77,13 @@ class TreeBuilder:
         """Whether ``metric`` should be resolved onto a node of ``node_cls``.
 
         Typed metrics match their node type (a ``RootMetric`` only at the root);
-        a ``GenericMetric`` matches iff it defines the node's ``compute_<kind>``.
+        an ``AnyNodeMetric`` matches every node; a ``GenericMetric`` matches iff
+        it defines the node's ``compute_<kind>``.
         """
         if isinstance(metric, RootMetric):
             return is_root
+        if isinstance(metric, AnyNodeMetric):
+            return True
         if isinstance(metric, FieldMetric):
             return issubclass(node_cls, ScalarNode)
         if isinstance(metric, ObjectMetric):

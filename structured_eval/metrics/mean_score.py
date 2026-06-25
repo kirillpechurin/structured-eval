@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from structured_eval.metrics.base import Metric
+from structured_eval.metrics.base import AnyNodeMetric
 from structured_eval.model.nodes.base import EvalNode
 
 
-class MeanScore(Metric[EvalNode]):
+class MeanScore(AnyNodeMetric):
     """A node's representative score: the arithmetic mean of its own metrics.
 
     The default ``key_metric`` of every node — the single number that bubbles up

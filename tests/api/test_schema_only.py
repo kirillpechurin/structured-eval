@@ -34,13 +34,17 @@ class TestSchemaOnly:
         r = evaluate({"id": "INV-1", "total": 100.0, "status": "paid"}, config=cfg)
         assert r.metrics["schema_validity"].representative() == 1.0
         assert r.metrics["coverage_leaf_score"].representative() == pytest.approx(1.0)
-        assert r.metrics["schema_validity"].extra_values("schema_errors") == []
+        assert r.metrics["schema_validity"].root().extra["schema_errors"] == {
+            "type_errors": [],
+            "missing_required": [],
+            "extra_fields": [],
+        }
 
     def test_invalid(self):
         cfg = EvalConfig(metrics=[SchemaValidity(Invoice)])
         r = evaluate({"id": "INV-1", "total": "nope"}, config=cfg)
         assert r.metrics["schema_validity"].representative() == 0.0
-        assert r.metrics["schema_validity"].extra_values("schema_errors")
+        assert "total" in r.metrics["schema_validity"].root().extra["schema_errors"]["type_errors"]
 
     def test_coverage_partial_with_null(self):
         # total null → not covered; but CoverageLeafScore needs an expected reference

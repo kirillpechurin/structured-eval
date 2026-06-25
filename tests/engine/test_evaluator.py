@@ -184,3 +184,42 @@ class TestNested:
         r = evaluate_one(actual, expected, cfg)
         assert r.field_scores["vendor.name"].score == 1.0
         assert "lines" in r.array_matches
+
+
+class TestAnyNodeMetric:
+    """An AnyNodeMetric cascades uniformly onto every node, regardless of kind."""
+
+    def test_cascades_onto_every_node(self, evaluate_one):
+        from structured_eval.metrics.base import AnyNodeMetric
+        from structured_eval.model.nodes.base import EvalNode
+
+        class ConstDepth(AnyNodeMetric):
+            name = "const_depth"
+
+            def compute(self, node: EvalNode) -> float:
+                return 0.42
+
+        actual = {"vendor": {"name": "Acme"}, "lines": [1, 2], "total": 100}
+        cfg = EvalConfig(metrics=[ConstDepth()])
+        r = evaluate_one(actual, actual, cfg)
+
+        # one uniform metric, the same on the root object, a nested object,
+        # an array, and a scalar leaf — no per-kind dispatch.
+        for path in ("$", "vendor", "lines", "total", "vendor.name"):
+            assert r.field_scores[path].metrics["const_depth"] == 0.42
+        assert r.metrics["const_depth"].mean() == 0.42
+
+    def test_usable_as_explicit_key_metric(self, evaluate_one):
+        from structured_eval.metrics.base import AnyNodeMetric
+        from structured_eval.model.nodes.base import EvalNode
+
+        class Half(AnyNodeMetric):
+            name = "half"
+
+            def compute(self, node: EvalNode) -> float:
+                return 0.5
+
+        cfg = EvalConfig(metrics=[Half()], key_metric="half")
+        r = evaluate_one({"a": 1}, {"a": 1}, cfg)
+        assert r.score_label == "half"
+        assert r.score == 0.5
