@@ -26,6 +26,8 @@ class Fuzzy(FieldMetric):
     * ``token_set_ratio`` — set-based, ignores duplicate/extra tokens.
 
     ``normalize`` strips surrounding whitespace and lowercases before comparison.
+    String-only: if either side is not a ``str`` the score is 0.0 (no coercion),
+    consistent with the other text metrics.
     """
 
     name = "fuzzy"
@@ -39,6 +41,8 @@ class Fuzzy(FieldMetric):
         self.normalize = normalize
 
     def score(self, actual: Any, expected: Any) -> float:
+        if not (isinstance(actual, str) and isinstance(expected, str)):
+            return 0.0
         try:
             from rapidfuzz import fuzz
         except ImportError as exc:  # pragma: no cover
@@ -54,7 +58,7 @@ class Fuzzy(FieldMetric):
             "token_set_ratio": fuzz.token_set_ratio,
         }[self.method]
 
-        a, e = str(actual), str(expected)
+        a, e = actual, expected
         if self.normalize:
             a, e = a.strip().lower(), e.strip().lower()
         return float(scorer(a, e)) / 100.0

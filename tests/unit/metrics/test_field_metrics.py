@@ -174,6 +174,11 @@ class TestTokenF1:
         # p = 2/3, r = 2/2 → f1 = 2*(2/3)*1 / (2/3 + 1) = 0.8
         assert TokenF1().score("the the cat", "the cat") == pytest.approx(0.8)
 
+    def test_string_only_non_str_is_zero(self):
+        assert TokenF1().score(None, None) == 0.0
+        assert TokenF1().score(None, "none") == 0.0
+        assert TokenF1().score(123, 123.0) == 0.0
+
 
 class TestTypeMatch:
     def test_same_type(self):
@@ -212,6 +217,11 @@ class TestFuzzy:
     def test_normalize_disabled_keeps_case(self):
         assert Fuzzy(normalize=False).score("ACME", "acme") < 1.0
         assert Fuzzy(normalize=True).score("ACME", "acme") == 1.0
+
+    def test_string_only_non_str_is_zero(self):
+        assert Fuzzy().score(None, None) == 0.0
+        assert Fuzzy().score(None, "none") == 0.0
+        assert Fuzzy().score(123, 123.0) == 0.0
 
 
 class TestLevenshtein:

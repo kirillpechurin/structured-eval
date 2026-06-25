@@ -21,12 +21,15 @@ class TokenF1(FieldMetric):
     with multiplicity exactly like the official SQuAD F1 — so a repeated token
     only helps as often as it appears on both sides (``"the the cat"`` vs
     ``"the cat"`` is 0.8, not 1.0). Precision and recall are over the token
-    *counts*; their harmonic mean is the score.
+    *counts*; their harmonic mean is the score. String-only: if either side is
+    not a ``str`` the score is 0.0 (no coercion).
     """
 
     name = "token_f1"
 
     def score(self, actual: Any, expected: Any) -> float:
+        if not (isinstance(actual, str) and isinstance(expected, str)):
+            return 0.0
         a = _tokenize(actual)
         e = _tokenize(expected)
         if not a and not e:

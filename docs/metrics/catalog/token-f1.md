@@ -65,7 +65,9 @@ float(report.field_scores["summary"].metrics["token_f1"])   # 0.667 — shares l
   a plain set overlap.
 - **Articles are kept** — `a`/`an`/`the` are *not* stripped (unlike SQuAD's answer
   normalization); they count as tokens like any other word.
-- **Empty handling** — both empty → `1.0`; exactly one empty → `0.0`.
+- **Strings only** — if either side isn't a `str` the score is `0.0` (no coercion);
+  `None` vs `"none"` is `0.0`, not a match. Empty *strings*: both empty → `1.0`,
+  exactly one empty → `0.0`.
 - **Word order is ignored** — it's a bag of tokens. For order-sensitive or
   character-level similarity use [`Fuzzy`](fuzzy.md).
 
