@@ -71,10 +71,12 @@ def test_ner_array_by_key():
     )
     r = evaluate(actual, expected, config=cfg)
     am = r.array_matches["entities"]
-    # Acme + Berlin align (2 TP), ghost spurious, 2024 missed
+    # Acme + Berlin align (2 matched), ghost spurious, 2024 missed
     assert len(am.matched) == 2
-    assert am.precision == pytest.approx(2 / 3)
-    assert am.recall == pytest.approx(2 / 3)
+    assert len(am.spurious) == 1
+    assert len(am.missed) == 1
+    # value-aware P/R/F1 come from the array metrics, not the match result
+    assert r.field_scores["entities"].metrics["array_f1"] == pytest.approx(2 / 3)
 
 
 # ── tool call: function name + nested args object ───────────────────────────
