@@ -21,7 +21,7 @@ class OverallLeafScore(RootMetric):
     def compute(self, node: EvalNode) -> float:
         total_weight = 0.0
         weighted = 0.0
-        for leaf in node.leaves():  # TODO: Strange overall score
+        for leaf in node.leaves():
             assert isinstance(leaf, ScalarNode)
             total_weight += leaf.weight
             weighted += leaf.weight * leaf.representative
