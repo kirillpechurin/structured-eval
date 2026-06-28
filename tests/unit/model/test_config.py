@@ -1,4 +1,4 @@
-"""Unit tests for the config models and their defaults/validation."""
+"""Config models — defaults, nesting, and enum value sets (model/config.py)."""
 
 import pytest
 
@@ -17,60 +17,73 @@ from structured_eval import (
 pytestmark = pytest.mark.unit
 
 
-class TestDefaults:
-    def test_eval_config_defaults(self):
-        cfg = EvalConfig()
-        assert cfg.metrics == []
-        assert cfg.fields == {}
-        assert cfg.null_policy == NullPolicy.PENALIZE
-        assert cfg.extra_keys == ExtraKeysPolicy.IGNORE
-        assert cfg.key_metric is None
-
-    def test_field_config_defaults(self):
-        fc = FieldConfig()
-        assert fc.weight == 1.0
-        assert fc.required is False
-        assert fc.null_policy is None  # inherit
-
-    def test_array_config_defaults(self):
-        ac = ArrayFieldConfig()
-        assert ac.strategy == ArrayStrategy.BY_INDEX
-        assert ac.params == {}
+# ── defaults ─────────────────────────────────────────────────────────────────
 
 
-class TestArbitraryMetrics:
-    def test_holds_metric_instances(self):
-        cfg = EvalConfig(metrics=[ObjectF1()], key_metric=ObjectF1())
-        assert isinstance(cfg.metrics[0], ObjectF1)
-
-    def test_field_metric_list(self):
-        fc = FieldConfig(metrics=[ExactMatch()], key_metric=ExactMatch())
-        assert isinstance(fc.metrics[0], ExactMatch)
-
-
-class TestNesting:
-    def test_object_field_config_nests(self):
-        cfg = ObjectFieldConfig(
-            fields={"vendor": ObjectFieldConfig(fields={"name": FieldConfig()})}
-        )
-        assert isinstance(cfg.fields["vendor"], ObjectFieldConfig)
-
-    def test_array_item_config(self):
-        cfg = ArrayFieldConfig(
-            item=ObjectFieldConfig(fields={"id": FieldConfig()}),
-            strategy=ArrayStrategy.BY_KEY,
-            params={"key": "id"},
-        )
-        assert cfg.params["key"] == "id"
-        assert isinstance(cfg.item, ObjectFieldConfig)
+def test_eval_config_defaults():
+    cfg = EvalConfig()
+    assert cfg.metrics == []
+    assert cfg.fields == {}
+    assert cfg.null_policy == NullPolicy.PENALIZE
+    assert cfg.extra_keys == ExtraKeysPolicy.IGNORE
+    assert cfg.key_metric is None
 
 
-class TestEnums:
-    def test_null_policy_values(self):
-        assert {p.value for p in NullPolicy} == {"ignore", "penalize", "require_match"}
+def test_field_config_defaults():
+    fc = FieldConfig()
+    assert fc.weight == 1.0
+    assert fc.required is False
+    assert fc.null_policy is None  # inherit
 
-    def test_extra_keys_values(self):
-        assert {p.value for p in ExtraKeysPolicy} == {"ignore", "penalize"}
 
-    def test_array_strategy_values(self):
-        assert {s.value for s in ArrayStrategy} == {"by_index", "by_key", "hungarian"}
+def test_array_config_defaults():
+    ac = ArrayFieldConfig()
+    assert ac.strategy == ArrayStrategy.BY_INDEX
+    assert ac.params == {}
+
+
+# ── metric holders ───────────────────────────────────────────────────────────
+
+
+def test_eval_config_holds_metric_instances():
+    cfg = EvalConfig(metrics=[ObjectF1()], key_metric=ObjectF1())
+    assert isinstance(cfg.metrics[0], ObjectF1)
+
+
+def test_field_config_holds_metric_list():
+    fc = FieldConfig(metrics=[ExactMatch()], key_metric=ExactMatch())
+    assert isinstance(fc.metrics[0], ExactMatch)
+
+
+# ── nesting ──────────────────────────────────────────────────────────────────
+
+
+def test_object_field_config_nests():
+    cfg = ObjectFieldConfig(fields={"vendor": ObjectFieldConfig(fields={"name": FieldConfig()})})
+    assert isinstance(cfg.fields["vendor"], ObjectFieldConfig)
+
+
+def test_array_item_config():
+    cfg = ArrayFieldConfig(
+        item=ObjectFieldConfig(fields={"id": FieldConfig()}),
+        strategy=ArrayStrategy.BY_KEY,
+        params={"key": "id"},
+    )
+    assert cfg.params["key"] == "id"
+    assert isinstance(cfg.item, ObjectFieldConfig)
+
+
+# ── enum value sets ──────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("enum", "values"),
+    [
+        (NullPolicy, {"ignore", "penalize", "require_match"}),
+        (ExtraKeysPolicy, {"ignore", "penalize"}),
+        (ArrayStrategy, {"by_index", "by_key", "hungarian"}),
+    ],
+    ids=["null-policy", "extra-keys", "array-strategy"],
+)
+def test_enum_values(enum, values):
+    assert {member.value for member in enum} == values

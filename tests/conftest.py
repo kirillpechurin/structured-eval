@@ -88,27 +88,62 @@ def context_factory():
     return make_context
 
 
-# ── data fixtures ───────────────────────────────────────────────────────────
+# ── semantic assertions (exposed as fixtures; see tests/README.md) ───────────
+
+
+def _assert_metric(report: EvalReport, name: str, value: float) -> None:
+    """Assert a metric's representative value across the tree (``report.metrics``)."""
+    actual = report.metrics[name].representative()
+    assert actual == pytest.approx(value), f"metric {name!r}: expected {value}, got {actual}"
+
+
+def _assert_field(report: EvalReport, path: str, score: float) -> None:
+    """Assert one field's representative score (``report.field_scores[path].score``)."""
+    fs = report.field_scores[path]
+    assert fs.score == pytest.approx(score), f"field {path!r}: expected {score}, got {fs.score}"
+
+
+@pytest.fixture
+def assert_metric():
+    """Semantic assertion: ``assert_metric(report, "object_f1", 0.5)``."""
+    return _assert_metric
+
+
+@pytest.fixture
+def assert_field():
+    """Semantic assertion: ``assert_field(report, "total", 0.0)``."""
+    return _assert_field
+
+
+# ── domain data builders ─────────────────────────────────────────────────────
+
+
+def make_invoice(**overrides: Any) -> dict[str, Any]:
+    """A canonical invoice document; pass overrides for the fields under test.
+
+    Builders keep tests focused: ``make_invoice(total=99.0)`` shows *only* what
+    differs from the baseline, instead of repeating the full literal.
+    """
+    base = {"id": "INV-001", "vendor": "Acme Corp", "total": 100.0, "status": "paid"}
+    base.update(overrides)
+    return base
+
+
+INVOICE_SOURCE = "Invoice INV-001 from Acme Corp, total amount 100.0 USD, status paid"
+
+
+@pytest.fixture
+def invoice_builder():
+    """Fixture exposing ``make_invoice`` for tests that prefer injection."""
+    return make_invoice
 
 
 @pytest.fixture
 def invoice_pair() -> tuple[dict, dict]:
     """A small invoice document with one wrong field (total)."""
-    actual = {
-        "id": "INV-001",
-        "vendor": "Acme Corp",
-        "total": 99.0,
-        "status": "paid",
-    }
-    expected = {
-        "id": "INV-001",
-        "vendor": "Acme Corp",
-        "total": 100.0,
-        "status": "paid",
-    }
-    return actual, expected
+    return make_invoice(total=99.0), make_invoice()
 
 
 @pytest.fixture
 def invoice_source() -> str:
-    return "Invoice INV-001 from Acme Corp, total amount 100.0 USD, status paid"
+    return INVOICE_SOURCE
