@@ -6,7 +6,7 @@ directly, without any host library installed.
 
 from __future__ import annotations
 
-from structured_eval.model.result import EvalReport
+from structured_eval.model.result import EvalReport, NodeType
 
 _MAX_REASONS = 5
 
@@ -22,7 +22,7 @@ def reason_text(report: EvalReport) -> str:
 
     parts = []
     for fs in list(failed.values())[:_MAX_REASONS]:
-        if fs.node_type == "scalar":
+        if fs.node_type == NodeType.SCALAR:
             parts.append(f"{fs.path}: {fs.actual!r} != {fs.expected!r}")
         else:
             parts.append(f"{fs.path}: score {fs.score:.2g}" if fs.score is not None else fs.path)
