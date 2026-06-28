@@ -1,84 +1,83 @@
 """Unit tests for L1 substring faithfulness.
 
-``SubstringFaithfulness.compute(actual, source, config) -> (score, hallucinated)``
-checks each leaf value against the source text; the ``Faithfulness`` root metric
-wraps it, reading ``source`` from the node context and returning ``None`` when
-there is no source.
+``FieldFaithfulness`` is a per-field metric: each scalar leaf scores 1.0 if its
+string form is a substring of the sample's ``source`` (case-insensitive), else
+0.0. Aggregation is the usual leaf roll-up; hallucinated fields are the leaves
+scoring 0.0 (``report.metrics["field_faithfulness"].by_path``). A missing
+``source`` is a configuration error (``ValueError``).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from structured_eval import EvalConfig, Faithfulness, FieldConfig
-from structured_eval.metrics.faithfulness.substring import SubstringFaithfulness
+from structured_eval import EvalConfig, FieldFaithfulness, evaluate
 
 pytestmark = pytest.mark.unit
 
 SOURCE = "Invoice from Acme Corp, total amount 100.0 USD, status paid"
+CFG = EvalConfig(metrics=[FieldFaithfulness()])
 
 
-class TestSubstringFaithfulness:
+def _faith(actual, source=SOURCE):
+    return evaluate(actual, None, CFG, source=source).metrics["field_faithfulness"]
+
+
+class TestFieldFaithfulness:
     def test_all_found(self):
-        score, hallucinated = SubstringFaithfulness().compute(
-            {"vendor": "Acme Corp", "total": "100.0"}, SOURCE, EvalConfig()
-        )
-        assert score == 1.0
-        assert hallucinated == []
+        mc = _faith({"vendor": "Acme Corp", "total": "100.0"})
+        assert mc.mean() == 1.0
+        assert _hallucinated(mc) == []
 
     def test_hallucination_detected(self):
-        score, hallucinated = SubstringFaithfulness().compute(
-            {"vendor": "Globex"}, SOURCE, EvalConfig()
-        )
-        assert score == 0.0
-        assert hallucinated == ["vendor"]
+        mc = _faith({"vendor": "Globex"})
+        assert mc.mean() == 0.0
+        assert _hallucinated(mc) == ["vendor"]
 
     def test_case_insensitive(self):
-        score, _ = SubstringFaithfulness().compute({"vendor": "acme corp"}, SOURCE, EvalConfig())
-        assert score == 1.0
+        assert _faith({"vendor": "acme corp"}).mean() == 1.0
 
     def test_partial(self):
-        score, hallucinated = SubstringFaithfulness().compute(
-            {"vendor": "Acme Corp", "city": "Berlin"}, SOURCE, EvalConfig()
-        )
-        assert score == pytest.approx(0.5)
-        assert hallucinated == ["city"]
+        mc = _faith({"vendor": "Acme Corp", "city": "Berlin"})
+        assert mc.mean() == pytest.approx(0.5)
+        assert _hallucinated(mc) == ["city"]
 
-    def test_derived_field_skipped(self):
-        cfg = EvalConfig(fields={"total": FieldConfig(derived=True)})
-        # total is derived (not in source) but excluded → score from vendor only
-        score, hallucinated = SubstringFaithfulness().compute(
-            {"vendor": "Acme Corp", "total": "999"}, SOURCE, cfg
-        )
-        assert score == 1.0
-        assert hallucinated == []
+    def test_nested_object(self):
+        # nested object leaves materialize without expected and are checked
+        mc = _faith({"meta": {"status": "paid"}, "vendor": "Acme Corp"})
+        assert mc.mean() == 1.0
+        assert "meta.status" in mc.by_path
 
-    def test_nested_and_list(self):
-        score, hallucinated = SubstringFaithfulness().compute(
-            {"meta": {"status": "paid"}, "tags": ["100.0", "ghost"]},
-            SOURCE,
-            EvalConfig(),
-        )
-        assert "tags[1]" in hallucinated
-        assert 0.0 < score < 1.0
+    def test_array_items_need_expected(self):
+        # Known limitation: in schema-only mode (expected=None) array items are
+        # not aligned, so no item nodes exist and faithfulness can't reach them.
+        # With an expected list the items materialize and are checked. (TODO:
+        # materialize actual elements without expected — roadmap.)
+        without = evaluate({"tags": ["100.0", "ghost"]}, None, CFG, source="value 100.0 here")
+        assert "field_faithfulness" not in without.metrics  # no array item nodes
+        with_exp = evaluate(
+            {"tags": ["100.0", "ghost"]},
+            {"tags": ["100.0", "x"]},
+            CFG,
+            source="value 100.0 here",
+        ).metrics["field_faithfulness"]
+        assert _hallucinated(with_exp) == ["tags[1]"]
 
-    def test_nothing_checkable_vacuous(self):
-        score, hallucinated = SubstringFaithfulness().compute({}, SOURCE, EvalConfig())
-        assert score == 1.0
-        assert hallucinated == []
+    def test_null_value_skipped(self):
+        # a null leaf has nothing to ground → not counted
+        mc = _faith({"vendor": "Acme Corp", "city": None})
+        assert mc.mean() == 1.0
+        assert "city" not in mc.by_path
 
+    def test_nothing_checkable_no_metric(self):
+        # no leaves at all → the metric never runs and the key is absent
+        r = evaluate({}, None, CFG, source=SOURCE)
+        assert "field_faithfulness" not in r.metrics
 
-class TestFaithfulnessRootMetric:
-    def test_requires_source(self, tree_factory):
-        import pytest
-
-        root = tree_factory({"vendor": "Globex"}, None)
+    def test_requires_source(self):
         with pytest.raises(ValueError, match="source"):
-            Faithfulness().compute(root)
+            evaluate({"vendor": "Globex"}, None, CFG)
 
-    def test_score_and_hallucinations(self, tree_factory):
-        root = tree_factory({"vendor": "Globex"}, None, source=SOURCE)
-        metric = Faithfulness()
-        score, extra = metric.compute(root)
-        assert score == 0.0
-        assert extra["hallucinated_fields"] == ["vendor"]
+
+def _hallucinated(mc):
+    return [p for p, v in mc.by_path.items() if float(v) == 0.0]

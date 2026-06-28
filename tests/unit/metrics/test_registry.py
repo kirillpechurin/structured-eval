@@ -42,7 +42,7 @@ NAMED_METRICS = [
     "OverallLeafScore",
     "SchemaValidity",
     "CoverageLeafScore",
-    "Faithfulness",
+    "FieldFaithfulness",
     "RulePassRate",
 ]
 

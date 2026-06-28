@@ -14,8 +14,8 @@ from structured_eval import (
     CoverageLeafScore,
     EvalConfig,
     ExtraKeysPolicy,
-    Faithfulness,
     FieldConfig,
+    FieldFaithfulness,
     ObjectF1,
     OverallLeafScore,
     RulePassRate,
@@ -97,13 +97,15 @@ class TestSideChannels:
         assert len(r.metrics["rule_pass_rate"].extra_values("rule_results")) == 2
 
     def test_hallucinations_surface(self, evaluate_one, invoice_source):
-        cfg = EvalConfig(metrics=[Faithfulness()])
+        cfg = EvalConfig(metrics=[FieldFaithfulness()])
         r = evaluate_one({"vendor": "Globex"}, None, cfg, source=invoice_source)
-        assert r.metrics["faithfulness"].representative() == 0.0
-        assert r.metrics["faithfulness"].extra_values("hallucinated_fields") == ["vendor"]
+        mc = r.metrics["field_faithfulness"]
+        assert mc.mean() == 0.0
+        # hallucinated fields are the leaves scoring 0.0
+        assert [p for p, v in mc.by_path.items() if float(v) == 0.0] == ["vendor"]
 
     def test_faithfulness_requires_source(self, evaluate_one):
-        cfg = EvalConfig(metrics=[Faithfulness()])
+        cfg = EvalConfig(metrics=[FieldFaithfulness()])
         with pytest.raises(ValueError, match="source"):
             evaluate_one({"vendor": "Globex"}, None, cfg)
 

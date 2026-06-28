@@ -57,8 +57,6 @@ class FieldConfig(BaseModel):
     weight: float = DEFAULT_FIELD_WEIGHT
     required: bool = False
     null_policy: NullPolicy | None = None  # None → inherit EvalConfig.null_policy
-    exclude: bool = False
-    derived: bool = False  # excluded from Faithfulness
 
 
 class ObjectFieldConfig(BaseModel):
@@ -69,7 +67,6 @@ class ObjectFieldConfig(BaseModel):
     fields: dict[str, AnyFieldConfig] = Field(default_factory=dict)
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
-    exclude: bool = False
     metrics: list[Any] | None = None
 
 
@@ -96,7 +93,6 @@ class ArrayFieldConfig(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)  # strategy-specific options
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
-    exclude: bool = False
     metrics: list[Any] | None = None
 
 

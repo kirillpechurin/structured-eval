@@ -85,21 +85,22 @@ report.metrics["schema_validity"].root().extra["schema_errors"]
 # {'type_errors': ['total'], 'missing_required': [], 'extra_fields': []}
 ```
 
-A `source` enables `Faithfulness` — it flags values that aren't grounded in the
+A `source` enables `FieldFaithfulness` — it flags values that aren't grounded in the
 original text:
 
 ```python
-from structured_eval import evaluate, EvalConfig, Faithfulness
+from structured_eval import evaluate, EvalConfig, FieldFaithfulness
 
 report = evaluate(
     {"name": "Sarah", "city": "Berlin"},
-    config=EvalConfig(metrics=[Faithfulness()]),
+    config=EvalConfig(metrics=[FieldFaithfulness()]),
     source="Sarah lives in Munich.",
 )
-report.metrics["faithfulness"].extra_values("hallucinated_fields")   # ['city'] — Berlin isn't in the source
+mc = report.metrics["field_faithfulness"]
+[p for p, v in mc.by_path.items() if float(v) == 0.0]   # ['city'] — Berlin isn't in the source
 ```
 
-`Faithfulness` **requires** `source` and raises `ValueError` without one. See the
+`FieldFaithfulness` **requires** `source` and raises `ValueError` without one. See the
 [metric catalog](../metrics/index.md) for which metrics need what.
 
 ## The report

@@ -32,8 +32,6 @@ class TestDefaults:
         fc = FieldConfig()
         assert fc.weight == 1.0
         assert fc.required is False
-        assert fc.exclude is False
-        assert fc.derived is False
         assert fc.null_policy is None  # inherit
 
     def test_array_config_defaults(self):

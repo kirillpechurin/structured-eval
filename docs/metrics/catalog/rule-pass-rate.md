@@ -90,5 +90,5 @@ for rr in report.metrics["rule_pass_rate"].root().extra["rule_results"]:
 ## See also
 
 - [`SchemaValidity`](schema-validity.md) — structural constraints (types/required) vs logic.
-- [`Faithfulness`](faithfulness.md) — another no-`expected` check: grounding in a source.
+- [`FieldFaithfulness`](field_faithfulness.md) — another no-`expected` check: grounding in a source.
 - [The metric catalog](../index.md) — all metrics and the return-shape model.

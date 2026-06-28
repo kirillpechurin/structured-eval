@@ -6,7 +6,7 @@ Layered architecture (dependencies point downward):
                    ``nodes``, ``EvalReport`` (and friends);
 - ``metrics``    — every metric as its own module/package (field/object/array/
                    root), incl. ``SchemaValidity``, ``RulePassRate``,
-                   ``Faithfulness``; ``alignment`` / ``formats`` / ``utils``;
+                   ``FieldFaithfulness``; ``alignment`` / ``formats`` / ``utils``;
 - ``engine``     — ``Evaluator`` plus the phase classes (parse → build tree →
                    run metrics → build report) and batch aggregation;
 - ``reporting``  — console rendering; ``integrations`` — host-framework adapters.
@@ -26,7 +26,7 @@ from structured_eval.metrics import (
     BaseMetric,
     CoverageLeafScore,
     ExactMatch,
-    Faithfulness,
+    FieldFaithfulness,
     FieldMetric,
     Fuzzy,
     GenericMetric,
@@ -157,7 +157,7 @@ __all__ = [
     "OverallLeafScore",
     "SchemaValidity",
     "CoverageLeafScore",
-    "Faithfulness",
+    "FieldFaithfulness",
     "RulePassRate",
     # rules / utils / diff
     "Rule",

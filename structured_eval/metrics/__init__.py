@@ -17,7 +17,7 @@ from structured_eval.metrics.base import (
 )
 from structured_eval.metrics.coverage_leaf_score import CoverageLeafScore
 from structured_eval.metrics.exact import ExactMatch
-from structured_eval.metrics.faithfulness import Faithfulness
+from structured_eval.metrics.field_faithfulness import FieldFaithfulness
 from structured_eval.metrics.fuzzy import Fuzzy
 from structured_eval.metrics.levenshtein import Levenshtein
 from structured_eval.metrics.mean_score import MeanScore
@@ -77,7 +77,7 @@ __all__ = [
     "OverallLeafScore",
     "SchemaValidity",
     "CoverageLeafScore",
-    "Faithfulness",
+    "FieldFaithfulness",
     "RulePassRate",
     # rules DSL
     "Rule",

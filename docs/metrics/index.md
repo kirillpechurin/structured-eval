@@ -43,7 +43,7 @@ falls back to a default so every node always carries one metric:
 ## Field metrics
 
 Leaf comparisons of `actual` vs `expected` — all need `expected`, except
-`Presence`, which looks only at `actual`.
+`Presence` (looks only at `actual`) and `FieldFaithfulness` (needs a `source`).
 
 | Class             | Key                 | Measures                                                        |
 |-------------------|---------------------|----------------------------------------------------------------|
@@ -56,6 +56,7 @@ Leaf comparisons of `actual` vs `expected` — all need `expected`, except
 | [`Levenshtein`](catalog/levenshtein.md)         | `levenshtein`       | edit-distance ratio (thin alias of `Fuzzy(RATIO)`)             |
 | [`Presence`](catalog/presence.md)            | `presence`          | whether the field is present / non-null                        |
 | [`TypeMatch`](catalog/type-match.md)           | `type_match`        | whether actual and expected share a JSON type                  |
+| [`FieldFaithfulness`](catalog/field_faithfulness.md) | `field_faithfulness` | whether each value is grounded in the `source` text (needs `source`, not `expected`) |
 
 ## Object metrics
 
@@ -88,8 +89,8 @@ one `item` config, so they carry no per-item weight). All need `expected`.
 
 ## Root metrics
 
-Run once, on the whole document. They take their **own** input — a schema, a rule
-set, or a `source` — rather than comparing against `expected`.
+Run once, on the whole document. They take their **own** input — a schema or a rule
+set — rather than comparing against `expected`.
 
 | Class             | Key                  | Needs        | Measures                                          |
 |-------------------|----------------------|--------------|---------------------------------------------------|
@@ -97,7 +98,6 @@ set, or a `source` — rather than comparing against `expected`.
 | [`CoverageLeafScore`](catalog/coverage-leaf-score.md)  | `coverage_leaf_score` | `expected`   | fraction of expected leaves that are present      |
 | [`SchemaValidity`](catalog/schema-validity.md)     | `schema_validity`     | a schema     | validity against a JSON Schema / pydantic model   |
 | [`RulePassRate`](catalog/rule-pass-rate.md)       | `rule_pass_rate`      | a rule set   | fraction of business rules that hold              |
-| [`Faithfulness`](catalog/faithfulness.md)       | `faithfulness`        | `source`     | whether values are grounded in the source text    |
 
 ## Representative metric
 
@@ -140,7 +140,7 @@ float(m)           # 0.667 — it's a float; round(m, 3), m < 0.8, … all work
 
 **A score with `.extra`.** The same float also carries structured detail — root
 metrics use this for their findings (`schema_validity` → `"schema_errors"`,
-`faithfulness` → `"hallucinated_fields"`, `rule_pass_rate` → `"rule_results"`):
+`rule_pass_rate` → `"rule_results"`):
 
 ```python
 from structured_eval import evaluate, EvalConfig, SchemaValidity

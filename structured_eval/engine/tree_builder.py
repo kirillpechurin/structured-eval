@@ -252,6 +252,10 @@ class TreeBuilder:
         )
         result = aligner.align(e_list, a_list)
         item_cfg = cfg.item if is_cfg else None
+        # TODO: with no expected list (faithfulness / schema-only mode) there are
+        # no matched pairs, so array elements get no nodes — value-on-actual
+        # metrics (FieldFaithfulness) can't reach them. Materialize actual
+        # elements directly in that mode. Roadmap.
         items = [
             self.node(f"{apath}[{aidx}]", f"{epath}[{eidx}]", item_cfg)
             for eidx, aidx in result.matched

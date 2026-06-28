@@ -53,15 +53,15 @@ def test_bare_list_is_single_document():
 
 
 def test_source_kwarg_enables_faithfulness():
-    from structured_eval import Faithfulness
+    from structured_eval import FieldFaithfulness
 
     r = evaluate(
         {"vendor": "Globex"},
         None,
-        config=EvalConfig(metrics=[Faithfulness()]),
+        config=EvalConfig(metrics=[FieldFaithfulness()]),
         source="Invoice from Acme Corp",
     )
-    assert r.metrics["faithfulness"].representative() == 0.0
+    assert r.metrics["field_faithfulness"].representative() == 0.0
 
 
 def test_no_config_runs_with_defaults():

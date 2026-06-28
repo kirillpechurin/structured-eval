@@ -13,13 +13,13 @@ class MeanScore(AnyNodeMetric):
     populate ``metric_results``; it averages those (excluding itself), without
     recursing into children — any cross-child aggregation is the job of the
     node's *own* metrics (``ObjectAccuracy`` / ``ObjectF1`` / ``ArrayAccuracy``),
-    which the engine guarantees by defaulting one onto every node. Returns
-    ``None`` only if a node somehow has no other metric (then it contributes
-    nothing).
+    which the engine guarantees by defaulting one onto every node. A node with
+    no other computed metric (e.g. a leaf whose only metric opted out by
+    returning ``None``) scores ``0.0`` — every node always has a representative.
     """
 
     name = "mean_score"
 
-    def compute(self, node: EvalNode) -> float | None:
+    def compute(self, node: EvalNode) -> float:
         values = [float(v) for name, v in node.metric_results.items() if name != self.name]
-        return sum(values) / len(values) if values else None
+        return sum(values) / len(values) if values else 0.0
