@@ -1,7 +1,5 @@
 """Unit tests for the config models and their defaults/validation."""
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

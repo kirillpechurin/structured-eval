@@ -56,6 +56,23 @@ markers = [
     "engine: end-to-end through the Evaluator",
     "integration: host-framework adapters (deepeval/langsmith)",
     "golden: regression on dataset fixtures",
+    "property: invariant / metamorphic tests over generated inputs",
+]
+
+[tool.coverage.run]
+source = ["structured_eval"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# Metrics + model are the correctness core and stay near-100%; the suite as a
+# whole holds ~89%. Fail CI if it regresses meaningfully below that.
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
 ]
 
 [tool.ruff]

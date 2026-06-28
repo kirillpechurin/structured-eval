@@ -5,8 +5,6 @@ channels (schema_errors / rule_results / hallucinated_fields), warnings, the
 key-metric → report.score wiring, and parse-error handling.
 """
 
-from __future__ import annotations
-
 import pytest
 from pydantic import BaseModel
 
@@ -171,7 +169,10 @@ class TestMultiMetric:
         r = evaluate_one({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
         assert r.score_label == "mean_score"
         assert r.score == pytest.approx(
-            (r.metrics["object_f1"].representative() + r.metrics["object_accuracy"].representative())
+            (
+                r.metrics["object_f1"].representative()
+                + r.metrics["object_accuracy"].representative()
+            )
             / 2
         )
 

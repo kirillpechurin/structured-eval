@@ -5,8 +5,6 @@ and results live in ``report.metrics`` / side channels — there is no ``detaile
 param and no ``report.f1`` shorthand.
 """
 
-from __future__ import annotations
-
 import pytest
 from pydantic import BaseModel
 

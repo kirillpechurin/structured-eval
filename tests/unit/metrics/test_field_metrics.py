@@ -5,8 +5,6 @@ pure primitive, tested here without the engine. ``Presence`` overrides
 ``compute(node)`` instead, so it is exercised through a ScalarNode.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

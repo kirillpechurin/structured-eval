@@ -5,8 +5,6 @@ both predicted and expected, ``missing`` keys are FN, ``spurious`` keys are FP
 (only when ExtraKeysPolicy.PENALIZE). Nested children grade at their own node.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

@@ -7,8 +7,6 @@ input is a separate, roadmap concern), and the ArrayNode is pulled from the
 built tree via ``children``.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

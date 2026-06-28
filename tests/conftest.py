@@ -5,8 +5,6 @@ engine/reporting ← integrations/api). Helpers here keep the engine-level tests
 free of boilerplate; pure unit tests construct their objects directly.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import pytest

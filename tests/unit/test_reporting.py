@@ -4,8 +4,6 @@ The renderer is pure stdlib; the adapter maps a report to (score, success,
 reason) and is tested without any host library installed.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate

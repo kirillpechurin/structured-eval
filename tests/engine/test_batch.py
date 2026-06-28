@@ -1,7 +1,5 @@
 """Tests for batch aggregation via evaluate_batch(list[Sample]) → BatchEvalReport."""
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

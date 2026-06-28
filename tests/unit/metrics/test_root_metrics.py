@@ -2,8 +2,6 @@
 SchemaValidity. Run on the built tree root, mirroring how the engine fires them.
 """
 
-from __future__ import annotations
-
 import pytest
 from pydantic import BaseModel
 

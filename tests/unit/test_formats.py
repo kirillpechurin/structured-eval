@@ -1,7 +1,5 @@
 """Unit tests for the format parsers (JSON / JSONL / YAML) and ParseError."""
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval.formats.base import ParseError

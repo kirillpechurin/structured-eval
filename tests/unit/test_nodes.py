@@ -4,8 +4,6 @@ Nodes never copy data — ``actual``/``expected`` resolve by navigating the shar
 context. ``navigate`` distinguishes 'absent' (MISSING → surfaced as None).
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval.model.nodes.base import MISSING, EvalNode, navigate

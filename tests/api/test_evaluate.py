@@ -1,7 +1,5 @@
 """Tests for the public ``evaluate`` entrypoint: the various call shapes."""
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

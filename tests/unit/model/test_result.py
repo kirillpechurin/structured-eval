@@ -4,8 +4,6 @@ serialization, plus BatchEvalReport / ConsistencyReport aggregates.
 Reports are constructed directly (no engine) to isolate the model behaviour.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import (

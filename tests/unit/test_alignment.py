@@ -3,8 +3,6 @@
 Aligners only pair indices; value scoring happens later in the array metrics.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval.alignment import (

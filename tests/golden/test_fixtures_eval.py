@@ -4,8 +4,6 @@ shapes (invoice / NER / tool-call / deep-nested) so refactors can't silently
 shift scores.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 

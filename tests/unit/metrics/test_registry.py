@@ -5,8 +5,6 @@ in ``_METRIC_REGISTRY`` and resolve via ``get_metric_class`` — this guards
 against the catalog and the registry drifting apart (e.g. EvalConfig.from_yaml).
 """
 
-from __future__ import annotations
-
 import pytest
 
 import structured_eval as se

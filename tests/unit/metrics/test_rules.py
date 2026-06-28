@@ -4,8 +4,6 @@ Covers comparisons, JSONPath arithmetic, ``in_``, custom rules, failure paths
 (missing path, no comparison) and pass-rate aggregation.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval.metrics.rule_pass_rate.dsl import Rule

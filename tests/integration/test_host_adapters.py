@@ -5,8 +5,6 @@ are not installed. The framework-agnostic mapping is covered separately in
 tests/unit/test_reporting.py::TestAdapter (no host library needed).
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import EvalConfig, ObjectF1

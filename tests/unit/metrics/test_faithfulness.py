@@ -7,8 +7,6 @@ scoring 0.0 (``report.metrics["field_faithfulness"].by_path``). A missing
 ``source`` is a configuration error (``ValueError``).
 """
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import EvalConfig, FieldFaithfulness, evaluate

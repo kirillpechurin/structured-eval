@@ -1,7 +1,5 @@
 """Tests for evaluate_consistency → ConsistencyReport (run-to-run stability)."""
 
-from __future__ import annotations
-
 import pytest
 
 from structured_eval import EvalConfig, ObjectF1, Sample, evaluate_consistency
