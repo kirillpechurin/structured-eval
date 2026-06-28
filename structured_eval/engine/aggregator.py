@@ -45,10 +45,22 @@ class BatchAggregator:
         by_path: dict[str, list[float]] = {}
         for r in ok:
             for path, fs in r.field_scores.items():
-                # Field-level stability tracks leaf fields; object/array nodes
-                # now carry an aggregate representative score that would be noise.
+                # Field-level stability currently tracks leaf fields only: object/
+                # array nodes carry an aggregate representative score whose variance
+                # is just a function of its children's, so including it here would
+                # be redundant (double-counting the same wobble), non-actionable
+                # (a parent path doesn't point at a concrete field to fix) and
+                # noisy (an F1-over-children varies for different reasons than a
+                # single atomic value). Hence the leaf filter.
+                #
+                # TODO: support per-node stability regardless of node type. Some
+                # users want block-level wobble ("the whole `address` object is
+                # unstable") without drilling into leaves. The fix is NOT to drop
+                # this filter (that mixes scales) but to expose a separate,
+                # parallel view computed over non-scalar nodes (e.g.
+                # ConsistencyReport.object_variance / block_variance), keeping the
+                # leaf map clean and adding the aggregate one alongside it.
                 if fs.score is None or fs.node_type != NodeType.SCALAR:
-                    # TODO: Why only leaves?
                     continue
                 by_path.setdefault(path, []).append(fs.score)
 

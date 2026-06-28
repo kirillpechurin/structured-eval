@@ -84,8 +84,10 @@ class FieldScore(BaseModel):
     actual: Any = None
     expected: Any = None
     metrics: dict[str, MetricResult] = Field(default_factory=dict)
-    score: float | None = None  # TODO: Should be required by default key metric
-    threshold: float | None = None  # TODO: Reconsider default arguments - all possible should be defined in model as defaults...
+    # TODO: Should be required by default key metric
+    score: float | None = None
+    # TODO: Reconsider default arguments - all possible should be defined in model as defaults
+    threshold: float | None = None
 
 
 # ── Regression diff ─────────────────────────────────────────────────────────

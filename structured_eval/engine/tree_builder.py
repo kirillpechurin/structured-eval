@@ -68,7 +68,7 @@ class TreeBuilder:
     def root_config(self) -> Any:
         if self.config.root is not None:
             return self.config.root
-        if self.config.fields:  # TODO: Remove fields, remain only root
+        if self.config.fields:
             return ObjectFieldConfig(fields=dict(self.config.fields))
         return None
 
@@ -121,7 +121,6 @@ class TreeBuilder:
         """
         out: list[BaseMetric] = []
 
-        # TODO: Find a better way to simplify it. Это слишком сложно - функция в методе
         def add(metric: BaseMetric) -> None:
             if self._applies_to(metric, node_cls, is_root) and not any(metric is s for s in out):
                 out.append(metric)
