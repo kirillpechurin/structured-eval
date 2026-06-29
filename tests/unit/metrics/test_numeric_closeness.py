@@ -34,7 +34,7 @@ pytestmark = pytest.mark.unit
         "currency-graded",
     ],
 )
-def test_graded_similarity(actual, expected, score):
+def test_graded_similarity(actual, expected, score) -> None:
     assert NumericCloseness().score(actual, expected) == pytest.approx(score)
 
 
@@ -48,5 +48,5 @@ def test_graded_similarity(actual, expected, score):
     ],
     ids=["bool", "non-numeric", "null", "equal-non-number"],
 )
-def test_non_number_is_zero(actual, expected):
+def test_non_number_is_zero(actual, expected) -> None:
     assert NumericCloseness().score(actual, expected) == 0.0

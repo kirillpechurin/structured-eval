@@ -26,7 +26,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["top", "nested", "index", "index-nested"],
 )
-def test_to_readable_path(raw, readable):
+def test_to_readable_path(raw, readable) -> None:
     assert _to_readable_path(raw) == readable
 
 
@@ -38,7 +38,7 @@ def test_to_readable_path(raw, readable):
     [{"a": 1, "b": "hello"}, {"invoice": {"id": "1", "total": 100.0}}, {}],
     ids=["flat", "nested", "empty"],
 )
-def test_identical_documents_are_equal(doc):
+def test_identical_documents_are_equal(doc) -> None:
     diff = structured_diff(doc, doc)
     assert diff.is_equal
     assert diff.entries == []
@@ -47,7 +47,7 @@ def test_identical_documents_are_equal(doc):
 # ── added ─────────────────────────────────────────────────────────────────────
 
 
-def test_top_level_added():
+def test_top_level_added() -> None:
     diff = structured_diff({"status": "paid", "extra": "bonus"}, {"status": "paid"})
     (entry,) = diff.added
     assert entry.path == "extra"
@@ -56,12 +56,12 @@ def test_top_level_added():
     assert entry.expected is None
 
 
-def test_nested_added():
+def test_nested_added() -> None:
     diff = structured_diff({"invoice": {"id": "1", "note": "new"}}, {"invoice": {"id": "1"}})
     assert [e.path for e in diff.added] == ["invoice.note"]
 
 
-def test_list_item_added():
+def test_list_item_added() -> None:
     diff = structured_diff({"items": [1, 2, 3]}, {"items": [1, 2]})
     (entry,) = diff.added
     assert entry.path == "items[2]"
@@ -71,7 +71,7 @@ def test_list_item_added():
 # ── removed ───────────────────────────────────────────────────────────────────
 
 
-def test_top_level_removed():
+def test_top_level_removed() -> None:
     diff = structured_diff({"status": "paid"}, {"status": "paid", "required_field": "value"})
     (entry,) = diff.removed
     assert entry.path == "required_field"
@@ -80,12 +80,12 @@ def test_top_level_removed():
     assert entry.expected == "value"
 
 
-def test_nested_removed():
+def test_nested_removed() -> None:
     diff = structured_diff({"invoice": {"id": "1"}}, {"invoice": {"id": "1", "tax": 10}})
     assert [e.path for e in diff.removed] == ["invoice.tax"]
 
 
-def test_list_item_removed():
+def test_list_item_removed() -> None:
     diff = structured_diff({"items": [1]}, {"items": [1, 2]})
     (entry,) = diff.removed
     assert entry.path == "items[1]"
@@ -95,7 +95,7 @@ def test_list_item_removed():
 # ── changed ───────────────────────────────────────────────────────────────────
 
 
-def test_top_level_changed():
+def test_top_level_changed() -> None:
     diff = structured_diff({"status": "paid"}, {"status": "draft"})
     (entry,) = diff.changed
     assert entry.path == "status"
@@ -104,7 +104,7 @@ def test_top_level_changed():
     assert entry.expected == "draft"
 
 
-def test_nested_changed():
+def test_nested_changed() -> None:
     diff = structured_diff({"invoice": {"total": 100}}, {"invoice": {"total": 200}})
     (entry,) = diff.changed
     assert entry.path == "invoice.total"
@@ -112,7 +112,7 @@ def test_nested_changed():
     assert entry.expected == 200
 
 
-def test_array_item_changed():
+def test_array_item_changed() -> None:
     diff = structured_diff(
         {"items": [{"name": "Widget"}, {"name": "Gadget"}]},
         {"items": [{"name": "Widget"}, {"name": "Gadget2"}]},
@@ -120,7 +120,7 @@ def test_array_item_changed():
     assert [e.path for e in diff.changed] == ["items[1].name"]
 
 
-def test_type_change_counts_as_changed():
+def test_type_change_counts_as_changed() -> None:
     diff = structured_diff({"count": "5"}, {"count": 5})
     (entry,) = diff.changed
     assert entry.diff_type == DiffType.CHANGED
@@ -131,20 +131,20 @@ def test_type_change_counts_as_changed():
 # ── mixed ─────────────────────────────────────────────────────────────────────
 
 
-def test_multiple_diff_types_at_once():
+def test_multiple_diff_types_at_once() -> None:
     diff = structured_diff({"a": 1, "b": 2, "c": "new"}, {"a": 1, "b": 99, "d": "old"})
     assert [e.path for e in diff.changed] == ["b"]
     assert [e.path for e in diff.added] == ["c"]
     assert [e.path for e in diff.removed] == ["d"]
 
 
-def test_entries_sorted_by_path():
+def test_entries_sorted_by_path() -> None:
     diff = structured_diff({"z": 1, "a": 2, "m": 3}, {"z": 2, "a": 3, "m": 4})
     paths = [e.path for e in diff.entries]
     assert paths == sorted(paths)
 
 
-def test_equal_nested_has_no_entries():
+def test_equal_nested_has_no_entries() -> None:
     doc = {"x": 1, "y": {"z": [1, 2, 3]}}
     assert structured_diff(doc, doc).entries == []
 
@@ -152,16 +152,16 @@ def test_equal_nested_has_no_entries():
 # ── StructuredDiff model ──────────────────────────────────────────────────────
 
 
-def test_empty_diff_is_equal():
+def test_empty_diff_is_equal() -> None:
     assert StructuredDiff().is_equal is True
 
 
-def test_diff_with_entries_is_not_equal():
+def test_diff_with_entries_is_not_equal() -> None:
     entry = DiffEntry(path="x", diff_type=DiffType.ADDED, actual=1, expected=None)
     assert StructuredDiff(entries=[entry]).is_equal is False
 
 
-def test_property_filters_by_type():
+def test_property_filters_by_type() -> None:
     entries = [
         DiffEntry(path="a", diff_type=DiffType.ADDED, actual=1, expected=None),
         DiffEntry(path="b", diff_type=DiffType.REMOVED, actual=None, expected=2),
@@ -173,11 +173,16 @@ def test_property_filters_by_type():
     assert [e.path for e in diff.changed] == ["c"]
 
 
-def test_diff_type_string_values():
-    assert DiffType.ADDED == "added"
-    assert DiffType.REMOVED == "removed"
-    assert DiffType.CHANGED == "changed"
+def test_diff_type_string_values() -> None:
+    assert DiffType.ADDED == "added"  # type: ignore[comparison-overlap]
+    assert DiffType.REMOVED == "removed"  # type: ignore[comparison-overlap]
+    assert DiffType.CHANGED == "changed"  # type: ignore[comparison-overlap]
 
 
-def test_importable_from_top_level():
-    from structured_eval import DiffEntry, DiffType, StructuredDiff, structured_diff  # noqa: F401
+def test_importable_from_top_level() -> None:
+    from structured_eval import (  # noqa: F401
+        DiffEntry,
+        DiffType,
+        StructuredDiff,
+        structured_diff,
+    )

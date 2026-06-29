@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment.base import ArrayAligner, key_value
-from structured_eval.metrics.base import resolve_metric
+from structured_eval.metrics.base import BaseMetric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.model.config import ArrayStrategy
@@ -31,7 +31,7 @@ class ByKeyAligner(ArrayAligner):
     def __init__(
         self,
         key: str | None = None,
-        key_metric: Any = None,
+        key_metric: str | BaseMetric | None = None,
         threshold: float = 1.0,
     ):
         self.key = key

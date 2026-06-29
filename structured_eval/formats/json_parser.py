@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from typing import Any
+from typing import TYPE_CHECKING
 
 from structured_eval.formats.base import ParseError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class JsonParser:
@@ -14,7 +16,7 @@ class JsonParser:
     Raises ParseError on malformed input.
     """
 
-    def parse(self, text: str) -> Any:
+    def parse(self, text: str) -> object:
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
@@ -28,12 +30,12 @@ class JsonlParser:
     Raises ParseError on the first malformed line, including the line number.
     """
 
-    def parse(self, text: str) -> Iterator[Any]:
+    def parse(self, text: str) -> Iterator[object]:
         return self._iter(text)
 
-    def _iter(self, text: str) -> Iterator[Any]:
-        for lineno, line in enumerate(text.splitlines(), start=1):
-            line = line.strip()
+    def _iter(self, text: str) -> Iterator[object]:
+        for lineno, raw_line in enumerate(text.splitlines(), start=1):
+            line = raw_line.strip()
             if not line:
                 continue
             try:

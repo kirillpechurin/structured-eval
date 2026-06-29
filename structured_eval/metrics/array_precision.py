@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from structured_eval.metrics.base import ArrayMetric
 from structured_eval.metrics.utils import array as astats
 from structured_eval.metrics.utils import calculate as stats
-from structured_eval.model.nodes.array_node import ArrayNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.array_node import ArrayNode
 
 
 class ArrayPrecision(ArrayMetric):

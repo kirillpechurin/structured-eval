@@ -29,7 +29,7 @@ class SchemaValidator:
     ``SchemaResult`` describing type errors, missing required and extra fields.
     """
 
-    def __init__(self, schema: Any):
+    def __init__(self, schema: type[BaseModel] | dict[str, Any]):
         self.schema = schema
 
     def validate(self, actual: Any) -> SchemaResult:

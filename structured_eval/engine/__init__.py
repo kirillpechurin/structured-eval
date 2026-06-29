@@ -6,10 +6,10 @@ from structured_eval.engine.report_builder import ReportBuilder
 from structured_eval.engine.tree_builder import TreeBuilder
 
 __all__ = [
-    "Evaluator",
-    "Parser",
-    "TreeBuilder",
-    "MetricRunner",
-    "ReportBuilder",
     "BatchAggregator",
+    "Evaluator",
+    "MetricRunner",
+    "Parser",
+    "ReportBuilder",
+    "TreeBuilder",
 ]

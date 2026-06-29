@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from structured_eval.metrics.base import AnyNodeMetric
-from structured_eval.model.nodes.base import EvalNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.base import EvalNode
 
 
 class MeanScore(AnyNodeMetric):

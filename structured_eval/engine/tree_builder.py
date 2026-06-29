@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.alignment import make_aligner
 from structured_eval.metrics.array_accuracy import ArrayAccuracy
@@ -20,6 +20,7 @@ from structured_eval.metrics.invoker import GENERIC_NODE_METHOD
 from structured_eval.metrics.mean_score import MeanScore
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
 from structured_eval.model.config import (
+    AnyFieldConfig,
     ArrayFieldConfig,
     ArrayStrategy,
     EvalConfig,
@@ -27,12 +28,14 @@ from structured_eval.model.config import (
     ObjectFieldConfig,
     weight_of,
 )
-from structured_eval.model.context import EvalContext
 from structured_eval.model.nodes.array_node import ArrayNode
 from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
 from structured_eval.model.result import EvalWarning, WarningType
+
+if TYPE_CHECKING:
+    from structured_eval.model.context import EvalContext
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.
@@ -65,7 +68,7 @@ class TreeBuilder:
 
     # ── config resolution ──────────────────────────────────────────────────
 
-    def root_config(self) -> Any:
+    def root_config(self) -> ObjectFieldConfig | ArrayFieldConfig | None:
         if self.config.root is not None:
             return self.config.root
         if self.config.fields:
@@ -108,7 +111,7 @@ class TreeBuilder:
                 out.append(metric)
         return out
 
-    def _resolve_metrics(self, node_cls: type, cfg: Any, is_root: bool) -> list[BaseMetric]:
+    def _resolve_metrics(self, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool) -> list[BaseMetric]:
         """Metrics for one node: applicable globals + this node's own (additive).
 
         Globals cascade by type (a ``RootMetric`` only at the root); per-node
@@ -140,7 +143,7 @@ class TreeBuilder:
         return out
 
     def _key_metric(
-        self, node_cls: type, cfg: Any, is_root: bool, metrics: list[BaseMetric]
+        self, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool, metrics: list[BaseMetric]
     ) -> Metric[Any]:
         """The node's representative metric (computed last).
 
@@ -175,7 +178,7 @@ class TreeBuilder:
     def _child(self, path: str, key: str) -> str:
         return key if path in ("$", "") else f"{path}.{key}"
 
-    def node(self, apath: str, epath: str, cfg: Any) -> Any:
+    def node(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> EvalNode:
         actual = self._value(self.context.actual, apath)
         expected = self._value(self.context.expected, epath)
         ref = expected if expected is not None else actual
@@ -186,7 +189,7 @@ class TreeBuilder:
             return self._array(apath, epath, cfg, actual, expected)
         return self._scalar(apath, epath, cfg)
 
-    def _object(self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any) -> ObjectNode:
+    def _object(self, apath: str, epath: str, cfg: AnyFieldConfig | None, actual: Any, expected: Any) -> ObjectNode:
         a_keys = set(actual) if isinstance(actual, dict) else set()
         e_keys = set(expected) if isinstance(expected, dict) else set()
         both = a_keys & e_keys
@@ -241,16 +244,16 @@ class TreeBuilder:
             children=children,
         )
 
-    def _array(self, apath: str, epath: str, cfg: Any, actual: Any, expected: Any) -> ArrayNode:
-        a_list = actual if isinstance(actual, list) else []
-        e_list = expected if isinstance(expected, list) else []
-        is_cfg = isinstance(cfg, ArrayFieldConfig)
-        aligner = make_aligner(
-            strategy=cfg.strategy if is_cfg else ArrayStrategy.BY_INDEX,
-            params=cfg.params if is_cfg else None,
-        )
+    def _array(self, apath: str, epath: str, cfg: AnyFieldConfig | None, actual: Any, expected: Any) -> ArrayNode:
+        a_list: list[Any] = actual if isinstance(actual, list) else []
+        e_list: list[Any] = expected if isinstance(expected, list) else []
+        if isinstance(cfg, ArrayFieldConfig):
+            aligner = make_aligner(strategy=cfg.strategy, params=cfg.params)
+            item_cfg = cfg.item
+        else:
+            aligner = make_aligner(strategy=ArrayStrategy.BY_INDEX, params=None)
+            item_cfg = None
         result = aligner.align(e_list, a_list)
-        item_cfg = cfg.item if is_cfg else None
         # TODO: with no expected list (faithfulness / schema-only mode) there are
         # no matched pairs, so array elements get no nodes — value-on-actual
         # metrics (FieldFaithfulness) can't reach them. Materialize actual
@@ -273,7 +276,7 @@ class TreeBuilder:
             items=items,
         )
 
-    def _scalar(self, apath: str, epath: str, cfg: Any) -> ScalarNode:
+    def _scalar(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> ScalarNode:
         is_root = apath == "$"
         metrics = self._resolve_metrics(ScalarNode, cfg, is_root)
         return ScalarNode(
@@ -287,6 +290,6 @@ class TreeBuilder:
         )
 
     @staticmethod
-    def _threshold(cfg: Any) -> float:
+    def _threshold(cfg: AnyFieldConfig | None) -> float:
         threshold = getattr(cfg, "threshold", None)
         return float(threshold) if threshold is not None else 1.0

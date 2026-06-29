@@ -25,7 +25,7 @@ MetricOutput = (
 _METRIC_REGISTRY: dict[str, type] = {}
 
 
-class BaseMetric(ABC):
+class BaseMetric(ABC):  # noqa: B024 — registry root; subclasses define the interface
     """Registry root for every metric — no evaluation interface of its own.
 
     ``name`` is the key under which a scalar result lands in ``report.metrics``
@@ -128,7 +128,7 @@ def get_metric_class(name: str) -> type:
     return _METRIC_REGISTRY[name]
 
 
-def resolve_metric(spec: Any) -> BaseMetric:
+def resolve_metric(spec: str | BaseMetric) -> BaseMetric:
     """Coerce a metric spec to a ``BaseMetric`` instance.
 
     Accepts an instance as-is or a registered name string (instantiated with no

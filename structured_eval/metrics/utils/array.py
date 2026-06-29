@@ -12,7 +12,10 @@ effectively count-based.
 
 from __future__ import annotations
 
-from structured_eval.model.nodes.array_node import ArrayNode
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.array_node import ArrayNode
 
 
 def verdicts(node: ArrayNode, threshold: float) -> list[tuple[float, float, float]]:

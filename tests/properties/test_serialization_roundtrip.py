@@ -39,7 +39,7 @@ def _assert_report_equivalent(a: EvalReport, b: EvalReport) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_roundtrip_preserves_scores_and_fields(seed):
+def test_roundtrip_preserves_scores_and_fields(seed) -> None:
     rng = random.Random(seed)
     expected = random_document(rng, depth=3)
     actual = random_document(rng, depth=3)
@@ -54,7 +54,7 @@ class _Invoice(BaseModel):
     total: float
 
 
-def test_roundtrip_preserves_schema_errors_extra():
+def test_roundtrip_preserves_schema_errors_extra() -> None:
     """The ``schema_errors`` side-channel survives a JSON round-trip."""
     cfg = EvalConfig(metrics=[SchemaValidity(_Invoice)])
     report = evaluate({"id": "1"}, None, config=cfg)  # missing total → invalid
@@ -67,7 +67,7 @@ def test_roundtrip_preserves_schema_errors_extra():
     )
 
 
-def test_roundtrip_preserves_rule_results_extra():
+def test_roundtrip_preserves_rule_results_extra() -> None:
     """The ``rule_results`` side-channel survives a JSON round-trip."""
     cfg = EvalConfig(
         metrics=[

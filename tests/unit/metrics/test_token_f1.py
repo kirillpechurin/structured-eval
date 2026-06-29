@@ -25,7 +25,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["identical", "partial", "disjoint", "both-empty", "one-empty", "punct", "multiset"],
 )
-def test_score(actual, expected, score):
+def test_score(actual, expected, score) -> None:
     assert TokenF1().score(actual, expected) == pytest.approx(score)
 
 
@@ -34,5 +34,5 @@ def test_score(actual, expected, score):
     [(None, None), (None, "none"), (123, 123.0)],
     ids=["null-null", "null-str", "int-float"],
 )
-def test_string_only_non_str_is_zero(actual, expected):
+def test_string_only_non_str_is_zero(actual, expected) -> None:
     assert TokenF1().score(actual, expected) == 0.0

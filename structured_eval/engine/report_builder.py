@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-from structured_eval.model.context import EvalContext
+from typing import TYPE_CHECKING, ClassVar
+
 from structured_eval.model.metric_result import MetricCollection
 from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.base import EvalNode
 from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
 from structured_eval.model.result import EvalReport, EvalWarning, FieldScore, NodeType
+
+if TYPE_CHECKING:
+    from structured_eval.model.context import EvalContext
+    from structured_eval.model.nodes.base import EvalNode
 
 
 class ReportBuilder:
     """Phase 3: flatten the computed node tree into an ``EvalReport``."""
 
-    _NODE_TYPE = {
+    _NODE_TYPE: ClassVar[dict[type, NodeType]] = {
         ScalarNode: NodeType.SCALAR,
         ObjectNode: NodeType.OBJECT,
         ArrayNode: NodeType.ARRAY,

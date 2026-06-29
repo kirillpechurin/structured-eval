@@ -18,13 +18,15 @@ via ``missing_weight`` / ``spurious_weight``.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.base import resolve_metric
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.utils.calculate import WeightMode
-from structured_eval.model.nodes.base import EvalNode
-from structured_eval.model.nodes.object_node import ObjectNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.model.nodes.object_node import ObjectNode
 
 
 def leaf_name(path: str) -> str:
@@ -32,7 +34,7 @@ def leaf_name(path: str) -> str:
     return path.rsplit(".", 1)[-1].split("[", 1)[0]
 
 
-def _resolve_threshold(thresholds: Any, name: str, fallback: float) -> float:
+def _resolve_threshold(thresholds: float | dict[str, float] | None, name: str, fallback: float) -> float:
     if isinstance(thresholds, dict):
         return float(thresholds.get(name, fallback))
     if thresholds is not None:
@@ -47,7 +49,7 @@ def _weight_of(child: EvalNode, weight_mode: WeightMode) -> float:
 def matched_verdicts(
     node: ObjectNode,
     score_policy: dict[str, Any] | None = None,
-    thresholds: Any = None,
+    thresholds: float | dict[str, float] | None = None,
     weight_mode: WeightMode = WeightMode.PROPORTIONAL,
 ) -> list[tuple[float, float, float]]:
     """``(score, threshold, weight)`` for each matched child of an object.

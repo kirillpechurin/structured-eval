@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.context import EvalContext
-from structured_eval.model.metric_result import MetricResult
 from structured_eval.utils.paths import MISSING, navigate
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from structured_eval.model.context import EvalContext
+    from structured_eval.model.metric_result import MetricResult
 
 # Re-exported for back-compat: ``navigate`` / ``MISSING`` now live in
 # ``structured_eval.utils.paths`` (a lower layer with no model dependency).

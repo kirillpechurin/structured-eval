@@ -7,6 +7,7 @@ supports relative / absolute tolerance bands. Booleans are not numbers.
 import pytest
 
 from structured_eval import Numeric
+from structured_eval.metrics.numeric import NumericMode
 
 pytestmark = pytest.mark.unit
 
@@ -16,14 +17,14 @@ pytestmark = pytest.mark.unit
     [
         (Numeric(tolerance=0.01), 100.5, 100.0, 1.0),  # within relative band
         (Numeric(tolerance=0.01), 110.0, 100.0, 0.0),  # outside relative band
-        (Numeric(tolerance=2, mode="absolute"), 101, 100, 1.0),  # |1| <= 2
-        (Numeric(tolerance=2, mode="absolute"), 105, 100, 0.0),  # |5| > 2
+        (Numeric(tolerance=2, mode=NumericMode.ABSOLUTE), 101, 100, 1.0),  # |1| <= 2
+        (Numeric(tolerance=2, mode=NumericMode.ABSOLUTE), 105, 100, 0.0),  # |5| > 2
         (Numeric(), 0, 0, 1.0),  # expected zero, exact
         (Numeric(), 1, 0, 0.0),  # expected zero, off
     ],
     ids=["rel-in", "rel-out", "abs-in", "abs-out", "zero-exact", "zero-off"],
 )
-def test_tolerance_bands(metric, actual, expected, score):
+def test_tolerance_bands(metric, actual, expected, score) -> None:
     assert metric.score(actual, expected) == score
 
 
@@ -54,17 +55,17 @@ def test_tolerance_bands(metric, actual, expected, score):
         "bool-not-number",
     ],
 )
-def test_lenient_parsing(actual, expected, score):
+def test_lenient_parsing(actual, expected, score) -> None:
     assert Numeric(tolerance=0).score(actual, expected) == score
 
 
-def test_explicit_bands_union():
+def test_explicit_bands_union() -> None:
     # within the absolute band but not the relative one → still a match.
     metric = Numeric(relative_tolerance=0.001, absolute_tolerance=5)
     assert metric.score(103, 100) == 1.0  # |3| <= 5
     assert metric.score(200, 100) == 0.0  # outside both
 
 
-def test_explicit_band_overrides_tolerance():
+def test_explicit_band_overrides_tolerance() -> None:
     metric = Numeric(tolerance=0, relative_tolerance=0.1)
     assert metric.score(109, 100) == 1.0

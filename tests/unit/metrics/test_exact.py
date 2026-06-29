@@ -22,9 +22,9 @@ pytestmark = pytest.mark.unit
     ],
     ids=["equal", "differ", "type-sensitive", "equal-int", "null-eq-null"],
 )
-def test_score(actual, expected, score):
+def test_score(actual, expected, score) -> None:
     assert ExactMatch().score(actual, expected) == score
 
 
-def test_registered_name():
+def test_registered_name() -> None:
     assert ExactMatch.name == "exact_match"

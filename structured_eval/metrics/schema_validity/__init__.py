@@ -4,4 +4,4 @@ from structured_eval.metrics.schema_validity.validator import (
     SchemaValidator,
 )
 
-__all__ = ["SchemaValidity", "SchemaValidator", "SchemaResult"]
+__all__ = ["SchemaResult", "SchemaValidator", "SchemaValidity"]

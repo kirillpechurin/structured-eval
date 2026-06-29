@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from structured_eval.model.result import RuleResult
+if TYPE_CHECKING:
+    from structured_eval.model.result import RuleResult
 
 
 class RuleProcessor:

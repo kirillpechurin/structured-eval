@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from structured_eval.metrics.base import ObjectMetric
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.type_match import TypeMatch
-from structured_eval.model.nodes.object_node import ObjectNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectTypeValidity(ObjectMetric):

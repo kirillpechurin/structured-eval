@@ -8,4 +8,4 @@ or ``[langsmith]``).
 
 from structured_eval.integrations._adapter import reason_text, verdict
 
-__all__ = ["verdict", "reason_text"]
+__all__ = ["reason_text", "verdict"]

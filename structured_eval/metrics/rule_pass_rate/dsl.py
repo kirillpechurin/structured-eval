@@ -3,10 +3,12 @@ from __future__ import annotations
 import ast
 import operator
 import re
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.model.result import RuleResult
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Matches a bare JSONPath like "$.field" or "$.nested.child"
 _PLAIN_PATH_RE = re.compile(r"^\$(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+$")
@@ -27,11 +29,11 @@ _ARITH_OPS: dict[type[ast.operator], Any] = {
 def _ensure_jsonpath() -> None:
     try:
         import jsonpath_ng  # noqa: F401
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "jsonpath-ng is required for the Rule DSL. "
             "Install it with: pip install 'structured-eval[rules]'"
-        )
+        ) from e
 
 
 def _resolve_path(path: str, document: dict[str, Any]) -> Any:

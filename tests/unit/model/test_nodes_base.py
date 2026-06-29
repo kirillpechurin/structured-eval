@@ -20,11 +20,11 @@ pytestmark = pytest.mark.unit
     ],
     ids=["dot", "bracket", "negative"],
 )
-def test_navigate_resolves(obj, path, expected):
+def test_navigate_resolves(obj, path, expected) -> None:
     assert navigate(obj, path) == expected
 
 
-def test_navigate_root_returns_same_object():
+def test_navigate_root_returns_same_object() -> None:
     obj = {"a": 1}
     assert navigate(obj, "$") is obj
 
@@ -39,28 +39,28 @@ def test_navigate_root_returns_same_object():
     ],
     ids=["missing-key", "out-of-range", "non-int-index", "index-non-list"],
 )
-def test_navigate_absent_is_missing(obj, path):
+def test_navigate_absent_is_missing(obj, path) -> None:
     assert navigate(obj, path) is MISSING
 
 
-def test_accessors_read_actual_and_expected(context_factory):
+def test_accessors_read_actual_and_expected(context_factory) -> None:
     ctx = context_factory({"a": 1}, {"a": 2})
     node = EvalNode(path="a", context=ctx)
     assert node.actual == 1
     assert node.expected == 2
 
 
-def test_missing_actual_surfaces_as_none(context_factory):
+def test_missing_actual_surfaces_as_none(context_factory) -> None:
     ctx = context_factory({"a": 1}, {})
     assert EvalNode(path="b", context=ctx).actual is None
 
 
-def test_expected_none_when_no_expected(context_factory):
+def test_expected_none_when_no_expected(context_factory) -> None:
     ctx = context_factory({"a": 1}, None)
     assert EvalNode(path="a", context=ctx).expected is None
 
 
-def test_diverging_expected_path(context_factory):
+def test_diverging_expected_path(context_factory) -> None:
     # array reordering: actual[0] ↔ expected[1]
     ctx = context_factory({"x": [1, 2]}, {"x": [2, 1]})
     node = EvalNode(path="x[0]", context=ctx, expected_path="x[1]")
@@ -68,17 +68,17 @@ def test_diverging_expected_path(context_factory):
     assert node.expected == 1
 
 
-def test_walk_visits_every_node(tree_factory):
+def test_walk_visits_every_node(tree_factory) -> None:
     root = tree_factory({"a": 1, "b": {"c": 2}}, {"a": 1, "b": {"c": 2}})
     paths = sorted(n.path for n in root.walk())
     assert "$" in paths and "a" in paths and "b.c" in paths
 
 
-def test_leaves_are_only_scalars(tree_factory):
+def test_leaves_are_only_scalars(tree_factory) -> None:
     root = tree_factory({"a": 1, "b": {"c": 2}}, {"a": 1, "b": {"c": 2}})
     assert sorted(n.path for n in root.leaves()) == ["a", "b.c"]
 
 
-def test_root_is_not_a_leaf(tree_factory):
+def test_root_is_not_a_leaf(tree_factory) -> None:
     root = tree_factory({"a": 1}, {"a": 1})
     assert not root.is_leaf()

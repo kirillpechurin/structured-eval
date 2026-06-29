@@ -5,6 +5,7 @@ engine/reporting ← integrations/api). Helpers here keep the engine-level tests
 free of boilerplate; pure unit tests construct their objects directly.
 """
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -71,19 +72,19 @@ def build_tree(
 
 
 @pytest.fixture
-def tree_factory():
+def tree_factory() -> Callable[..., EvalNode]:
     """Fixture exposing ``build_tree`` for object/array/root metric unit tests."""
     return build_tree
 
 
 @pytest.fixture
-def evaluate_one():
+def evaluate_one() -> Callable[..., EvalReport]:
     """Fixture exposing the ``run`` helper to tests that prefer injection."""
     return run
 
 
 @pytest.fixture
-def context_factory():
+def context_factory() -> Callable[..., EvalContext]:
     """Fixture exposing ``make_context`` for node/metric unit tests."""
     return make_context
 
@@ -104,13 +105,13 @@ def _assert_field(report: EvalReport, path: str, score: float) -> None:
 
 
 @pytest.fixture
-def assert_metric():
+def assert_metric() -> Callable[[EvalReport, str, float], None]:
     """Semantic assertion: ``assert_metric(report, "object_f1", 0.5)``."""
     return _assert_metric
 
 
 @pytest.fixture
-def assert_field():
+def assert_field() -> Callable[[EvalReport, str, float], None]:
     """Semantic assertion: ``assert_field(report, "total", 0.0)``."""
     return _assert_field
 
@@ -133,13 +134,13 @@ INVOICE_SOURCE = "Invoice INV-001 from Acme Corp, total amount 100.0 USD, status
 
 
 @pytest.fixture
-def invoice_builder():
+def invoice_builder() -> Callable[..., dict[str, Any]]:
     """Fixture exposing ``make_invoice`` for tests that prefer injection."""
     return make_invoice
 
 
 @pytest.fixture
-def invoice_pair() -> tuple[dict, dict]:
+def invoice_pair() -> tuple[dict[str, Any], dict[str, Any]]:
     """A small invoice document with one wrong field (total)."""
     return make_invoice(total=99.0), make_invoice()
 

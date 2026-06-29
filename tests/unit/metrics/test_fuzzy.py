@@ -7,25 +7,26 @@ here. Fuzzy is string-only.
 import pytest
 
 from structured_eval import Fuzzy, Levenshtein
+from structured_eval.metrics.fuzzy import FuzzyMethod
 
 pytestmark = pytest.mark.unit
 
 
-def test_identical_is_one():
+def test_identical_is_one() -> None:
     assert Fuzzy().score("hello world", "hello world") == 1.0
 
 
-def test_token_sort_is_order_insensitive():
+def test_token_sort_is_order_insensitive() -> None:
     # default token_sort_ratio ignores word order
     assert Fuzzy().score("world hello", "hello world") == pytest.approx(1.0)
 
 
-def test_ratio_is_order_sensitive():
+def test_ratio_is_order_sensitive() -> None:
     # plain ratio, unlike token_sort, is hurt by reordering
-    assert Fuzzy(method="ratio").score("world hello", "hello world") < 1.0
+    assert Fuzzy(method=FuzzyMethod.RATIO).score("world hello", "hello world") < 1.0
 
 
-def test_partial_match_is_between():
+def test_partial_match_is_between() -> None:
     assert 0.0 < Fuzzy().score("Acme Corporation", "Acme Corp") < 1.0
 
 
@@ -34,7 +35,7 @@ def test_partial_match_is_between():
     [(False, lambda s: s < 1.0), (True, lambda s: s == 1.0)],
     ids=["normalize-off", "normalize-on"],
 )
-def test_normalize_controls_case_folding(normalize, predicate):
+def test_normalize_controls_case_folding(normalize, predicate) -> None:
     assert predicate(Fuzzy(normalize=normalize).score("ACME", "acme"))
 
 
@@ -43,19 +44,19 @@ def test_normalize_controls_case_folding(normalize, predicate):
     [(None, None), (None, "none"), (123, 123.0)],
     ids=["null-null", "null-str", "int-float"],
 )
-def test_string_only_non_str_is_zero(actual, expected):
+def test_string_only_non_str_is_zero(actual, expected) -> None:
     assert Fuzzy().score(actual, expected) == 0.0
 
 
 # ── Levenshtein alias ─────────────────────────────────────────────────────────
 
 
-def test_levenshtein_is_registered():
+def test_levenshtein_is_registered() -> None:
     assert Levenshtein.name == "levenshtein"
 
 
-def test_levenshtein_matches_fuzzy_ratio():
+def test_levenshtein_matches_fuzzy_ratio() -> None:
     assert Levenshtein().score("kitten", "kitten") == 1.0
-    assert Levenshtein().score("kitten", "sitting") == Fuzzy(method="ratio").score(
+    assert Levenshtein().score("kitten", "sitting") == Fuzzy(method=FuzzyMethod.RATIO).score(
         "kitten", "sitting"
     )

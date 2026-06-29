@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from structured_eval.metrics.base import BaseMetric
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.model.metric_result import MetricResult
-from structured_eval.model.nodes.base import EvalNode
+
+if TYPE_CHECKING:
+    from structured_eval.metrics.base import BaseMetric, MetricOutput
+    from structured_eval.model.nodes.base import EvalNode
 
 
 class MetricRunner:
@@ -40,7 +42,7 @@ class MetricRunner:
         node.metric_results.update(self._normalize(metric.name, result))
 
     @staticmethod
-    def _normalize(name: str, result: Any) -> dict[str, MetricResult]:
+    def _normalize(name: str, result: MetricOutput) -> dict[str, MetricResult]:
         """Coerce any ``compute`` return into ``{key: MetricResult}``.
 
         Accepts ``None`` (skip), a bare value, a ``dict`` of sub-scores, a

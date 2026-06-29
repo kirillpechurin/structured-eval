@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from structured_eval import (
     EvalConfig,
+    EvalReport,
     FieldFaithfulness,
     ObjectF1,
     OverallLeafScore,
@@ -69,7 +70,7 @@ SOURCE = "Invoice INV-001 from Acme Corp, subtotal 100.0, tax 10.0, total 110.0,
 
 
 @pytest.fixture
-def report():
+def report() -> EvalReport:
     cfg = EvalConfig(
         metrics=[
             ObjectF1(),
@@ -82,11 +83,11 @@ def report():
     return evaluate(ACTUAL, EXPECTED, config=cfg, source=SOURCE)
 
 
-def test_l0_parses_clean(report):
+def test_l0_parses_clean(report) -> None:
     assert report.parse_error is False
 
 
-def test_l1_schema_valid(report):
+def test_l1_schema_valid(report) -> None:
     # Document conforms to the schema even though values are wrong.
     assert report.metrics["schema_validity"].representative() == 1.0
     # A valid document carries the schema_errors channel but every bucket is empty.
@@ -94,7 +95,7 @@ def test_l1_schema_valid(report):
     assert all(not bucket for bucket in errors.values())
 
 
-def test_l4_values_imperfect(report):
+def test_l4_values_imperfect(report) -> None:
     # Structural levels pass, yet the value score is dragged down by `total`.
     assert report.metrics["overall_leaf_score"].representative() < 1.0
     assert report.field_scores["total"].score == 0.0
@@ -102,21 +103,21 @@ def test_l4_values_imperfect(report):
     assert report.field_scores["subtotal"].score == 1.0
 
 
-def test_l5_faithfulness_flags_hallucination(report):
+def test_l5_faithfulness_flags_hallucination(report) -> None:
     ff = report.metrics["field_faithfulness"].by_path
     hallucinated = [p for p, v in ff.items() if float(v) == 0.0]
     assert "vendor" in hallucinated  # "Globex" is absent from the source
     assert ff["id"] == pytest.approx(1.0)  # "INV-001" is grounded
 
 
-def test_l6_rule_violation_reported(report):
+def test_l6_rule_violation_reported(report) -> None:
     rpr = report.metrics["rule_pass_rate"]
     assert rpr.representative() == 0.0  # 999 != 100 + 10
     results = rpr.extra_values("rule_results")
     assert len(results) == 1
 
 
-def test_levels_are_independent(report):
+def test_levels_are_independent(report) -> None:
     # The thesis in one assert block: valid structure (L1) coexists with broken
     # values (L4), an unfaithful field (L5), and a violated rule (L6).
     assert report.metrics["schema_validity"].representative() == 1.0

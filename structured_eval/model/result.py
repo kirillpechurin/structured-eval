@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import Path
 from statistics import mean
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.metric_result import MetricCollection, MetricResult
-from structured_eval.model.nodes.array_node import ArrayMatchResult
-from structured_eval.reporting.console import render
+if TYPE_CHECKING:
+    from structured_eval.model.metric_result import MetricCollection, MetricResult
+    from structured_eval.model.nodes.array_node import ArrayMatchResult
 
 
 class NodeType(StrEnum):
@@ -153,6 +154,7 @@ class EvalReport(BaseModel):
 
     def print_summary(self) -> None:
         """Print a field-level summary table to stdout."""
+        from structured_eval.reporting import render
         print(render(self))
 
     def to_dict(self) -> dict[str, Any]:
@@ -161,7 +163,7 @@ class EvalReport(BaseModel):
 
     def to_json(self, path: str) -> None:
         """Serialize the report to a JSON file."""
-        with open(path, "w", encoding="utf-8") as fh:
+        with Path(path).open("w", encoding="utf-8") as fh:
             fh.write(self.model_dump_json(indent=2))
 
     @classmethod
@@ -172,7 +174,7 @@ class EvalReport(BaseModel):
     @classmethod
     def from_json(cls, path: str) -> EvalReport:
         """Load a report from a JSON file."""
-        with open(path, encoding="utf-8") as fh:
+        with Path(path).open(encoding="utf-8") as fh:
             return cls.model_validate_json(fh.read())
 
     def diff_from(self, other: EvalReport, metrics: list[str] | None = None) -> RegressionDiff:
@@ -315,6 +317,7 @@ class BatchEvalReport(BaseModel):
 
     def print_summary(self) -> None:
         """Print a batch summary (aggregate metrics + field breakdown)."""
+        from structured_eval.reporting import render
         print(render(self))
 
 
@@ -336,4 +339,5 @@ class ConsistencyReport(BaseModel):
 
     def print_summary(self) -> None:
         """Print a consistency summary (stable/unstable fields + variance)."""
+        from structured_eval.reporting import render
         print(render(self))

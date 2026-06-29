@@ -19,7 +19,7 @@ pytestmark = pytest.mark.unit
 ALL_METRICS = sorted(_METRIC_REGISTRY.items())
 
 
-def _instantiable_field_score_metrics():
+def _instantiable_field_score_metrics() -> list[tuple[str, FieldMetric]]:
     """Field metrics with a no-arg ctor and a pure ``score`` (engine-free).
 
     Excludes node-based field metrics (Presence inspects the node;
@@ -59,7 +59,7 @@ GARBAGE_PAIRS = [
 
 
 @pytest.mark.parametrize(("name", "cls"), ALL_METRICS, ids=[n for n, _ in ALL_METRICS])
-def test_registered_under_a_nonempty_name(name, cls):
+def test_registered_under_a_nonempty_name(name, cls) -> None:
     assert isinstance(name, str) and name
     assert issubclass(cls, BaseMetric)
     assert cls.name == name
@@ -76,11 +76,11 @@ for _name, _cls in ALL_METRICS:
 
 
 @pytest.mark.parametrize(("name", "cls"), NO_ARG_METRICS, ids=[n for n, _ in NO_ARG_METRICS])
-def test_resolve_by_name_returns_an_instance(name, cls):
+def test_resolve_by_name_returns_an_instance(name, cls) -> None:
     assert isinstance(resolve_metric(name), cls)
 
 
-def test_resolve_passes_instances_through():
+def test_resolve_passes_instances_through() -> None:
     inst = next(m for _, m in FIELD_SCORE_METRICS)
     assert resolve_metric(inst) is inst
 
@@ -90,7 +90,7 @@ def test_resolve_passes_instances_through():
 
 @pytest.mark.parametrize("metric", _FIELD_INSTANCES, ids=_FIELD_IDS)
 @pytest.mark.parametrize("pair", GARBAGE_PAIRS, ids=[f"{i}" for i in range(len(GARBAGE_PAIRS))])
-def test_score_is_total_and_bounded(metric, pair):
+def test_score_is_total_and_bounded(metric, pair) -> None:
     """Never raises, and always returns a float in [0, 1]."""
     actual, expected = pair
     score = metric.score(actual, expected)

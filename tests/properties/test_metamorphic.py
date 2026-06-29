@@ -28,7 +28,7 @@ pytestmark = pytest.mark.property
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_corrupting_more_fields_never_raises_score(seed):
+def test_corrupting_more_fields_never_raises_score(seed) -> None:
     """Start from a perfect doc; corrupt leaves one at a time → score is monotone non-increasing."""
     rng = random.Random(seed)
     n = rng.randint(2, 8)
@@ -53,7 +53,7 @@ def test_corrupting_more_fields_never_raises_score(seed):
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_uniform_weights_reduce_proportional_to_counts(seed):
+def test_uniform_weights_reduce_proportional_to_counts(seed) -> None:
     """With equal child weights, PROPORTIONAL F1 == NONE (count-based) F1."""
     rng = random.Random(seed)
     n = rng.randint(2, 8)
@@ -82,7 +82,7 @@ def test_uniform_weights_reduce_proportional_to_counts(seed):
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_accuracy_equals_fraction_correct(seed):
+def test_accuracy_equals_fraction_correct(seed) -> None:
     """ObjectAccuracy over flat scalar fields == fraction of exactly-correct fields."""
     rng = random.Random(seed)
     n = rng.randint(1, 10)

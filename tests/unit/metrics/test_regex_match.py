@@ -19,11 +19,11 @@ pytestmark = pytest.mark.unit
     ],
     ids=["case-and-whitespace", "collapse-tabs", "distinct-values"],
 )
-def test_default_normalization(actual, expected, score):
+def test_default_normalization(actual, expected, score) -> None:
     assert RegexMatch().score(actual, expected) == score
 
 
-def test_custom_pattern_drops_punctuation():
+def test_custom_pattern_drops_punctuation() -> None:
     metric = RegexMatch(pattern=r"[^\w\s]", repl="")
     assert metric.score("hello, world!", "hello world") == 1.0
 
@@ -33,7 +33,7 @@ def test_custom_pattern_drops_punctuation():
     [(12, 12.0), (None, None), (None, "none"), ("12", 12)],
     ids=["int-int", "null-null", "null-str", "str-int"],
 )
-def test_string_only_non_str_is_zero(actual, expected):
+def test_string_only_non_str_is_zero(actual, expected) -> None:
     assert RegexMatch().score(actual, expected) == 0.0
 
 
@@ -45,5 +45,5 @@ def test_string_only_non_str_is_zero(actual, expected):
     ],
     ids=["lower-off", "strip-off"],
 )
-def test_flags_disable_normalization(metric, actual, expected, score):
+def test_flags_disable_normalization(metric, actual, expected, score) -> None:
     assert metric.score(actual, expected) == score

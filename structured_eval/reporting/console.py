@@ -8,7 +8,11 @@ for colour later.
 
 from __future__ import annotations
 
-from typing import Any
+from structured_eval.model.result import (
+    BatchEvalReport,
+    ConsistencyReport,
+    EvalReport,
+)
 
 _RULE = "─"
 _BAR = "━"
@@ -18,17 +22,18 @@ _WIDTH = 60
 class ConsoleRenderer:
     """Renders ``EvalReport`` / ``BatchEvalReport`` / ``ConsistencyReport``."""
 
-    def render(self, report: Any) -> str:
-        kind = type(report).__name__
-        if kind == "BatchEvalReport":
+    def render(self, report: EvalReport | BatchEvalReport | ConsistencyReport) -> str:
+        if isinstance(report, EvalReport):
+            return self._render_eval(report)
+        if isinstance(report, BatchEvalReport):
             return self._render_batch(report)
-        if kind == "ConsistencyReport":
+        if isinstance(report, ConsistencyReport):
             return self._render_consistency(report)
-        return self._render_eval(report)
+        raise NotImplementedError
 
     # ── EvalReport ──────────────────────────────────────────────────────────
 
-    def _render_eval(self, report: Any) -> str:
+    def _render_eval(self, report: EvalReport) -> str:
         out: list[str] = [_BAR * _WIDTH]
 
         if report.parse_error:
@@ -45,9 +50,11 @@ class ConsoleRenderer:
             out.append("  OVERALL   —   (no ground truth)")
 
         # Document-level metrics: those a metric produced at the root ("$").
-        doc_metrics = {
-            name: coll.root() for name, coll in report.metrics.items() if coll.root() is not None
-        }
+        doc_metrics: dict[str, float] = {}
+        for name, coll in report.metrics.items():
+            v = coll.root()
+            if v is not None:
+                doc_metrics[name] = v
         grid = self._metric_grid(doc_metrics, skip=report.score_label)
         if grid:
             out += ["", *grid]
@@ -80,7 +87,7 @@ class ConsoleRenderer:
 
     # ── BatchEvalReport ───────────────────────────────────────────────────
 
-    def _render_batch(self, report: Any) -> str:
+    def _render_batch(self, report: BatchEvalReport) -> str:
         bar = _BAR * _WIDTH
         n = len(report.per_sample)
         out = [bar, f"  BATCH   {n} samples"]
@@ -107,7 +114,7 @@ class ConsoleRenderer:
 
     # ── ConsistencyReport ─────────────────────────────────────────────────
 
-    def _render_consistency(self, report: Any) -> str:
+    def _render_consistency(self, report: ConsistencyReport) -> str:
         bar = _BAR * _WIDTH
         out = [bar, f"  CONSISTENCY   {len(report.per_run)} runs"]
         if report.mean_score is not None:
@@ -143,12 +150,12 @@ class ConsoleRenderer:
         headers: list[str], rows: list[list[str]], aligns: list[str] | None = None
     ) -> list[str]:
         """Render a simple monospace table as a list of lines."""
-        cols = list(zip(*([headers] + rows))) if rows else [[h] for h in headers]
+        cols = list(zip(*([headers, *rows]), strict=False)) if rows else [[h] for h in headers]
         widths = [max(len(c) for c in col) for col in cols]
         aligns = aligns or ["<"] * len(headers)
 
         def fmt(cells: list[str]) -> str:
-            return "  ".join(f"{c:{a}{w}}" for c, w, a in zip(cells, widths, aligns))
+            return "  ".join(f"{c:{a}{w}}" for c, w, a in zip(cells, widths, aligns, strict=False))
 
         lines = [fmt(headers), fmt([_RULE * w for w in widths])]
         lines += [fmt(r) for r in rows]
@@ -168,6 +175,6 @@ class ConsoleRenderer:
         return lines
 
 
-def render(report: Any) -> str:
+def render(report: EvalReport | BatchEvalReport | ConsistencyReport) -> str:
     """Render any of the report types to a printable string."""
     return ConsoleRenderer().render(report)

@@ -12,7 +12,7 @@ from structured_eval import EvalConfig, ObjectF1
 pytestmark = pytest.mark.integration
 
 
-def test_deepeval_metric_scores_report():
+def test_deepeval_metric_scores_report() -> None:
     pytest.importorskip("deepeval")
     from deepeval.test_case import LLMTestCase
 
@@ -25,7 +25,7 @@ def test_deepeval_metric_scores_report():
     assert metric.is_successful()
 
 
-def test_langsmith_evaluator_constructs():
+def test_langsmith_evaluator_constructs() -> None:
     pytest.importorskip("langsmith")
     from structured_eval.integrations.langsmith import StructuredEvaluator
 

@@ -18,7 +18,7 @@ class Invoice(BaseModel):
     status: str
 
 
-def test_valid_pydantic_document(tree_factory):
+def test_valid_pydantic_document(tree_factory) -> None:
     root = tree_factory({"id": "1", "total": 100.0, "status": "paid"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 1.0
@@ -29,21 +29,21 @@ def test_valid_pydantic_document(tree_factory):
     }
 
 
-def test_wrong_type_flagged(tree_factory):
+def test_wrong_type_flagged(tree_factory) -> None:
     root = tree_factory({"id": "1", "total": "not-a-float", "status": "paid"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 0.0
     assert "total" in extra["schema_errors"]["type_errors"]
 
 
-def test_missing_required_flagged(tree_factory):
+def test_missing_required_flagged(tree_factory) -> None:
     root = tree_factory({"id": "1"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 0.0
     assert "total" in extra["schema_errors"]["missing_required"]
 
 
-def test_accepts_raw_json_schema(tree_factory):
+def test_accepts_raw_json_schema(tree_factory) -> None:
     schema = {
         "type": "object",
         "properties": {"id": {"type": "string"}, "n": {"type": "number"}},
@@ -54,8 +54,8 @@ def test_accepts_raw_json_schema(tree_factory):
     assert metric.compute(tree_factory({"id": "x", "n": "bad"}, None))[0] == 0.0
 
 
-def test_unsupported_schema_type_raises():
+def test_unsupported_schema_type_raises() -> None:
     from structured_eval.metrics.schema_validity.validator import SchemaValidator
 
     with pytest.raises(TypeError):
-        SchemaValidator("not-a-schema").validate({})
+        SchemaValidator("not-a-schema").validate({})  # type: ignore[arg-type]

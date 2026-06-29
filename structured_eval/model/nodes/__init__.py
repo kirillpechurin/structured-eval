@@ -4,10 +4,10 @@ from structured_eval.model.nodes.object_node import ObjectNode
 from structured_eval.model.nodes.scalar import ScalarNode
 
 __all__ = [
-    "EvalNode",
-    "navigate",
-    "ScalarNode",
-    "ObjectNode",
-    "ArrayNode",
     "ArrayMatchResult",
+    "ArrayNode",
+    "EvalNode",
+    "ObjectNode",
+    "ScalarNode",
+    "navigate",
 ]

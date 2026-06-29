@@ -46,7 +46,7 @@ NAMED_METRICS = [
 
 
 @pytest.mark.parametrize("cls_name", NAMED_METRICS)
-def test_metric_registered(cls_name):
+def test_metric_registered(cls_name) -> None:
     cls = getattr(se, cls_name)
     assert issubclass(cls, Metric)
     assert cls.name, f"{cls_name} has no registered name"
@@ -54,16 +54,16 @@ def test_metric_registered(cls_name):
 
 
 @pytest.mark.parametrize("cls_name", NAMED_METRICS)
-def test_get_metric_class_roundtrip(cls_name):
+def test_get_metric_class_roundtrip(cls_name) -> None:
     cls = getattr(se, cls_name)
     assert get_metric_class(cls.name) is cls
 
 
-def test_unknown_metric_raises():
+def test_unknown_metric_raises() -> None:
     with pytest.raises(KeyError):
         get_metric_class("does_not_exist")
 
 
-def test_names_are_unique():
+def test_names_are_unique() -> None:
     names = [getattr(se, c).name for c in NAMED_METRICS]
     assert len(names) == len(set(names))

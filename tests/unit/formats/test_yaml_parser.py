@@ -9,10 +9,10 @@ pytestmark = pytest.mark.unit
 yaml_parser = pytest.importorskip("structured_eval.formats.yaml_parser")
 
 
-def test_parses_mapping():
+def test_parses_mapping() -> None:
     assert yaml_parser.YamlParser().parse("a: 1\nb: two") == {"a": 1, "b": "two"}
 
 
-def test_invalid_raises_parse_error():
+def test_invalid_raises_parse_error() -> None:
     with pytest.raises(ParseError):
         yaml_parser.YamlParser().parse("a: [1, 2\n  - broken")

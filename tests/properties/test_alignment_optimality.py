@@ -36,7 +36,7 @@ pytestmark = pytest.mark.property
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_hungarian_matches_at_least_as_many_as_greedy(seed):
+def test_hungarian_matches_at_least_as_many_as_greedy(seed) -> None:
     """Optimal assignment matches >= greedy, given the same exact-key scoring."""
     rng = random.Random(seed)
     pool = list("abcde")
@@ -51,7 +51,7 @@ def test_hungarian_matches_at_least_as_many_as_greedy(seed):
     assert len(optimal.matched) <= min(len(expected), len(actual))
 
 
-def test_both_strategies_recover_a_reordered_list():
+def test_both_strategies_recover_a_reordered_list() -> None:
     """On a clean permutation both strategies find the full one-to-one matching.
 
     This pins the non-vacuous baseline: the inequality above is not trivially
@@ -69,7 +69,7 @@ def test_both_strategies_recover_a_reordered_list():
     assert optimal.missed == [] and optimal.spurious == []
 
 
-def test_hungarian_total_similarity_dominates_on_crossmatch():
+def test_hungarian_total_similarity_dominates_on_crossmatch() -> None:
     """At the *score* level Hungarian never scores below greedy on a cross-match.
 
     Optimal assignment maximises total similarity, so the value-aware ArrayF1

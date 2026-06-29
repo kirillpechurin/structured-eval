@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.config import ArrayStrategy
 from structured_eval.model.nodes.base import EvalNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.config import ArrayStrategy
 
 
 class ArrayMatchResult(BaseModel):

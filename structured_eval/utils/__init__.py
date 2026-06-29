@@ -7,9 +7,9 @@ from structured_eval.utils.structured_diff import (
 )
 
 __all__ = [
-    "flatten",
-    "structured_diff",
-    "StructuredDiff",
     "DiffEntry",
     "DiffType",
+    "StructuredDiff",
+    "flatten",
+    "structured_diff",
 ]

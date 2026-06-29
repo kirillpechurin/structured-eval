@@ -22,5 +22,5 @@ pytestmark = pytest.mark.unit
     ],
     ids=["int-int", "str-vs-int", "bool-vs-int", "null-null", "list-list", "dict-dict"],
 )
-def test_score(actual, expected, score):
+def test_score(actual, expected, score) -> None:
     assert TypeMatch().score(actual, expected) == score

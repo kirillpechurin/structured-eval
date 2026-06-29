@@ -24,5 +24,5 @@ pytestmark = pytest.mark.unit
     ],
     ids=["by-index", "hungarian", "by-key", "by-key-named-metric"],
 )
-def test_builds_expected_aligner(strategy, params, expected_type):
+def test_builds_expected_aligner(strategy, params, expected_type) -> None:
     assert isinstance(make_aligner(strategy, params), expected_type)

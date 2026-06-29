@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.base import RootMetric
 from structured_eval.metrics.schema_validity.validator import SchemaValidator
-from structured_eval.model.nodes.base import EvalNode
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
+    from structured_eval.model.nodes.base import EvalNode
 
 
 class SchemaValidity(RootMetric):
@@ -17,7 +21,7 @@ class SchemaValidity(RootMetric):
 
     name = "schema_validity"
 
-    def __init__(self, schema: Any):
+    def __init__(self, schema: type[BaseModel] | dict[str, Any]):
         self.validator = SchemaValidator(schema)
 
     def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:

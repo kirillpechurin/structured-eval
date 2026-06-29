@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.engine.evaluator import Evaluator
-from structured_eval.model.config import EvalConfig
-from structured_eval.model.result import BatchEvalReport, ConsistencyReport, EvalReport
 from structured_eval.model.sample import Sample
+
+if TYPE_CHECKING:
+    from structured_eval.model.config import EvalConfig
+    from structured_eval.model.result import (
+        BatchEvalReport,
+        ConsistencyReport,
+        EvalReport,
+    )
 
 
 def _is_batch(actual: Any) -> bool:

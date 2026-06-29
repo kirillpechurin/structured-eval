@@ -19,7 +19,7 @@ def _batch(samples, cfg=None) -> BatchEvalReport:
     return report
 
 
-def test_batch_mean_metrics():
+def test_batch_mean_metrics() -> None:
     samples = [
         Sample(actual={"a": 1}, expected={"a": 1}),  # f1 1.0
         Sample(actual={"a": 9}, expected={"a": 1}),  # f1 0.0
@@ -29,7 +29,7 @@ def test_batch_mean_metrics():
     assert len(r.per_sample) == 2
 
 
-def test_perfect_response_rate():
+def test_perfect_response_rate() -> None:
     samples = [
         Sample(actual={"a": 1}, expected={"a": 1}),
         Sample(actual={"a": 9}, expected={"a": 1}),
@@ -38,7 +38,7 @@ def test_perfect_response_rate():
     assert r.perfect_response_rate == pytest.approx(0.5)
 
 
-def test_parse_error_rate():
+def test_parse_error_rate() -> None:
     samples = [
         Sample(actual="{bad", expected={"a": 1}),
         Sample(actual={"a": 1}, expected={"a": 1}),
@@ -47,7 +47,7 @@ def test_parse_error_rate():
     assert r.parse_error_rate == pytest.approx(0.5)
 
 
-def test_score_from_key_metric():
+def test_score_from_key_metric() -> None:
     samples = [
         Sample(actual={"a": 1}, expected={"a": 1}),
         Sample(actual={"a": 9}, expected={"a": 1}),
@@ -57,7 +57,7 @@ def test_score_from_key_metric():
     assert r.score_label == "object_f1"
 
 
-def test_field_breakdown_across_batch():
+def test_field_breakdown_across_batch() -> None:
     samples = [
         Sample(actual={"a": 1}, expected={"a": 1}),
         Sample(actual={"a": 9}, expected={"a": 1}),
@@ -68,14 +68,14 @@ def test_field_breakdown_across_batch():
     assert bd["a"]["fail_rate"] == pytest.approx(0.5)
 
 
-def test_positional_config():
+def test_positional_config() -> None:
     samples = [Sample(actual={"a": 1}, expected={"a": 1})]
     r = evaluate_batch(samples, EvalConfig(metrics=[ObjectF1()]))
     assert isinstance(r, BatchEvalReport)
     assert r.metrics["object_f1"] == 1.0
 
 
-def test_empty_batch():
+def test_empty_batch() -> None:
     r = _batch([], EvalConfig(metrics=[ObjectF1()]))
     assert r.per_sample == []
     assert r.parse_error_rate == 0.0

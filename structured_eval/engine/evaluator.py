@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.engine.aggregator import BatchAggregator
 from structured_eval.engine.metric_runner import MetricRunner
@@ -10,8 +10,10 @@ from structured_eval.engine.tree_builder import TreeBuilder
 from structured_eval.model.config import EvalConfig
 from structured_eval.model.context import EvalContext
 from structured_eval.model.result import BatchEvalReport, ConsistencyReport, EvalReport
-from structured_eval.model.sample import Sample
 from structured_eval.utils.flatten import flatten
+
+if TYPE_CHECKING:
+    from structured_eval.model.sample import Sample
 
 
 class Evaluator:

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.base import ObjectMetric
 from structured_eval.metrics.utils import calculate as stats
 from structured_eval.metrics.utils import object_utils as obj
-from structured_eval.model.nodes.object_node import ObjectNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.object_node import ObjectNode
 
 
 class ObjectAccuracy(ObjectMetric):

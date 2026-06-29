@@ -9,23 +9,24 @@ import pytest
 
 from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate
 from structured_eval.reporting.console import ConsoleRenderer
+from typing import Any
 
 pytestmark = pytest.mark.unit
 
 
-def _render(actual, expected, **kw):
+def _render(actual: Any, expected: Any, **kw: Any) -> str:
     report = evaluate(actual, expected, config=EvalConfig(key_metric=ObjectF1()), **kw)
     return ConsoleRenderer().render(report)
 
 
-def test_header_and_score_present():
+def test_header_and_score_present() -> None:
     out = _render({"id": "INV-1", "total": 99.0}, {"id": "INV-1", "total": 100.0})
     assert "OVERALL" in out
     assert "object_f1" in out  # the key-metric label
     assert "0.50" in out  # 1/2 fields correct
 
 
-def test_every_field_has_a_row():
+def test_every_field_has_a_row() -> None:
     out = _render(
         {"id": "INV-1", "total": 99.0, "vendor": "Acme"},
         {"id": "INV-1", "total": 100.0, "vendor": "Acme"},
@@ -34,19 +35,19 @@ def test_every_field_has_a_row():
         assert field in out
 
 
-def test_pass_and_fail_marks_rendered():
+def test_pass_and_fail_marks_rendered() -> None:
     out = _render({"a": 1, "b": 2}, {"a": 1, "b": 99})
     assert "✓" in out  # a correct
     assert "✗" in out  # b wrong
 
 
-def test_perfect_report_has_no_fail_mark():
+def test_perfect_report_has_no_fail_mark() -> None:
     out = _render({"a": 1}, {"a": 1})
     assert "✗" not in out
     assert "✓" in out
 
 
-def test_parse_error_render():
+def test_parse_error_render() -> None:
     out = ConsoleRenderer().render(
         EvalReport(parse_error=True, parse_error_message="unexpected token")
     )
@@ -54,11 +55,11 @@ def test_parse_error_render():
     assert "unexpected token" in out
 
 
-def test_render_is_nonempty_str():
+def test_render_is_nonempty_str() -> None:
     assert _render({"a": 1}, {"a": 1}).strip()
 
 
-def test_batch_report_renders():
+def test_batch_report_renders() -> None:
     from structured_eval import Sample, evaluate_batch
 
     report = evaluate_batch(
@@ -67,6 +68,6 @@ def test_batch_report_renders():
     assert ConsoleRenderer().render(report)
 
 
-def test_print_summary_writes_to_stdout(capsys):
+def test_print_summary_writes_to_stdout(capsys) -> None:
     evaluate({"a": 1}, {"a": 1}, config=EvalConfig(key_metric=ObjectF1())).print_summary()
     assert capsys.readouterr().out

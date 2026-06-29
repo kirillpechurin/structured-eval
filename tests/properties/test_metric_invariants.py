@@ -13,6 +13,7 @@ reproducible seed.
 
 import math
 import random
+from typing import Any
 
 import pytest
 
@@ -49,13 +50,13 @@ STRING_ONLY = [RegexMatch(), TokenF1(), Fuzzy(), Levenshtein()]
 SYMMETRIC = [ExactMatch(), TypeMatch(), Fuzzy(), TokenF1(), NumericCloseness()]
 
 
-def _ids(metrics):
+def _ids(metrics: list[Any]) -> list[str]:
     return [type(m).__name__ for m in metrics]
 
 
 @pytest.mark.parametrize("metric", ALL_SCORE_METRICS, ids=_ids(ALL_SCORE_METRICS))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_boundedness(metric, seed):
+def test_boundedness(metric, seed) -> None:
     """Any scalar pair → a finite float in [0, 1], with no exception escaping."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -67,7 +68,7 @@ def test_boundedness(metric, seed):
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_identity_universal(seed):
+def test_identity_universal(seed) -> None:
     """ExactMatch/TypeMatch are reflexive for every scalar (incl. None)."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -80,7 +81,7 @@ def test_identity_universal(seed):
     "metric", [RegexMatch(), TokenF1(), Fuzzy(), Levenshtein()], ids=_ids(STRING_ONLY)
 )
 @pytest.mark.parametrize("seed", SEEDS)
-def test_identity_string_domain(metric, seed):
+def test_identity_string_domain(metric, seed) -> None:
     """Text metrics are reflexive on their own domain — equal strings → 1.0."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -90,7 +91,7 @@ def test_identity_string_domain(metric, seed):
 
 @pytest.mark.parametrize("metric", SYMMETRIC, ids=_ids(SYMMETRIC))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_symmetry(metric, seed):
+def test_symmetry(metric, seed) -> None:
     """Order-independent metrics: swapping operands never changes the score."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -100,7 +101,7 @@ def test_symmetry(metric, seed):
 
 @pytest.mark.parametrize("metric", STRING_ONLY, ids=_ids(STRING_ONLY))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_string_only_contract(metric, seed):
+def test_string_only_contract(metric, seed) -> None:
     """A non-str on either side scores exactly 0.0 — never coerced, never raised."""
     rng = random.Random(seed)
     for _ in range(20):

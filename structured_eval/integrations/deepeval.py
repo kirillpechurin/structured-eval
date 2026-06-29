@@ -17,7 +17,7 @@ requires deepeval to be installed (the ``[deepeval]`` extra).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deepeval.metrics import BaseMetric
 
@@ -25,8 +25,11 @@ from structured_eval.api import evaluate
 from structured_eval.integrations._adapter import verdict
 from structured_eval.model.config import EvalConfig
 
+if TYPE_CHECKING:
+    from structured_eval.model.result import EvalReport
 
-class StructuredMetric(BaseMetric):  # type: ignore[misc]  # BaseMetric is Any when deepeval is absent
+
+class StructuredMetric(BaseMetric):  # type: ignore[no-untyped-call]  # deepeval.__init_subclass__ has no annotations
     """Field-level structured-output metric for deepeval."""
 
     def __init__(
@@ -42,7 +45,7 @@ class StructuredMetric(BaseMetric):  # type: ignore[misc]  # BaseMetric is Any w
         self.score: float = 0.0
         self.success: bool = False
         self.reason: str | None = None
-        self.report: Any = None
+        self.report: EvalReport | None = None
 
     def measure(self, test_case: Any, *args: Any, **kwargs: Any) -> float:
         self.report = evaluate(test_case.actual_output, test_case.expected_output, self.config)

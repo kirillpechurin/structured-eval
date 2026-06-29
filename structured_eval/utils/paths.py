@@ -35,7 +35,7 @@ def navigate(obj: Any, path: str) -> Any:
         >>> navigate({"items": [1, 2]}, "items[0]")
         1
     """
-    if path == "$" or path == "":
+    if path in {"$", ""}:
         return obj
 
     current = obj

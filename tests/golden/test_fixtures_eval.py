@@ -6,6 +6,7 @@ shift scores.
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -26,15 +27,16 @@ pytestmark = pytest.mark.golden
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
 
-def _load(name: str) -> dict:
-    return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+def _load(name: str) -> dict[str, Any]:
+    result: dict[str, Any] = json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+    return result
 
 
 # ── invoice extraction (data-driven from JSON) ──────────────────────────────
 
 
 @pytest.mark.parametrize("case", _load("invoices.json")["cases"], ids=lambda c: c["name"])
-def test_invoice_object_f1(case):
+def test_invoice_object_f1(case) -> None:
     r = evaluate(case["actual"], case["expected"], config=EvalConfig(metrics=[ObjectF1()]))
     assert r.metrics["object_f1"].representative() == pytest.approx(case["expect_object_f1"])
 
@@ -42,7 +44,7 @@ def test_invoice_object_f1(case):
 # ── NER: list of typed spans, aligned by (text,label) ───────────────────────
 
 
-def test_ner_array_by_key():
+def test_ner_array_by_key() -> None:
     actual = {
         "entities": [
             {"text": "Acme", "label": "ORG"},
@@ -80,7 +82,7 @@ def test_ner_array_by_key():
 # ── tool call: function name + nested args object ───────────────────────────
 
 
-def test_tool_call_nested():
+def test_tool_call_nested() -> None:
     actual = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "celsius"}}
     expected = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "fahrenheit"}}
     cfg = EvalConfig(metrics=[ObjectF1(), OverallLeafScore()])
@@ -93,7 +95,7 @@ def test_tool_call_nested():
 # ── deeply nested document ──────────────────────────────────────────────────
 
 
-def test_deep_nested():
+def test_deep_nested() -> None:
     actual = {"a": {"b": {"c": {"d": 1, "e": 2}}}}
     expected = {"a": {"b": {"c": {"d": 1, "e": 9}}}}
     r = evaluate(actual, expected, config=EvalConfig(metrics=[OverallLeafScore()]))

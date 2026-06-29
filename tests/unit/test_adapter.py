@@ -3,6 +3,8 @@
 Pure mapping shared by the host adapters; tested without any host library.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate
@@ -11,28 +13,28 @@ from structured_eval.integrations._adapter import reason_text, verdict
 pytestmark = pytest.mark.unit
 
 
-def _report(actual, expected):
+def _report(actual: Any, expected: Any) -> EvalReport:
     return evaluate(actual, expected, config=EvalConfig(key_metric=ObjectF1()))
 
 
-def test_verdict_success():
+def test_verdict_success() -> None:
     score, success, reason = verdict(_report({"a": 1}, {"a": 1}), threshold=0.8)
     assert score == 1.0 and success is True
     assert "passed" in reason
 
 
-def test_verdict_failure():
+def test_verdict_failure() -> None:
     _score, success, reason = verdict(_report({"a": 9}, {"a": 1}), threshold=0.8)
     assert success is False
     assert "failed" in reason
 
 
-def test_reason_text_for_parse_error():
+def test_reason_text_for_parse_error() -> None:
     text = reason_text(EvalReport(parse_error=True, parse_error_message="boom"))
     assert "parse error" in text
 
 
-def test_none_score_is_failure():
+def test_none_score_is_failure() -> None:
     # no key-metric score (e.g. no ground truth) → threshold can't apply → not a pass
     _score, success, _reason = verdict(EvalReport(score=None), threshold=0.5)
     assert success is False

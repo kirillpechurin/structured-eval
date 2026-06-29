@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.base import RootMetric
 from structured_eval.metrics.rule_pass_rate.engine import RuleProcessor
-from structured_eval.model.nodes.base import EvalNode
+
+if TYPE_CHECKING:
+    from structured_eval.model.nodes.base import EvalNode
 
 
 class RulePassRate(RootMetric):
