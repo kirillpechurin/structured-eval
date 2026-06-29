@@ -4,6 +4,7 @@ serialization, plus BatchEvalReport / ConsistencyReport aggregates.
 Reports are constructed directly (no engine) to isolate the model behaviour.
 """
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -21,12 +22,21 @@ from structured_eval.model.result import NodeType
 pytestmark = pytest.mark.unit
 
 
-def _coll(name: str, value: float, extra: dict[str, Any] | None = None) -> MetricCollection:
+def _coll(
+    name: str, value: float, extra: dict[str, Any] | None = None
+) -> MetricCollection:
     """A single-node MetricCollection rooted at "$" (document-level)."""
     return MetricCollection(name=name, by_path={"$": MetricResult(value, extra)})
 
 
-def _fs(path: str, score: float, threshold: float = 1.0, metrics: dict[str, MetricResult] | None = None, actual: Any = None, expected: Any = None) -> FieldScore:
+def _fs(
+    path: str,
+    score: float,
+    threshold: float = 1.0,
+    metrics: dict[str, MetricResult] | None = None,
+    actual: Any = None,
+    expected: Any = None,
+) -> FieldScore:
     return FieldScore(
         path=path,
         node_type=NodeType.SCALAR,
@@ -38,7 +48,12 @@ def _fs(path: str, score: float, threshold: float = 1.0, metrics: dict[str, Metr
     )
 
 
-def _report(score: float | None = None, metrics: dict[str, float] | None = None, fields: list[FieldScore] | None = None, **kwargs: Any) -> EvalReport:
+def _report(
+    score: float | None = None,
+    metrics: dict[str, float] | None = None,
+    fields: list[FieldScore] | None = None,
+    **kwargs: Any,
+) -> EvalReport:
     return EvalReport(
         score=score,
         metrics={k: _coll(k, v) for k, v in (metrics or {}).items()},
@@ -107,7 +122,9 @@ def test_assert_metric() -> None:
 
 
 def test_assert_schema_valid() -> None:
-    EvalReport(metrics={"schema_validity": _coll("schema_validity", 1.0)}).assert_schema_valid()
+    EvalReport(
+        metrics={"schema_validity": _coll("schema_validity", 1.0)}
+    ).assert_schema_valid()
     with pytest.raises(AssertionError):
         bad = _coll("schema_validity", 0.0, {"schema_errors": ["type: total"]})
         EvalReport(metrics={"schema_validity": bad}).assert_schema_valid()
@@ -117,7 +134,9 @@ def test_assert_schema_valid() -> None:
 
 
 def test_diff_metric_deltas() -> None:
-    diff = _report(metrics={"object_f1": 0.9}).diff_from(_report(metrics={"object_f1": 0.7}))
+    diff = _report(metrics={"object_f1": 0.9}).diff_from(
+        _report(metrics={"object_f1": 0.7})
+    )
     assert diff.deltas["object_f1"] == pytest.approx(0.2)
 
 
@@ -142,7 +161,7 @@ def test_to_dict_is_jsonable() -> None:
     assert d["metrics"]["object_f1"]["by_path"]["$"] == 0.5
 
 
-def test_json_file_roundtrip(tmp_path) -> None:
+def test_json_file_roundtrip(tmp_path: Path) -> None:
     r = _report(score=0.5, metrics={"object_f1": 0.5}, fields=[_fs("a", 0.5)])
     path = tmp_path / "report.json"
     r.to_json(str(path))
@@ -190,7 +209,7 @@ def test_consistency_stable_vs_unstable() -> None:
     [([1.0], 0.95, 1.0), ([0.0, 1.0], 0.5, 0.5), ([0.0, 10.0], 0.95, 9.5)],
     ids=["single", "median", "p95"],
 )
-def test_percentile_helper(values, pct, expected) -> None:
+def test_percentile_helper(values: Any, pct: Any, expected: Any) -> None:
     from structured_eval.model.result import _percentile
 
     assert _percentile(values, pct) == pytest.approx(expected)

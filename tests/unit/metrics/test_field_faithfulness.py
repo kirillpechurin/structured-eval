@@ -59,7 +59,9 @@ def test_array_items_need_expected() -> None:
     # aligned, so no item nodes exist and faithfulness can't reach them. With an
     # expected list the items materialize and are checked.
     # TODO: materialize actual elements without expected — roadmap.
-    without = evaluate({"tags": ["100.0", "ghost"]}, None, CFG, source="value 100.0 here")
+    without = evaluate(
+        {"tags": ["100.0", "ghost"]}, None, CFG, source="value 100.0 here"
+    )
     assert "field_faithfulness" not in without.metrics  # no array item nodes
     with_exp = evaluate(
         {"tags": ["100.0", "ghost"]},

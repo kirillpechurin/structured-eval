@@ -1,5 +1,7 @@
 """Config models — defaults, nesting, and enum value sets (model/config.py)."""
 
+from typing import Any
+
 import pytest
 
 from structured_eval import (
@@ -59,7 +61,9 @@ def test_field_config_holds_metric_list() -> None:
 
 
 def test_object_field_config_nests() -> None:
-    cfg = ObjectFieldConfig(fields={"vendor": ObjectFieldConfig(fields={"name": FieldConfig()})})
+    cfg = ObjectFieldConfig(
+        fields={"vendor": ObjectFieldConfig(fields={"name": FieldConfig()})}
+    )
     assert isinstance(cfg.fields["vendor"], ObjectFieldConfig)
 
 
@@ -85,5 +89,5 @@ def test_array_item_config() -> None:
     ],
     ids=["null-policy", "extra-keys", "array-strategy"],
 )
-def test_enum_values(enum, values) -> None:
+def test_enum_values(enum: Any, values: Any) -> None:
     assert {member.value for member in enum} == values

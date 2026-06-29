@@ -35,10 +35,16 @@ def _load(name: str) -> dict[str, Any]:
 # ── invoice extraction (data-driven from JSON) ──────────────────────────────
 
 
-@pytest.mark.parametrize("case", _load("invoices.json")["cases"], ids=lambda c: c["name"])
-def test_invoice_object_f1(case) -> None:
-    r = evaluate(case["actual"], case["expected"], config=EvalConfig(metrics=[ObjectF1()]))
-    assert r.metrics["object_f1"].representative() == pytest.approx(case["expect_object_f1"])
+@pytest.mark.parametrize(
+    "case", _load("invoices.json")["cases"], ids=lambda c: c["name"]
+)
+def test_invoice_object_f1(case: Any) -> None:
+    r = evaluate(
+        case["actual"], case["expected"], config=EvalConfig(metrics=[ObjectF1()])
+    )
+    assert r.metrics["object_f1"].representative() == pytest.approx(
+        case["expect_object_f1"]
+    )
 
 
 # ── NER: list of typed spans, aligned by (text,label) ───────────────────────
@@ -64,7 +70,9 @@ def test_ner_array_by_key() -> None:
             "entities": ArrayFieldConfig(
                 strategy=ArrayStrategy.BY_KEY,
                 params={"key": "text"},
-                item=ObjectFieldConfig(fields={"text": FieldConfig(), "label": FieldConfig()}),
+                item=ObjectFieldConfig(
+                    fields={"text": FieldConfig(), "label": FieldConfig()}
+                ),
             )
         },
         metrics=[ArrayF1()],
@@ -84,7 +92,10 @@ def test_ner_array_by_key() -> None:
 
 def test_tool_call_nested() -> None:
     actual = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "celsius"}}
-    expected = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "fahrenheit"}}
+    expected = {
+        "name": "get_weather",
+        "arguments": {"city": "Paris", "unit": "fahrenheit"},
+    }
     cfg = EvalConfig(metrics=[ObjectF1(), OverallLeafScore()])
     r = evaluate(actual, expected, config=cfg)
     # name correct, arguments.city correct, arguments.unit wrong → 2/3 leaves

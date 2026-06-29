@@ -20,7 +20,9 @@ class ArrayPrecision(ArrayMetric):
 
     name = "array_precision"
 
-    def __init__(self, threshold: float = 1.0, mode: stats.GradingMode = stats.GradingMode.HARD):
+    def __init__(
+        self, threshold: float = 1.0, mode: stats.GradingMode = stats.GradingMode.HARD
+    ):
         self.threshold = threshold
         self.mode = stats.GradingMode(mode)
 

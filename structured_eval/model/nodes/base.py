@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from structured_eval.model.context import EvalContext  # noqa: TC001
+from structured_eval.model.metric_result import MetricResult  # noqa: TC001
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from structured_eval.model.context import EvalContext
-    from structured_eval.model.metric_result import MetricResult
 
 # Re-exported for back-compat: ``navigate`` / ``MISSING`` now live in
 # ``structured_eval.utils.paths`` (a lower layer with no model dependency).
@@ -39,8 +39,12 @@ class EvalNode(BaseModel):
     context: EvalContext
     expected_path: str | None = None
     weight: float = 1.0  # relative importance for weighted aggregation (OverallLeafScore, object metrics)
-    metrics: list[Any] = Field(default_factory=list)  # list[BaseMetric] resolved for this node
-    key_metric: Any = None  # BaseMetric: this node's representative score (parents read it)
+    metrics: list[Any] = Field(
+        default_factory=list
+    )  # list[BaseMetric] resolved for this node
+    key_metric: Any = (
+        None  # BaseMetric: this node's representative score (parents read it)
+    )
     threshold: float = 1.0  # bar the representative score must clear to count as a TP
     metric_results: dict[str, MetricResult] = Field(default_factory=dict)
 
@@ -71,7 +75,9 @@ class EvalNode(BaseModel):
             raise ValueError(f"node {self.path!r} has no key_metric")
         value = self.metric_results.get(km.name)
         if value is None:
-            raise ValueError(f"node {self.path!r}: key_metric {km.name!r} has no computed value")
+            raise ValueError(
+                f"node {self.path!r}: key_metric {km.name!r} has no computed value"
+            )
         return float(value)
 
     # ── traversal ──────────────────────────────────────────────────────────
@@ -89,7 +95,10 @@ class EvalNode(BaseModel):
 
     def is_leaf(self) -> bool:
         """True for a scalar node (no object children, no array items)."""
-        return getattr(self, "children", None) is None and getattr(self, "items", None) is None
+        return (
+            getattr(self, "children", None) is None
+            and getattr(self, "items", None) is None
+        )
 
     def walk(self) -> Iterator[EvalNode]:
         """Depth-first traversal yielding this node and every descendant."""

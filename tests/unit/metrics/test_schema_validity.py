@@ -4,10 +4,12 @@ Returns ``(score, extra)`` where ``extra["schema_errors"]`` buckets failures int
 type_errors / missing_required / extra_fields.
 """
 
+from collections.abc import Callable
+
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import SchemaValidity
+from structured_eval import EvalNode, SchemaValidity
 
 pytestmark = pytest.mark.unit
 
@@ -18,7 +20,7 @@ class Invoice(BaseModel):
     status: str
 
 
-def test_valid_pydantic_document(tree_factory) -> None:
+def test_valid_pydantic_document(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"id": "1", "total": 100.0, "status": "paid"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 1.0
@@ -29,21 +31,21 @@ def test_valid_pydantic_document(tree_factory) -> None:
     }
 
 
-def test_wrong_type_flagged(tree_factory) -> None:
+def test_wrong_type_flagged(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"id": "1", "total": "not-a-float", "status": "paid"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 0.0
     assert "total" in extra["schema_errors"]["type_errors"]
 
 
-def test_missing_required_flagged(tree_factory) -> None:
+def test_missing_required_flagged(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"id": "1"}, None)
     score, extra = SchemaValidity(Invoice).compute(root)
     assert score == 0.0
     assert "total" in extra["schema_errors"]["missing_required"]
 
 
-def test_accepts_raw_json_schema(tree_factory) -> None:
+def test_accepts_raw_json_schema(tree_factory: Callable[..., EvalNode]) -> None:
     schema = {
         "type": "object",
         "properties": {"id": {"type": "string"}, "n": {"type": "number"}},

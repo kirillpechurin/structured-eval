@@ -3,13 +3,15 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 from statistics import mean
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    from structured_eval.model.metric_result import MetricCollection, MetricResult
-    from structured_eval.model.nodes.array_node import ArrayMatchResult
+from structured_eval.model.metric_result import (  # noqa: TC001
+    MetricCollection,
+    MetricResult,
+)
+from structured_eval.model.nodes.array_node import ArrayMatchResult  # noqa: TC001
 
 
 class NodeType(StrEnum):
@@ -38,7 +40,9 @@ def _percentile(values: list[float], q: float) -> float:
 class WarningType(StrEnum):
     """The kind of structural warning the engine raised while building the tree."""
 
-    EXTRA_KEY = "extra_key"  # key present in actual but not expected (ExtraKeysPolicy.IGNORE)
+    EXTRA_KEY = (
+        "extra_key"  # key present in actual but not expected (ExtraKeysPolicy.IGNORE)
+    )
     MISSING_FIELD = "missing_field"  # key present in expected but absent in actual
 
 
@@ -155,6 +159,7 @@ class EvalReport(BaseModel):
     def print_summary(self) -> None:
         """Print a field-level summary table to stdout."""
         from structured_eval.reporting import render
+
         print(render(self))
 
     def to_dict(self) -> dict[str, Any]:
@@ -177,7 +182,9 @@ class EvalReport(BaseModel):
         with Path(path).open(encoding="utf-8") as fh:
             return cls.model_validate_json(fh.read())
 
-    def diff_from(self, other: EvalReport, metrics: list[str] | None = None) -> RegressionDiff:
+    def diff_from(
+        self, other: EvalReport, metrics: list[str] | None = None
+    ) -> RegressionDiff:
         """Compute metric deltas relative to ``other`` (self minus other).
 
         ``deltas`` covers document-level metrics present in both reports (or the
@@ -186,7 +193,8 @@ class EvalReport(BaseModel):
         """
         names = metrics if metrics is not None else sorted(self.metrics)
         deltas = {
-            name: self.metrics[name].representative() - other.metrics[name].representative()
+            name: self.metrics[name].representative()
+            - other.metrics[name].representative()
             for name in names
             if name in self.metrics and name in other.metrics
         }
@@ -197,7 +205,9 @@ class EvalReport(BaseModel):
             if other_fs is None:
                 continue
             per: dict[str, float] = {
-                m: fs.metrics[m] - other_fs.metrics[m] for m in fs.metrics if m in other_fs.metrics
+                m: fs.metrics[m] - other_fs.metrics[m]
+                for m in fs.metrics
+                if m in other_fs.metrics
             }
             if fs.score is not None and other_fs.score is not None:
                 per["score"] = fs.score - other_fs.score
@@ -247,10 +257,14 @@ class EvalReport(BaseModel):
         """
         if metric_name not in self.metrics:
             available = ", ".join(sorted(self.metrics)) or "none"
-            raise AssertionError(f"metric {metric_name!r} not computed (available: {available})")
+            raise AssertionError(
+                f"metric {metric_name!r} not computed (available: {available})"
+            )
         value = self.metrics[metric_name].representative()
         if value < min_value:
-            raise AssertionError(f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}")
+            raise AssertionError(
+                f"metric {metric_name!r} {value:.4g} < required {min_value:.4g}"
+            )
 
     def assert_schema_valid(self) -> None:
         """Fail if schema validation produced errors."""
@@ -282,7 +296,9 @@ class BatchEvalReport(BaseModel):
     perfect_response_rate: float = 0.0
     parse_error_rate: float = 0.0
 
-    def field_breakdown(self, threshold: float | None = None) -> dict[str, dict[str, float]]:
+    def field_breakdown(
+        self, threshold: float | None = None
+    ) -> dict[str, dict[str, float]]:
         """Per-path statistics across the batch: mean/min/max/p95/fail_rate.
 
         Only nodes with a score (a key metric applied) are counted. ``fail_rate``
@@ -318,6 +334,7 @@ class BatchEvalReport(BaseModel):
     def print_summary(self) -> None:
         """Print a batch summary (aggregate metrics + field breakdown)."""
         from structured_eval.reporting import render
+
         print(render(self))
 
 
@@ -340,4 +357,5 @@ class ConsistencyReport(BaseModel):
     def print_summary(self) -> None:
         """Print a consistency summary (stable/unstable fields + variance)."""
         from structured_eval.reporting import render
+
         print(render(self))

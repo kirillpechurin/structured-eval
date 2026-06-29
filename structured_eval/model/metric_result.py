@@ -34,7 +34,11 @@ class MetricResult(float):
 
     def __repr__(self) -> str:
         num = float.__repr__(self)
-        return f"MetricResult({num}, extra={self.extra!r})" if self.extra else f"MetricResult({num})"
+        return (
+            f"MetricResult({num}, extra={self.extra!r})"
+            if self.extra
+            else f"MetricResult({num})"
+        )
 
     # ── pydantic (round-trips extra: serialized as a bare float when empty,
     #    else as ``{"value": ..., "extra": ...}``; both forms re-validate) ──
@@ -48,7 +52,11 @@ class MetricResult(float):
 
     @staticmethod
     def _serialize(value: MetricResult) -> Any:
-        return {"value": float(value), "extra": value.extra} if value.extra else float(value)
+        return (
+            {"value": float(value), "extra": value.extra}
+            if value.extra
+            else float(value)
+        )
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -56,7 +64,9 @@ class MetricResult(float):
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_plain_validator_function(
             cls._validate,
-            serialization=core_schema.plain_serializer_function_ser_schema(cls._serialize),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls._serialize
+            ),
         )
 
 

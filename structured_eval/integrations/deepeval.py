@@ -48,7 +48,9 @@ class StructuredMetric(BaseMetric):  # type: ignore[no-untyped-call]  # deepeval
         self.report: EvalReport | None = None
 
     def measure(self, test_case: Any, *args: Any, **kwargs: Any) -> float:
-        self.report = evaluate(test_case.actual_output, test_case.expected_output, self.config)
+        self.report = evaluate(
+            test_case.actual_output, test_case.expected_output, self.config
+        )
         score, success, reason = verdict(self.report, self.threshold)
         self.score = 0.0 if score is None else score
         self.success = success

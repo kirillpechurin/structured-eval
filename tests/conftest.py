@@ -95,13 +95,17 @@ def context_factory() -> Callable[..., EvalContext]:
 def _assert_metric(report: EvalReport, name: str, value: float) -> None:
     """Assert a metric's representative value across the tree (``report.metrics``)."""
     actual = report.metrics[name].representative()
-    assert actual == pytest.approx(value), f"metric {name!r}: expected {value}, got {actual}"
+    assert actual == pytest.approx(value), (
+        f"metric {name!r}: expected {value}, got {actual}"
+    )
 
 
 def _assert_field(report: EvalReport, path: str, score: float) -> None:
     """Assert one field's representative score (``report.field_scores[path].score``)."""
     fs = report.field_scores[path]
-    assert fs.score == pytest.approx(score), f"field {path!r}: expected {score}, got {fs.score}"
+    assert fs.score == pytest.approx(score), (
+        f"field {path!r}: expected {score}, got {fs.score}"
+    )
 
 
 @pytest.fixture

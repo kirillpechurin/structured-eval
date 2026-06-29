@@ -4,6 +4,8 @@
 here. Fuzzy is string-only.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import Fuzzy, Levenshtein
@@ -35,7 +37,7 @@ def test_partial_match_is_between() -> None:
     [(False, lambda s: s < 1.0), (True, lambda s: s == 1.0)],
     ids=["normalize-off", "normalize-on"],
 )
-def test_normalize_controls_case_folding(normalize, predicate) -> None:
+def test_normalize_controls_case_folding(normalize: Any, predicate: Any) -> None:
     assert predicate(Fuzzy(normalize=normalize).score("ACME", "acme"))
 
 
@@ -44,7 +46,7 @@ def test_normalize_controls_case_folding(normalize, predicate) -> None:
     [(None, None), (None, "none"), (123, 123.0)],
     ids=["null-null", "null-str", "int-float"],
 )
-def test_string_only_non_str_is_zero(actual, expected) -> None:
+def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert Fuzzy().score(actual, expected) == 0.0
 
 
@@ -57,6 +59,6 @@ def test_levenshtein_is_registered() -> None:
 
 def test_levenshtein_matches_fuzzy_ratio() -> None:
     assert Levenshtein().score("kitten", "kitten") == 1.0
-    assert Levenshtein().score("kitten", "sitting") == Fuzzy(method=FuzzyMethod.RATIO).score(
-        "kitten", "sitting"
-    )
+    assert Levenshtein().score("kitten", "sitting") == Fuzzy(
+        method=FuzzyMethod.RATIO
+    ).score("kitten", "sitting")

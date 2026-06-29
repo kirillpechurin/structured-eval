@@ -1,5 +1,7 @@
 """structured_diff — added/removed/changed entries over two documents."""
 
+from typing import Any
+
 import pytest
 
 from structured_eval.utils.structured_diff import (
@@ -26,7 +28,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["top", "nested", "index", "index-nested"],
 )
-def test_to_readable_path(raw, readable) -> None:
+def test_to_readable_path(raw: Any, readable: Any) -> None:
     assert _to_readable_path(raw) == readable
 
 
@@ -38,7 +40,7 @@ def test_to_readable_path(raw, readable) -> None:
     [{"a": 1, "b": "hello"}, {"invoice": {"id": "1", "total": 100.0}}, {}],
     ids=["flat", "nested", "empty"],
 )
-def test_identical_documents_are_equal(doc) -> None:
+def test_identical_documents_are_equal(doc: Any) -> None:
     diff = structured_diff(doc, doc)
     assert diff.is_equal
     assert diff.entries == []
@@ -57,7 +59,9 @@ def test_top_level_added() -> None:
 
 
 def test_nested_added() -> None:
-    diff = structured_diff({"invoice": {"id": "1", "note": "new"}}, {"invoice": {"id": "1"}})
+    diff = structured_diff(
+        {"invoice": {"id": "1", "note": "new"}}, {"invoice": {"id": "1"}}
+    )
     assert [e.path for e in diff.added] == ["invoice.note"]
 
 
@@ -72,7 +76,9 @@ def test_list_item_added() -> None:
 
 
 def test_top_level_removed() -> None:
-    diff = structured_diff({"status": "paid"}, {"status": "paid", "required_field": "value"})
+    diff = structured_diff(
+        {"status": "paid"}, {"status": "paid", "required_field": "value"}
+    )
     (entry,) = diff.removed
     assert entry.path == "required_field"
     assert entry.diff_type == DiffType.REMOVED
@@ -81,7 +87,9 @@ def test_top_level_removed() -> None:
 
 
 def test_nested_removed() -> None:
-    diff = structured_diff({"invoice": {"id": "1"}}, {"invoice": {"id": "1", "tax": 10}})
+    diff = structured_diff(
+        {"invoice": {"id": "1"}}, {"invoice": {"id": "1", "tax": 10}}
+    )
     assert [e.path for e in diff.removed] == ["invoice.tax"]
 
 

@@ -4,6 +4,8 @@ Strips currency/separators, honors accounting notation ``(123) → −123``, and
 supports relative / absolute tolerance bands. Booleans are not numbers.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import Numeric
@@ -24,7 +26,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["rel-in", "rel-out", "abs-in", "abs-out", "zero-exact", "zero-off"],
 )
-def test_tolerance_bands(metric, actual, expected, score) -> None:
+def test_tolerance_bands(metric: Any, actual: Any, expected: Any, score: Any) -> None:
     assert metric.score(actual, expected) == score
 
 
@@ -55,7 +57,7 @@ def test_tolerance_bands(metric, actual, expected, score) -> None:
         "bool-not-number",
     ],
 )
-def test_lenient_parsing(actual, expected, score) -> None:
+def test_lenient_parsing(actual: Any, expected: Any, score: Any) -> None:
     assert Numeric(tolerance=0).score(actual, expected) == score
 
 

@@ -48,8 +48,12 @@ class Evaluator:
             config=self.config,
         )
 
-        root, warnings = TreeBuilder(context).build()  # phase 1: structure + per-node metrics
-        self._runner.run(root)  # phase 2: compute post-order, each node's key_metric last
+        root, warnings = TreeBuilder(
+            context
+        ).build()  # phase 1: structure + per-node metrics
+        self._runner.run(
+            root
+        )  # phase 2: compute post-order, each node's key_metric last
         return self._report_builder.build(root, context, warnings)  # phase 3
 
     def evaluate_batch(self, samples: list[Sample]) -> BatchEvalReport:

@@ -37,7 +37,9 @@ class ObjectPrecision(ObjectMetric):
         self.weight_mode = stats.WeightMode(weight_mode)
 
     def compute(self, node: ObjectNode) -> float:
-        verdicts = obj.matched_verdicts(node, self.score_policy, self.threshold, self.weight_mode)
+        verdicts = obj.matched_verdicts(
+            node, self.score_policy, self.threshold, self.weight_mode
+        )
         tp, predicted, expected = stats.prf_counts(
             verdicts,
             obj.missing_weight(node, self.weight_mode),

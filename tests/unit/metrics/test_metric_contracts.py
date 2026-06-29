@@ -5,6 +5,8 @@ the baseline guarantees for free. Per-metric files assert behaviour; this file
 asserts the laws shared by the whole family. Do not re-assert these per metric.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval.metrics.base import (
@@ -59,7 +61,7 @@ GARBAGE_PAIRS = [
 
 
 @pytest.mark.parametrize(("name", "cls"), ALL_METRICS, ids=[n for n, _ in ALL_METRICS])
-def test_registered_under_a_nonempty_name(name, cls) -> None:
+def test_registered_under_a_nonempty_name(name: Any, cls: Any) -> None:
     assert isinstance(name, str) and name
     assert issubclass(cls, BaseMetric)
     assert cls.name == name
@@ -75,8 +77,10 @@ for _name, _cls in ALL_METRICS:
     NO_ARG_METRICS.append((_name, _cls))
 
 
-@pytest.mark.parametrize(("name", "cls"), NO_ARG_METRICS, ids=[n for n, _ in NO_ARG_METRICS])
-def test_resolve_by_name_returns_an_instance(name, cls) -> None:
+@pytest.mark.parametrize(
+    ("name", "cls"), NO_ARG_METRICS, ids=[n for n, _ in NO_ARG_METRICS]
+)
+def test_resolve_by_name_returns_an_instance(name: Any, cls: Any) -> None:
     assert isinstance(resolve_metric(name), cls)
 
 
@@ -89,8 +93,10 @@ def test_resolve_passes_instances_through() -> None:
 
 
 @pytest.mark.parametrize("metric", _FIELD_INSTANCES, ids=_FIELD_IDS)
-@pytest.mark.parametrize("pair", GARBAGE_PAIRS, ids=[f"{i}" for i in range(len(GARBAGE_PAIRS))])
-def test_score_is_total_and_bounded(metric, pair) -> None:
+@pytest.mark.parametrize(
+    "pair", GARBAGE_PAIRS, ids=[f"{i}" for i in range(len(GARBAGE_PAIRS))]
+)
+def test_score_is_total_and_bounded(metric: Any, pair: Any) -> None:
     """Never raises, and always returns a float in [0, 1]."""
     actual, expected = pair
     score = metric.score(actual, expected)

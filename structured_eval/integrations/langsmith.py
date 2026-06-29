@@ -64,7 +64,9 @@ class StructuredEvaluator:
         self.__name__ = key
 
     def __call__(self, run: Any, example: Any) -> dict[str, Any]:
-        report = evaluate(self._get_actual(run), self._get_expected(example), self.config)
+        report = evaluate(
+            self._get_actual(run), self._get_expected(example), self.config
+        )
         assert isinstance(report, EvalReport)  # single-document evaluation
         score, _success, reason = verdict(report, self.threshold)
         return {"key": self.key, "score": score, "comment": reason}

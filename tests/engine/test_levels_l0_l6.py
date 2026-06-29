@@ -66,7 +66,9 @@ EXPECTED = {
     "total": 110.0,
     "status": "paid",
 }
-SOURCE = "Invoice INV-001 from Acme Corp, subtotal 100.0, tax 10.0, total 110.0, status paid"
+SOURCE = (
+    "Invoice INV-001 from Acme Corp, subtotal 100.0, tax 10.0, total 110.0, status paid"
+)
 
 
 @pytest.fixture
@@ -83,19 +85,21 @@ def report() -> EvalReport:
     return evaluate(ACTUAL, EXPECTED, config=cfg, source=SOURCE)
 
 
-def test_l0_parses_clean(report) -> None:
+def test_l0_parses_clean(report: EvalReport) -> None:
     assert report.parse_error is False
 
 
-def test_l1_schema_valid(report) -> None:
+def test_l1_schema_valid(report: EvalReport) -> None:
     # Document conforms to the schema even though values are wrong.
     assert report.metrics["schema_validity"].representative() == 1.0
     # A valid document carries the schema_errors channel but every bucket is empty.
-    errors = report.metrics["schema_validity"].root().extra["schema_errors"]
+    root = report.metrics["schema_validity"].root()
+    assert root is not None
+    errors = root.extra["schema_errors"]
     assert all(not bucket for bucket in errors.values())
 
 
-def test_l4_values_imperfect(report) -> None:
+def test_l4_values_imperfect(report: EvalReport) -> None:
     # Structural levels pass, yet the value score is dragged down by `total`.
     assert report.metrics["overall_leaf_score"].representative() < 1.0
     assert report.field_scores["total"].score == 0.0
@@ -103,21 +107,21 @@ def test_l4_values_imperfect(report) -> None:
     assert report.field_scores["subtotal"].score == 1.0
 
 
-def test_l5_faithfulness_flags_hallucination(report) -> None:
+def test_l5_faithfulness_flags_hallucination(report: EvalReport) -> None:
     ff = report.metrics["field_faithfulness"].by_path
     hallucinated = [p for p, v in ff.items() if float(v) == 0.0]
     assert "vendor" in hallucinated  # "Globex" is absent from the source
     assert ff["id"] == pytest.approx(1.0)  # "INV-001" is grounded
 
 
-def test_l6_rule_violation_reported(report) -> None:
+def test_l6_rule_violation_reported(report: EvalReport) -> None:
     rpr = report.metrics["rule_pass_rate"]
     assert rpr.representative() == 0.0  # 999 != 100 + 10
     results = rpr.extra_values("rule_results")
     assert len(results) == 1
 
 
-def test_levels_are_independent(report) -> None:
+def test_levels_are_independent(report: EvalReport) -> None:
     # The thesis in one assert block: valid structure (L1) coexists with broken
     # values (L4), an unfaithful field (L5), and a violated rule (L6).
     assert report.metrics["schema_validity"].representative() == 1.0

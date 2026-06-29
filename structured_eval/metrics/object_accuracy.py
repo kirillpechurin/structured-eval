@@ -36,7 +36,9 @@ class ObjectAccuracy(ObjectMetric):
         self.weight_mode = stats.WeightMode(weight_mode)
 
     def compute(self, node: ObjectNode) -> float:
-        verdicts = obj.matched_verdicts(node, self.score_policy, weight_mode=self.weight_mode)
+        verdicts = obj.matched_verdicts(
+            node, self.score_policy, weight_mode=self.weight_mode
+        )
         denom = sum(weight for _, _, weight in verdicts) + obj.missing_weight(
             node, self.weight_mode
         )

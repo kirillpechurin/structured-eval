@@ -111,7 +111,9 @@ class TreeBuilder:
                 out.append(metric)
         return out
 
-    def _resolve_metrics(self, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool) -> list[BaseMetric]:
+    def _resolve_metrics(
+        self, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool
+    ) -> list[BaseMetric]:
         """Metrics for one node: applicable globals + this node's own (additive).
 
         Globals cascade by type (a ``RootMetric`` only at the root); per-node
@@ -125,7 +127,9 @@ class TreeBuilder:
         out: list[BaseMetric] = []
 
         def add(metric: BaseMetric) -> None:
-            if self._applies_to(metric, node_cls, is_root) and not any(metric is s for s in out):
+            if self._applies_to(metric, node_cls, is_root) and not any(
+                metric is s for s in out
+            ):
                 out.append(metric)
 
         for metric in self._globals:
@@ -143,7 +147,11 @@ class TreeBuilder:
         return out
 
     def _key_metric(
-        self, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool, metrics: list[BaseMetric]
+        self,
+        node_cls: type,
+        cfg: AnyFieldConfig | None,
+        is_root: bool,
+        metrics: list[BaseMetric],
     ) -> Metric[Any]:
         """The node's representative metric (computed last).
 
@@ -189,7 +197,14 @@ class TreeBuilder:
             return self._array(apath, epath, cfg, actual, expected)
         return self._scalar(apath, epath, cfg)
 
-    def _object(self, apath: str, epath: str, cfg: AnyFieldConfig | None, actual: Any, expected: Any) -> ObjectNode:
+    def _object(
+        self,
+        apath: str,
+        epath: str,
+        cfg: AnyFieldConfig | None,
+        actual: Any,
+        expected: Any,
+    ) -> ObjectNode:
         a_keys = set(actual) if isinstance(actual, dict) else set()
         e_keys = set(expected) if isinstance(expected, dict) else set()
         both = a_keys & e_keys
@@ -214,7 +229,9 @@ class TreeBuilder:
         children: dict[str, Any] = {}
         matched: list[Any] = []
         for key in sorted(a_keys | e_keys):
-            child = self.node(self._child(apath, key), self._child(epath, key), fields.get(key))
+            child = self.node(
+                self._child(apath, key), self._child(epath, key), fields.get(key)
+            )
             children[key] = child
             if key in both:
                 matched.append(child)
@@ -244,7 +261,14 @@ class TreeBuilder:
             children=children,
         )
 
-    def _array(self, apath: str, epath: str, cfg: AnyFieldConfig | None, actual: Any, expected: Any) -> ArrayNode:
+    def _array(
+        self,
+        apath: str,
+        epath: str,
+        cfg: AnyFieldConfig | None,
+        actual: Any,
+        expected: Any,
+    ) -> ArrayNode:
         a_list: list[Any] = actual if isinstance(actual, list) else []
         e_list: list[Any] = expected if isinstance(expected, list) else []
         if isinstance(cfg, ArrayFieldConfig):

@@ -45,11 +45,16 @@ def test_list_of_primitives() -> None:
 
 
 def test_list_of_strings() -> None:
-    assert flatten({"names": ["Alice", "Bob"]}) == {"names[0]": "Alice", "names[1]": "Bob"}
+    assert flatten({"names": ["Alice", "Bob"]}) == {
+        "names[0]": "Alice",
+        "names[1]": "Bob",
+    }
 
 
 def test_list_of_dicts() -> None:
-    result = flatten({"items": [{"name": "A", "price": 10}, {"name": "B", "price": 20}]})
+    result = flatten(
+        {"items": [{"name": "A", "price": 10}, {"name": "B", "price": 20}]}
+    )
     assert result == {
         "items[0].name": "A",
         "items[0].price": 10,

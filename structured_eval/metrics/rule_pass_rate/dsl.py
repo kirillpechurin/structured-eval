@@ -150,7 +150,9 @@ class Rule:
         return self._bind("in", collection)
 
     @classmethod
-    def custom(cls, fn: Callable[[dict[str, Any]], bool], *, name: str = "") -> _CustomRule:
+    def custom(
+        cls, fn: Callable[[dict[str, Any]], bool], *, name: str = ""
+    ) -> _CustomRule:
         """Wrap an arbitrary function as a rule.
 
         Args:
@@ -172,7 +174,9 @@ class Rule:
 
     def evaluate(self, document: dict[str, Any]) -> RuleResult:
         if self._op is None:
-            raise ValueError(f"Rule {self._path!r} has no comparison — call .eq(), .lt(), etc.")
+            raise ValueError(
+                f"Rule {self._path!r} has no comparison — call .eq(), .lt(), etc."
+            )
 
         try:
             lhs = _resolve_path(self._path, document)
@@ -189,7 +193,11 @@ class Rule:
         except TypeError as exc:
             return RuleResult(name=self.name, passed=False, message=str(exc))
 
-        msg = "" if passed else f"{self._path!r} ({lhs!r}) does not satisfy {self._op}({rhs!r})"
+        msg = (
+            ""
+            if passed
+            else f"{self._path!r} ({lhs!r}) does not satisfy {self._op}({rhs!r})"
+        )
         return RuleResult(name=self.name, passed=passed, message=msg)
 
     def _resolve_rhs(self, rhs: Any, document: dict[str, Any]) -> Any:

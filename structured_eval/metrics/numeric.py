@@ -67,7 +67,10 @@ class Numeric(FieldMetric):
                         return True
                 elif abs(a - e) / abs(e) <= self.relative_tolerance:
                     return True
-            return self.absolute_tolerance is not None and abs(a - e) <= self.absolute_tolerance
+            return (
+                self.absolute_tolerance is not None
+                and abs(a - e) <= self.absolute_tolerance
+            )
 
         # Single-band form (tolerance + mode).
         if self.mode == NumericMode.RELATIVE:

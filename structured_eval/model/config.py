@@ -51,7 +51,9 @@ class FieldConfig(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    metrics: list[Any] | None = None  # list[Metric]; added to the cascading config.metrics
+    metrics: list[Any] | None = (
+        None  # list[Metric]; added to the cascading config.metrics
+    )
     key_metric: Any = None  # Metric | name str used as the parent's match criterion
     threshold: float | None = None
     weight: float = DEFAULT_FIELD_WEIGHT
@@ -118,7 +120,9 @@ class EvalConfig(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    metrics: list[Any] = Field(default_factory=list)  # list[Metric]; cascade by type to all nodes
+    metrics: list[Any] = Field(
+        default_factory=list
+    )  # list[Metric]; cascade by type to all nodes
     fields: dict[str, AnyFieldConfig] = Field(default_factory=dict)
     root: ObjectFieldConfig | ArrayFieldConfig | None = None
     key_metric: Any = None  # Metric whose value becomes report.score

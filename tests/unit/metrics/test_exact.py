@@ -4,6 +4,8 @@ A field metric *is* the comparison: ``score(actual, expected) -> float`` is a
 pure primitive, tested without the engine.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import ExactMatch
@@ -22,7 +24,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["equal", "differ", "type-sensitive", "equal-int", "null-eq-null"],
 )
-def test_score(actual, expected, score) -> None:
+def test_score(actual: Any, expected: Any, score: Any) -> None:
     assert ExactMatch().score(actual, expected) == score
 
 

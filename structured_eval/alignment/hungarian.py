@@ -123,13 +123,18 @@ class HungarianAligner(ArrayAligner):
             return self._object_similarity(expected, actual, {})
         return self._apply(self._default_scorer(expected, actual), expected, actual)
 
-    def _object_similarity(self, expected: Any, actual: Any, scorers: dict[str, Scorer]) -> float:
+    def _object_similarity(
+        self, expected: Any, actual: Any, scorers: dict[str, Scorer]
+    ) -> float:
         if not isinstance(expected, dict) or not isinstance(actual, dict):
             return 1.0 if expected == actual else 0.0
         keys = set(expected) | set(actual)
         if not keys:
             return 1.0
-        total = sum(self._similarity(expected.get(k), actual.get(k), scorers.get(k)) for k in keys)
+        total = sum(
+            self._similarity(expected.get(k), actual.get(k), scorers.get(k))
+            for k in keys
+        )
         return total / len(keys)
 
     @staticmethod

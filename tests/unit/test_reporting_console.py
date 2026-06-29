@@ -5,11 +5,12 @@ relies on (overall verdict, score, every field row, pass/fail marks), so layout
 drops are caught without pinning exact whitespace.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate
 from structured_eval.reporting.console import ConsoleRenderer
-from typing import Any
 
 pytestmark = pytest.mark.unit
 
@@ -68,6 +69,8 @@ def test_batch_report_renders() -> None:
     assert ConsoleRenderer().render(report)
 
 
-def test_print_summary_writes_to_stdout(capsys) -> None:
-    evaluate({"a": 1}, {"a": 1}, config=EvalConfig(key_metric=ObjectF1())).print_summary()
+def test_print_summary_writes_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
+    evaluate(
+        {"a": 1}, {"a": 1}, config=EvalConfig(key_metric=ObjectF1())
+    ).print_summary()
     assert capsys.readouterr().out

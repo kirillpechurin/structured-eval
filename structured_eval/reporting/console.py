@@ -65,7 +65,9 @@ class ConsoleRenderer:
         for fs in report.field_scores.values():
             if fs.score is None:
                 continue
-            metric_name = next((k for k, v in fs.metrics.items() if v == fs.score), "score")
+            metric_name = next(
+                (k for k, v in fs.metrics.items() if v == fs.score), "score"
+            )
             rows.append(
                 [
                     fs.path,
@@ -104,11 +106,18 @@ class ConsoleRenderer:
         ranked = sorted(bd.items(), key=lambda kv: kv[1]["fail_rate"], reverse=True)
         if ranked:
             rows = [
-                [path, self._num(s["mean"]), self._num(s["p95"]), self._num(s["fail_rate"])]
+                [
+                    path,
+                    self._num(s["mean"]),
+                    self._num(s["p95"]),
+                    self._num(s["fail_rate"]),
+                ]
                 for path, s in ranked
             ]
             out.append("  Field breakdown (worst first)")
-            out += self._table(["Field", "mean", "p95", "fail_rate"], rows, ["<", ">", ">", ">"])
+            out += self._table(
+                ["Field", "mean", "p95", "fail_rate"], rows, ["<", ">", ">", ">"]
+            )
             out.append(bar)
         return "\n".join(out)
 
@@ -126,7 +135,9 @@ class ConsoleRenderer:
             f"  unstable         {', '.join(report.unstable_fields) or '—'}",
             bar,
         ]
-        ranked = sorted(report.field_variance.items(), key=lambda kv: kv[1], reverse=True)
+        ranked = sorted(
+            report.field_variance.items(), key=lambda kv: kv[1], reverse=True
+        )
         if ranked:
             rows = [[path, f"{var:.4f}"] for path, var in ranked]
             out += self._table(["Field", "variance"], rows, ["<", ">"])
@@ -150,12 +161,18 @@ class ConsoleRenderer:
         headers: list[str], rows: list[list[str]], aligns: list[str] | None = None
     ) -> list[str]:
         """Render a simple monospace table as a list of lines."""
-        cols = list(zip(*([headers, *rows]), strict=False)) if rows else [[h] for h in headers]
+        cols = (
+            list(zip(*([headers, *rows]), strict=False))
+            if rows
+            else [[h] for h in headers]
+        )
         widths = [max(len(c) for c in col) for col in cols]
         aligns = aligns or ["<"] * len(headers)
 
         def fmt(cells: list[str]) -> str:
-            return "  ".join(f"{c:{a}{w}}" for c, w, a in zip(cells, widths, aligns, strict=False))
+            return "  ".join(
+                f"{c:{a}{w}}" for c, w, a in zip(cells, widths, aligns, strict=False)
+            )
 
         lines = [fmt(headers), fmt([_RULE * w for w in widths])]
         lines += [fmt(r) for r in rows]

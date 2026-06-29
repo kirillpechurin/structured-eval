@@ -14,6 +14,7 @@ the approximation. We pin that as:
 """
 
 import random
+from typing import Any
 
 import pytest
 
@@ -36,7 +37,7 @@ pytestmark = pytest.mark.property
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_hungarian_matches_at_least_as_many_as_greedy(seed) -> None:
+def test_hungarian_matches_at_least_as_many_as_greedy(seed: Any) -> None:
     """Optimal assignment matches >= greedy, given the same exact-key scoring."""
     rng = random.Random(seed)
     pool = list("abcde")
@@ -44,7 +45,9 @@ def test_hungarian_matches_at_least_as_many_as_greedy(seed) -> None:
     actual = [{"id": rng.choice(pool)} for _ in range(rng.randint(0, 6))]
 
     greedy = ByKeyAligner(key="id", threshold=1.0).align(expected, actual)
-    optimal = HungarianAligner(scorer=ExactMatch(), threshold=1.0, key="id").align(expected, actual)
+    optimal = HungarianAligner(scorer=ExactMatch(), threshold=1.0, key="id").align(
+        expected, actual
+    )
 
     assert len(optimal.matched) >= len(greedy.matched)
     # And the optimum can't exceed the obvious ceiling of available pairs.
@@ -62,7 +65,9 @@ def test_both_strategies_recover_a_reordered_list() -> None:
     actual = [{"id": "c"}, {"id": "a"}, {"id": "b"}]
 
     greedy = ByKeyAligner(key="id", threshold=1.0).align(expected, actual)
-    optimal = HungarianAligner(scorer=ExactMatch(), threshold=1.0, key="id").align(expected, actual)
+    optimal = HungarianAligner(scorer=ExactMatch(), threshold=1.0, key="id").align(
+        expected, actual
+    )
 
     assert len(greedy.matched) == 3
     assert len(optimal.matched) == 3
@@ -102,4 +107,7 @@ def test_hungarian_total_similarity_dominates_on_crossmatch() -> None:
 
     g = evaluate({"xs": actual}, {"xs": expected}, config=greedy_cfg)
     o = evaluate({"xs": actual}, {"xs": expected}, config=opt_cfg)
-    assert o.field_scores["xs"].metrics["array_f1"] >= g.field_scores["xs"].metrics["array_f1"]
+    assert (
+        o.field_scores["xs"].metrics["array_f1"]
+        >= g.field_scores["xs"].metrics["array_f1"]
+    )

@@ -23,7 +23,8 @@ def test_dict_shorthand() -> None:
 
 def test_sample_input() -> None:
     r = evaluate(
-        Sample(actual={"a": 1}, expected={"a": 1}), config=EvalConfig(metrics=[ObjectF1()])
+        Sample(actual={"a": 1}, expected={"a": 1}),
+        config=EvalConfig(metrics=[ObjectF1()]),
     )
     assert isinstance(r, EvalReport)
 

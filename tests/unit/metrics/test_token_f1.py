@@ -3,6 +3,8 @@
 Punctuation is dropped; repeated tokens count with multiplicity. String-only.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import TokenF1
@@ -23,9 +25,17 @@ pytestmark = pytest.mark.unit
         # multiset: "the the cat"(3) vs "the cat"(2), common 2 → p=2/3,r=1 → 0.8
         ("the the cat", "the cat", 0.8),
     ],
-    ids=["identical", "partial", "disjoint", "both-empty", "one-empty", "punct", "multiset"],
+    ids=[
+        "identical",
+        "partial",
+        "disjoint",
+        "both-empty",
+        "one-empty",
+        "punct",
+        "multiset",
+    ],
 )
-def test_score(actual, expected, score) -> None:
+def test_score(actual: Any, expected: Any, score: Any) -> None:
     assert TokenF1().score(actual, expected) == pytest.approx(score)
 
 
@@ -34,5 +44,5 @@ def test_score(actual, expected, score) -> None:
     [(None, None), (None, "none"), (123, 123.0)],
     ids=["null-null", "null-str", "int-float"],
 )
-def test_string_only_non_str_is_zero(actual, expected) -> None:
+def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert TokenF1().score(actual, expected) == 0.0

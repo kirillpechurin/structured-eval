@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-if TYPE_CHECKING:
-    from structured_eval.model.config import EvalConfig
+from structured_eval.model.config import EvalConfig  # noqa: TC001
 
 
 class EvalContext(BaseModel):

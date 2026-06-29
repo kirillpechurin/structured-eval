@@ -66,7 +66,10 @@ def test_rules_only_all_pass() -> None:
     cfg = EvalConfig(
         metrics=[
             RulePassRate(
-                rules=[Rule("$.status").eq("paid"), Rule("$.total").eq("$.subtotal + $.tax")]
+                rules=[
+                    Rule("$.status").eq("paid"),
+                    Rule("$.total").eq("$.subtotal + $.tax"),
+                ]
             )
         ]
     )
@@ -78,7 +81,9 @@ def test_rules_only_all_pass() -> None:
 
 def test_rules_only_partial() -> None:
     cfg = EvalConfig(
-        metrics=[RulePassRate(rules=[Rule("$.status").eq("paid"), Rule("$.total").gt(0)])]
+        metrics=[
+            RulePassRate(rules=[Rule("$.status").eq("paid"), Rule("$.total").gt(0)])
+        ]
     )
     r = evaluate({"status": "draft", "total": 50.0}, config=cfg)
     assert r.metrics["rule_pass_rate"].representative() == pytest.approx(0.5)

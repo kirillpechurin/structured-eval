@@ -56,7 +56,7 @@ def _ids(metrics: list[Any]) -> list[str]:
 
 @pytest.mark.parametrize("metric", ALL_SCORE_METRICS, ids=_ids(ALL_SCORE_METRICS))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_boundedness(metric, seed) -> None:
+def test_boundedness(metric: Any, seed: Any) -> None:
     """Any scalar pair → a finite float in [0, 1], with no exception escaping."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -68,7 +68,7 @@ def test_boundedness(metric, seed) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_identity_universal(seed) -> None:
+def test_identity_universal(seed: Any) -> None:
     """ExactMatch/TypeMatch are reflexive for every scalar (incl. None)."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -81,7 +81,7 @@ def test_identity_universal(seed) -> None:
     "metric", [RegexMatch(), TokenF1(), Fuzzy(), Levenshtein()], ids=_ids(STRING_ONLY)
 )
 @pytest.mark.parametrize("seed", SEEDS)
-def test_identity_string_domain(metric, seed) -> None:
+def test_identity_string_domain(metric: Any, seed: Any) -> None:
     """Text metrics are reflexive on their own domain — equal strings → 1.0."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -91,7 +91,7 @@ def test_identity_string_domain(metric, seed) -> None:
 
 @pytest.mark.parametrize("metric", SYMMETRIC, ids=_ids(SYMMETRIC))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_symmetry(metric, seed) -> None:
+def test_symmetry(metric: Any, seed: Any) -> None:
     """Order-independent metrics: swapping operands never changes the score."""
     rng = random.Random(seed)
     for _ in range(20):
@@ -101,7 +101,7 @@ def test_symmetry(metric, seed) -> None:
 
 @pytest.mark.parametrize("metric", STRING_ONLY, ids=_ids(STRING_ONLY))
 @pytest.mark.parametrize("seed", SEEDS)
-def test_string_only_contract(metric, seed) -> None:
+def test_string_only_contract(metric: Any, seed: Any) -> None:
     """A non-str on either side scores exactly 0.0 — never coerced, never raised."""
     rng = random.Random(seed)
     for _ in range(20):

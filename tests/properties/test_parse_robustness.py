@@ -8,6 +8,7 @@ assert the contract holds every time.
 
 import random
 import string
+from typing import Any
 
 import pytest
 
@@ -37,7 +38,7 @@ PATHOLOGICAL = [
 
 
 @pytest.mark.parametrize("bad", PATHOLOGICAL, ids=range(len(PATHOLOGICAL)))
-def test_pathological_strings_report_not_raise(bad) -> None:
+def test_pathological_strings_report_not_raise(bad: Any) -> None:
     report = evaluate(bad, {"a": 1}, config=EvalConfig(metrics=[ObjectF1()]))
     if report.parse_error:
         assert report.parse_error_message
@@ -46,7 +47,7 @@ def test_pathological_strings_report_not_raise(bad) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_random_garbage_reports_not_raise(seed) -> None:
+def test_random_garbage_reports_not_raise(seed: Any) -> None:
     rng = random.Random(seed)
     n = rng.randint(0, 40)
     alphabet = string.printable + "{}[]:,\"'"

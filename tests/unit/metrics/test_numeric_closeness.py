@@ -4,6 +4,8 @@ Numbers only: any non-number side scores 0.0, with no equality fallback. Shares
 ``Numeric``'s lenient parser, so numeric strings are graded rather than collapsed.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import NumericCloseness
@@ -34,7 +36,7 @@ pytestmark = pytest.mark.unit
         "currency-graded",
     ],
 )
-def test_graded_similarity(actual, expected, score) -> None:
+def test_graded_similarity(actual: Any, expected: Any, score: Any) -> None:
     assert NumericCloseness().score(actual, expected) == pytest.approx(score)
 
 
@@ -48,5 +50,5 @@ def test_graded_similarity(actual, expected, score) -> None:
     ],
     ids=["bool", "non-numeric", "null", "equal-non-number"],
 )
-def test_non_number_is_zero(actual, expected) -> None:
+def test_non_number_is_zero(actual: Any, expected: Any) -> None:
     assert NumericCloseness().score(actual, expected) == 0.0

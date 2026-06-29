@@ -13,7 +13,7 @@ from structured_eval import (
 pytestmark = pytest.mark.engine
 
 
-def _batch(samples, cfg=None) -> BatchEvalReport:
+def _batch(samples: list[Sample], cfg: EvalConfig | None = None) -> BatchEvalReport:
     report = evaluate_batch(samples, cfg)
     assert isinstance(report, BatchEvalReport)
     return report

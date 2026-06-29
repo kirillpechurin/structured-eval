@@ -25,7 +25,9 @@ def reason_text(report: EvalReport) -> str:
         if fs.node_type == NodeType.SCALAR:
             parts.append(f"{fs.path}: {fs.actual!r} != {fs.expected!r}")
         else:
-            parts.append(f"{fs.path}: score {fs.score:.2g}" if fs.score is not None else fs.path)
+            parts.append(
+                f"{fs.path}: score {fs.score:.2g}" if fs.score is not None else fs.path
+            )
     if len(failed) > _MAX_REASONS:
         parts.append(f"... +{len(failed) - _MAX_REASONS} more")
 

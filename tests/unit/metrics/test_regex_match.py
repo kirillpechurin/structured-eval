@@ -3,6 +3,8 @@
 String-only: a non-str on either side scores 0.0, never coerced.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import RegexMatch
@@ -19,7 +21,7 @@ pytestmark = pytest.mark.unit
     ],
     ids=["case-and-whitespace", "collapse-tabs", "distinct-values"],
 )
-def test_default_normalization(actual, expected, score) -> None:
+def test_default_normalization(actual: Any, expected: Any, score: Any) -> None:
     assert RegexMatch().score(actual, expected) == score
 
 
@@ -33,7 +35,7 @@ def test_custom_pattern_drops_punctuation() -> None:
     [(12, 12.0), (None, None), (None, "none"), ("12", 12)],
     ids=["int-int", "null-null", "null-str", "str-int"],
 )
-def test_string_only_non_str_is_zero(actual, expected) -> None:
+def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert RegexMatch().score(actual, expected) == 0.0
 
 
@@ -45,5 +47,7 @@ def test_string_only_non_str_is_zero(actual, expected) -> None:
     ],
     ids=["lower-off", "strip-off"],
 )
-def test_flags_disable_normalization(metric, actual, expected, score) -> None:
+def test_flags_disable_normalization(
+    metric: Any, actual: Any, expected: Any, score: Any
+) -> None:
     assert metric.score(actual, expected) == score

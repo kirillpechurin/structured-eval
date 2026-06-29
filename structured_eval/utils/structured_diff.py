@@ -17,7 +17,9 @@ class DiffEntry(BaseModel):
     """Single difference between actual and expected at one field path."""
 
     path: str = Field(description="Dot/bracket path to the differing field.")
-    diff_type: DiffType = Field(description="Type of difference: added, removed, or changed.")
+    diff_type: DiffType = Field(
+        description="Type of difference: added, removed, or changed."
+    )
     actual: Any = Field(description="Value in actual (None for removed entries).")
     expected: Any = Field(description="Value in expected (None for added entries).")
 

@@ -5,6 +5,8 @@ in ``_METRIC_REGISTRY`` and resolve via ``get_metric_class`` — this guards
 against the catalog and the registry drifting apart (e.g. EvalConfig.from_yaml).
 """
 
+from typing import Any
+
 import pytest
 
 import structured_eval as se
@@ -46,7 +48,7 @@ NAMED_METRICS = [
 
 
 @pytest.mark.parametrize("cls_name", NAMED_METRICS)
-def test_metric_registered(cls_name) -> None:
+def test_metric_registered(cls_name: Any) -> None:
     cls = getattr(se, cls_name)
     assert issubclass(cls, Metric)
     assert cls.name, f"{cls_name} has no registered name"
@@ -54,7 +56,7 @@ def test_metric_registered(cls_name) -> None:
 
 
 @pytest.mark.parametrize("cls_name", NAMED_METRICS)
-def test_get_metric_class_roundtrip(cls_name) -> None:
+def test_get_metric_class_roundtrip(cls_name: Any) -> None:
     cls = getattr(se, cls_name)
     assert get_metric_class(cls.name) is cls
 

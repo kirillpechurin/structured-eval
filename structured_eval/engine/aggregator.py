@@ -79,7 +79,9 @@ class BatchAggregator:
             stable_fields=stable,
             unstable_fields=unstable,
             mean_score=mean(scores) if scores else None,
-            score_variance=(pvariance(scores) if len(scores) > 1 else 0.0) if scores else None,
+            score_variance=(pvariance(scores) if len(scores) > 1 else 0.0)
+            if scores
+            else None,
         )
 
     @staticmethod

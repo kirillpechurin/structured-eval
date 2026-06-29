@@ -56,7 +56,14 @@ class MetricRunner:
         if isinstance(result, tuple):
             result, extra = result
         if isinstance(result, dict):
-            return {k: MetricResult(v, {**getattr(v, "extra", {}), **extra}) for k, v in result.items()}
+            return {
+                k: MetricResult(v, {**getattr(v, "extra", {}), **extra})
+                for k, v in result.items()
+            }
         if isinstance(result, MetricResult):
-            return {name: MetricResult(result, {**result.extra, **extra}) if extra else result}
+            return {
+                name: MetricResult(result, {**result.extra, **extra})
+                if extra
+                else result
+            }
         return {name: MetricResult(result, extra)}

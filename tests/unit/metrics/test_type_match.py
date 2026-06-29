@@ -3,6 +3,8 @@
 Booleans are not numbers; null matches null.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval import TypeMatch
@@ -22,5 +24,5 @@ pytestmark = pytest.mark.unit
     ],
     ids=["int-int", "str-vs-int", "bool-vs-int", "null-null", "list-list", "dict-dict"],
 )
-def test_score(actual, expected, score) -> None:
+def test_score(actual: Any, expected: Any, score: Any) -> None:
     assert TypeMatch().score(actual, expected) == score

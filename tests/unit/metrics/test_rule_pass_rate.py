@@ -59,7 +59,7 @@ def _passed(rule: Rule, doc: dict[str, Any] = DOC) -> bool:
         "nested",
     ],
 )
-def test_comparisons(rule, ok) -> None:
+def test_comparisons(rule: Any, ok: Any) -> None:
     assert _passed(rule) is ok
 
 
@@ -120,13 +120,17 @@ def test_name_reflects_comparison() -> None:
 
 
 def test_processor_all_pass() -> None:
-    results, rate = RuleProcessor().run([Rule("$.status").eq("paid"), Rule("$.total").gt(0)], DOC)
+    results, rate = RuleProcessor().run(
+        [Rule("$.status").eq("paid"), Rule("$.total").gt(0)], DOC
+    )
     assert rate == 1.0
     assert len(results) == 2
 
 
 def test_processor_partial() -> None:
-    _results, rate = RuleProcessor().run([Rule("$.status").eq("draft"), Rule("$.total").gt(0)], DOC)
+    _results, rate = RuleProcessor().run(
+        [Rule("$.status").eq("draft"), Rule("$.total").gt(0)], DOC
+    )
     assert rate == pytest.approx(0.5)
 
 

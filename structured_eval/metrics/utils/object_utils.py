@@ -34,7 +34,9 @@ def leaf_name(path: str) -> str:
     return path.rsplit(".", 1)[-1].split("[", 1)[0]
 
 
-def _resolve_threshold(thresholds: float | dict[str, float] | None, name: str, fallback: float) -> float:
+def _resolve_threshold(
+    thresholds: float | dict[str, float] | None, name: str, fallback: float
+) -> float:
     if isinstance(thresholds, dict):
         return float(thresholds.get(name, fallback))
     if thresholds is not None:
@@ -71,11 +73,15 @@ def matched_verdicts(
     return out
 
 
-def missing_weight(node: ObjectNode, weight_mode: WeightMode = WeightMode.PROPORTIONAL) -> float:
+def missing_weight(
+    node: ObjectNode, weight_mode: WeightMode = WeightMode.PROPORTIONAL
+) -> float:
     """Summed weight of the object's missing (FN) children (count when uniform)."""
     return sum(_weight_of(node.children[name], weight_mode) for name in node.missing)
 
 
-def spurious_weight(node: ObjectNode, weight_mode: WeightMode = WeightMode.PROPORTIONAL) -> float:
+def spurious_weight(
+    node: ObjectNode, weight_mode: WeightMode = WeightMode.PROPORTIONAL
+) -> float:
     """Summed weight of the object's spurious (FP) children (count when uniform)."""
     return sum(_weight_of(node.children[name], weight_mode) for name in node.spurious)

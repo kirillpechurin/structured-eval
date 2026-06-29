@@ -1,5 +1,7 @@
 """JsonParser / JsonlParser (one module) + the shared ParseError contract."""
 
+from typing import Any
+
 import pytest
 
 from structured_eval.formats.base import ParseError
@@ -13,7 +15,7 @@ pytestmark = pytest.mark.unit
     [('{"a": 1}', {"a": 1}), ("[1, 2]", [1, 2]), ("42", 42)],
     ids=["object", "array", "scalar"],
 )
-def test_json_parses(text, expected) -> None:
+def test_json_parses(text: Any, expected: Any) -> None:
     assert JsonParser().parse(text) == expected
 
 

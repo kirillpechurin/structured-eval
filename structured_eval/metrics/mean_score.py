@@ -25,5 +25,7 @@ class MeanScore(AnyNodeMetric):
     name = "mean_score"
 
     def compute(self, node: EvalNode) -> float:
-        values = [float(v) for name, v in node.metric_results.items() if name != self.name]
+        values = [
+            float(v) for name, v in node.metric_results.items() if name != self.name
+        ]
         return sum(values) / len(values) if values else 0.0

@@ -42,7 +42,9 @@ class ReportBuilder:
 
         # The headline number is the root node's representative (key) metric.
         score_label = root.key_metric.name if root.key_metric is not None else None
-        root_score = root.metric_results.get(score_label) if score_label is not None else None
+        root_score = (
+            root.metric_results.get(score_label) if score_label is not None else None
+        )
         score = float(root_score) if root_score is not None else None
 
         return EvalReport(

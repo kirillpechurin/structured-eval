@@ -10,6 +10,7 @@ re-tuning that preserves ordering.
 """
 
 import random
+from typing import Any
 
 import pytest
 
@@ -28,7 +29,7 @@ pytestmark = pytest.mark.property
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_corrupting_more_fields_never_raises_score(seed) -> None:
+def test_corrupting_more_fields_never_raises_score(seed: Any) -> None:
     """Start from a perfect doc; corrupt leaves one at a time → score is monotone non-increasing."""
     rng = random.Random(seed)
     n = rng.randint(2, 8)
@@ -39,13 +40,21 @@ def test_corrupting_more_fields_never_raises_score(seed) -> None:
     rng.shuffle(keys)
 
     actual = dict(expected)
-    prev = evaluate(actual, expected, config=cfg).metrics["overall_leaf_score"].representative()
+    prev = (
+        evaluate(actual, expected, config=cfg)
+        .metrics["overall_leaf_score"]
+        .representative()
+    )
     assert prev == pytest.approx(1.0)
 
     for k in keys:
         actual = dict(actual)
         actual[k] = expected[k] + 10_000  # guaranteed-wrong value
-        cur = evaluate(actual, expected, config=cfg).metrics["overall_leaf_score"].representative()
+        cur = (
+            evaluate(actual, expected, config=cfg)
+            .metrics["overall_leaf_score"]
+            .representative()
+        )
         assert cur <= prev + 1e-9, f"score rose after corrupting {k}: {prev} -> {cur}"
         prev = cur
 
@@ -53,7 +62,7 @@ def test_corrupting_more_fields_never_raises_score(seed) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_uniform_weights_reduce_proportional_to_counts(seed) -> None:
+def test_uniform_weights_reduce_proportional_to_counts(seed: Any) -> None:
     """With equal child weights, PROPORTIONAL F1 == NONE (count-based) F1."""
     rng = random.Random(seed)
     n = rng.randint(2, 8)
@@ -72,7 +81,9 @@ def test_uniform_weights_reduce_proportional_to_counts(seed) -> None:
     )
     none = (
         evaluate(
-            actual, expected, config=EvalConfig(metrics=[ObjectF1(weight_mode=WeightMode.NONE)])
+            actual,
+            expected,
+            config=EvalConfig(metrics=[ObjectF1(weight_mode=WeightMode.NONE)]),
         )
         .metrics["object_f1"]
         .representative()
@@ -82,7 +93,7 @@ def test_uniform_weights_reduce_proportional_to_counts(seed) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_accuracy_equals_fraction_correct(seed) -> None:
+def test_accuracy_equals_fraction_correct(seed: Any) -> None:
     """ObjectAccuracy over flat scalar fields == fraction of exactly-correct fields."""
     rng = random.Random(seed)
     n = rng.randint(1, 10)

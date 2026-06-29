@@ -8,6 +8,7 @@ fixed point at the level callers actually read.
 """
 
 import random
+from typing import Any
 
 import pytest
 from pydantic import BaseModel
@@ -39,7 +40,7 @@ def _assert_report_equivalent(a: EvalReport, b: EvalReport) -> None:
 
 
 @pytest.mark.parametrize("seed", SEEDS)
-def test_roundtrip_preserves_scores_and_fields(seed) -> None:
+def test_roundtrip_preserves_scores_and_fields(seed: Any) -> None:
     rng = random.Random(seed)
     expected = random_document(rng, depth=3)
     actual = random_document(rng, depth=3)
