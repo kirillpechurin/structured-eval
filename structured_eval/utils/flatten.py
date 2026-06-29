@@ -37,3 +37,30 @@ def flatten(obj: dict[str, Any] | list[Any], prefix: str = "") -> dict[str, Any]
             else:
                 result[path] = item
     return result
+
+
+def extract_paths(value: Any, prefix: str = "") -> set[str]:
+    """Every structural path in a JSON-like value — order- and value-blind.
+
+    Yields the path of each container *and* each leaf, so the set captures the
+    whole skeleton: dict keys (``a``, ``a.b``), list indices (``a[0]``) and the
+    leaf paths beneath them. Values themselves are ignored — only the shape.
+    Unlike :func:`flatten`, intermediate container paths are included, not just
+    leaves, and the result is a set of paths rather than a path→value mapping.
+
+    Example:
+        >>> sorted(extract_paths({"a": {"b": 1}, "c": [2]}))
+        ['a', 'a.b', 'c', 'c[0]']
+    """
+    paths: set[str] = set()
+    if isinstance(value, dict):
+        for key, child in value.items():
+            here = f"{prefix}.{key}" if prefix else str(key)
+            paths.add(here)
+            paths |= extract_paths(child, here)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            here = f"{prefix}[{index}]"
+            paths.add(here)
+            paths |= extract_paths(child, here)
+    return paths

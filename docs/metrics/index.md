@@ -51,7 +51,10 @@ Leaf comparisons of `actual` vs `expected` — all need `expected`, except
 | [`RegexMatch`](catalog/regex-match.md) | `regex_match`  | string equality after optional lower/strip + a regex rewrite (string-only) |
 | [`Numeric`](catalog/numeric.md)             | `numeric`           | numeric equality within a tolerance (strips currency/separators)|
 | [`NumericCloseness`](catalog/numeric-closeness.md) | `numeric_closeness` | graded numeric closeness `1 − |a−e| / max(|a|,|e|)`            |
+| [`ExponentialNumericScore`](catalog/exponential-numeric-score.md) | `exponential_numeric_score` | graded numeric closeness with exponential decay `exp(−|a−e|/scale)` |
+| [`DateDistanceScore`](catalog/date-distance-score.md) | `date_distance_score` | linear date closeness `max(0, 1 − days/max_days)` |
 | [`TokenF1`](catalog/token-f1.md)             | `token_f1`          | token-overlap F1 — rewards partial phrase matches              |
+| [`CharacterF1`](catalog/character-f1.md)     | `character_f1`      | character-overlap F1 (multiset) — typo-tolerant short text     |
 | [`Fuzzy`](catalog/fuzzy.md)               | `fuzzy`             | fuzzy string similarity (rapidfuzz; configurable method)       |
 | [`Levenshtein`](catalog/levenshtein.md)         | `levenshtein`       | edit-distance ratio (thin alias of `Fuzzy(RATIO)`)             |
 | [`Presence`](catalog/presence.md)            | `presence`          | whether the field is present / non-null                        |
@@ -71,6 +74,7 @@ Aggregate over an object's children, weighting each by `child.weight`
 | [`ObjectF1`](catalog/object-f1.md)          | `object_f1`          | harmonic mean of object precision & recall          |
 | [`ObjectPRF1`](catalog/object-prf1.md)        | `object_prf1`        | precision + recall + F1 together (one metric, three keys) |
 | [`ObjectTypeValidity`](catalog/object-type-validity.md) | `object_type_validity` | fraction of children with the expected JSON type (count-based) |
+| [`ObjectExactMatch`](catalog/object-exact-match.md) | `object_exact_match` | strict deep equality of the whole object (1.0 / 0.0) |
 
 ## Array metrics
 
@@ -86,6 +90,8 @@ one `item` config, so they carry no per-item weight). All need `expected`.
 | [`ArrayF1`](catalog/array-f1.md)           | `array_f1`          | harmonic mean of array precision & recall         |
 | [`ArrayPRF1`](catalog/array-prf1.md)         | `array_prf1`        | precision + recall + F1 together                  |
 | [`ArrayCardinality`](catalog/array-cardinality.md)   | `array_cardinality` | how close the element count is, ignoring matching |
+| [`ArrayExactMatch`](catalog/array-exact-match.md)    | `array_exact_match` | strict order-sensitive equality of the whole list (1.0 / 0.0) |
+| [`ArrayJaccardSimilarity`](catalog/array-jaccard-similarity.md) | `array_jaccard_similarity` | set overlap `|A∩B|/|A∪B|` — order/count-insensitive (no alignment) |
 
 ## Root metrics
 
@@ -98,18 +104,22 @@ set — rather than comparing against `expected`.
 | [`CoverageLeafScore`](catalog/coverage-leaf-score.md)  | `coverage_leaf_score` | `expected`   | fraction of expected leaves that are present      |
 | [`SchemaValidity`](catalog/schema-validity.md)     | `schema_validity`     | a schema     | validity against a JSON Schema / pydantic model   |
 | [`RulePassRate`](catalog/rule-pass-rate.md)       | `rule_pass_rate`      | a rule set   | fraction of business rules that hold              |
+| [`StructuralSimilarity`](catalog/structural-similarity.md) | `structural_similarity` | `expected` | Jaccard over document paths — shape match, value-blind |
 
-## Representative metric
+## Representative / any-node metrics
 
 | Class             | Key          | Branch     | Measures                                  |
 |-------------------|--------------|------------|-------------------------------------------|
 | [`MeanScore`](catalog/mean-score.md)         | `mean_score` | any-node   | mean of a node's *own* metrics (its default `key_metric`) |
+| [`CompositeScore`](catalog/composite-score.md) | `composite_score` | any-node | normalized **weighted** blend of named metrics on the node |
 
-`MeanScore` is the only built-in `any-node` metric: it runs on every node and is each
-node's default representative — the single number that bubbles up to a parent's
-aggregation and, at the root, to `report.score`. It is computed **last**, so it
-averages the node's other already-computed metrics (without recursing into children).
-See [representative score](../core-concepts/evaluation-model.md#the-representative-score-key_metric).
+`MeanScore` runs on every node and is each node's default representative — the single
+number that bubbles up to a parent's aggregation and, at the root, to `report.score`.
+It is computed **last**, so it averages the node's other already-computed metrics
+(without recursing into children).
+[`CompositeScore`](catalog/composite-score.md) is the weighted variant: set it as a
+node's `key_metric` to blend its other metrics by explicit weights instead of a plain
+mean. See [representative score](../core-concepts/evaluation-model.md#the-representative-score-key_metric).
 
 ## What a metric returns
 
