@@ -38,7 +38,8 @@ def test_score_variance() -> None:
     runs = _runs([{"a": 1}, {"a": 9}], {"a": 1})
     r = evaluate_consistency(runs, config=EvalConfig(key_metric=ObjectF1()))
     assert r.mean_score == pytest.approx(0.5)
-    assert r.score_variance is not None and r.score_variance > 0.0
+    assert r.score_variance is not None
+    assert r.score_variance > 0.0
 
 
 def test_parse_errors_excluded() -> None:

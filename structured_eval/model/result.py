@@ -160,7 +160,7 @@ class EvalReport(BaseModel):
         """Print a field-level summary table to stdout."""
         from structured_eval.reporting import render
 
-        print(render(self))
+        print(render(self))  # noqa: T201
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly dict of the full report."""
@@ -335,7 +335,7 @@ class BatchEvalReport(BaseModel):
         """Print a batch summary (aggregate metrics + field breakdown)."""
         from structured_eval.reporting import render
 
-        print(render(self))
+        print(render(self))  # noqa: T201
 
 
 class ConsistencyReport(BaseModel):
@@ -358,4 +358,4 @@ class ConsistencyReport(BaseModel):
         """Print a consistency summary (stable/unstable fields + variance)."""
         from structured_eval.reporting import render
 
-        print(render(self))
+        print(render(self))  # noqa: T201

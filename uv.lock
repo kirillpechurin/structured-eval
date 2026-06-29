@@ -2202,7 +2202,6 @@ all = [
     { name = "jsonschema" },
     { name = "pyyaml" },
     { name = "rapidfuzz" },
-    { name = "rich" },
     { name = "scipy" },
 ]
 deepeval = [
@@ -2219,9 +2218,6 @@ jsonschema = [
 ]
 langsmith = [
     { name = "langsmith" },
-]
-report = [
-    { name = "rich" },
 ]
 rules = [
     { name = "jsonpath-ng" },
@@ -2249,25 +2245,18 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "deepdiff", marker = "extra == 'all'", specifier = ">=9.1.0" },
-    { name = "deepdiff", marker = "extra == 'diff'", specifier = ">=9.1.0" },
+    { name = "deepdiff", marker = "extra == 'diff'", specifier = ">=7.0.0" },
     { name = "deepeval", marker = "extra == 'deepeval'", specifier = ">=3.0.0" },
-    { name = "jsonpath-ng", marker = "extra == 'all'", specifier = ">=1.6" },
-    { name = "jsonpath-ng", marker = "extra == 'rules'", specifier = ">=1.6" },
-    { name = "jsonschema", marker = "extra == 'all'", specifier = ">=4.26.0" },
-    { name = "jsonschema", marker = "extra == 'jsonschema'", specifier = ">=4.26.0" },
+    { name = "jsonpath-ng", marker = "extra == 'rules'", specifier = ">=1.6.0" },
+    { name = "jsonschema", marker = "extra == 'jsonschema'", specifier = ">=4.20.0" },
     { name = "langsmith", marker = "extra == 'langsmith'", specifier = ">=0.8.0" },
-    { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pyyaml", marker = "extra == 'all'", specifier = ">=6.0" },
+    { name = "pydantic", specifier = ">=2.5.0" },
     { name = "pyyaml", marker = "extra == 'yaml'", specifier = ">=6.0" },
-    { name = "rapidfuzz", marker = "extra == 'all'", specifier = ">=3.0" },
-    { name = "rapidfuzz", marker = "extra == 'fuzzy'", specifier = ">=3.0" },
-    { name = "rich", marker = "extra == 'all'", specifier = ">=13.0" },
-    { name = "rich", marker = "extra == 'report'", specifier = ">=13.0" },
-    { name = "scipy", marker = "extra == 'align'", specifier = ">=1.12" },
-    { name = "scipy", marker = "extra == 'all'", specifier = ">=1.12" },
+    { name = "rapidfuzz", marker = "extra == 'fuzzy'", specifier = ">=3.0.0" },
+    { name = "scipy", marker = "extra == 'align'", specifier = ">=1.13.0" },
+    { name = "structured-eval", extras = ["yaml", "fuzzy", "jsonschema", "rules", "diff", "align"], marker = "extra == 'all'" },
 ]
-provides-extras = ["yaml", "fuzzy", "jsonschema", "rules", "diff", "report", "align", "deepeval", "langsmith", "all"]
+provides-extras = ["yaml", "fuzzy", "jsonschema", "rules", "diff", "align", "deepeval", "langsmith", "all"]
 
 [package.metadata.requires-dev]
 dev = [

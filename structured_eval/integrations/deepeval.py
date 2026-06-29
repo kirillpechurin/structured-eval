@@ -19,7 +19,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from deepeval.metrics import BaseMetric
+try:
+    from deepeval.metrics import BaseMetric
+except ImportError as exc:  # pragma: no cover
+    raise ImportError(
+        "deepeval is required for this integration. "
+        "Install it with: pip install structured-eval[deepeval]"
+    ) from exc
 
 from structured_eval.api import evaluate
 from structured_eval.integrations._adapter import verdict

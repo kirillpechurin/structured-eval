@@ -125,8 +125,8 @@ def test_assert_schema_valid() -> None:
     EvalReport(
         metrics={"schema_validity": _coll("schema_validity", 1.0)}
     ).assert_schema_valid()
+    bad = _coll("schema_validity", 0.0, {"schema_errors": ["type: total"]})
     with pytest.raises(AssertionError):
-        bad = _coll("schema_validity", 0.0, {"schema_errors": ["type: total"]})
         EvalReport(metrics={"schema_validity": bad}).assert_schema_valid()
 
 

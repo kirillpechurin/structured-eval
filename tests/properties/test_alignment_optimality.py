@@ -71,7 +71,8 @@ def test_both_strategies_recover_a_reordered_list() -> None:
 
     assert len(greedy.matched) == 3
     assert len(optimal.matched) == 3
-    assert optimal.missed == [] and optimal.spurious == []
+    assert optimal.missed == []
+    assert optimal.spurious == []
 
 
 def test_hungarian_total_similarity_dominates_on_crossmatch() -> None:

@@ -81,7 +81,9 @@ def test_diverging_expected_path(context_factory: Callable[..., EvalContext]) ->
 def test_walk_visits_every_node(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"a": 1, "b": {"c": 2}}, {"a": 1, "b": {"c": 2}})
     paths = sorted(n.path for n in root.walk())
-    assert "$" in paths and "a" in paths and "b.c" in paths
+    assert "$" in paths
+    assert "a" in paths
+    assert "b.c" in paths
 
 
 def test_leaves_are_only_scalars(tree_factory: Callable[..., EvalNode]) -> None:

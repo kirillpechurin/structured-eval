@@ -108,7 +108,7 @@ def test_missing_path_fails_gracefully() -> None:
 
 
 def test_no_comparison_raises() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="comparison"):
         Rule("$.total").evaluate(DOC)
 
 

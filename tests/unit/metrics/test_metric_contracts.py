@@ -62,7 +62,8 @@ GARBAGE_PAIRS = [
 
 @pytest.mark.parametrize(("name", "cls"), ALL_METRICS, ids=[n for n, _ in ALL_METRICS])
 def test_registered_under_a_nonempty_name(name: Any, cls: Any) -> None:
-    assert isinstance(name, str) and name
+    assert isinstance(name, str)
+    assert name
     assert issubclass(cls, BaseMetric)
     assert cls.name == name
 

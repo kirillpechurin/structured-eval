@@ -6,27 +6,28 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.13.4",
+    "pydantic>=2.5.0",
 ]
 
 [project.optional-dependencies]
 yaml = ["pyyaml>=6.0"]
-fuzzy = ["rapidfuzz>=3.0"]
-jsonschema = ["jsonschema>=4.26.0"]
-rules = ["jsonpath-ng>=1.6"]
-diff = ["deepdiff>=9.1.0"]
-report = ["rich>=13.0"]
-align = ["scipy>=1.12"]
+fuzzy = ["rapidfuzz>=3.0.0"]
+jsonschema = ["jsonschema>=4.20.0"]
+rules = ["jsonpath-ng>=1.6.0"]
+diff = ["deepdiff>=7.0.0"]
+align = ["scipy>=1.13.0"]
 deepeval = ["deepeval>=3.0.0"]
 langsmith = ["langsmith>=0.8.0"]
-all = ["pyyaml>=6.0", "rapidfuzz>=3.0", "jsonschema>=4.26.0", "jsonpath-ng>=1.6", "deepdiff>=9.1.0", "rich>=13.0", "scipy>=1.12"]
+all = [
+    "structured-eval[yaml,fuzzy,jsonschema,rules,diff,align]"
+]
 
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",
     "ruff>=0.4",
     "mypy>=1.10",
-    "pytest-cov>=5.0",
     "pyyaml>=6.0",
     "rapidfuzz>=3.0",
     "types-pyyaml>=6.0",
@@ -38,14 +39,76 @@ dev = [
     "scipy-stubs>=1.12",
 ]
 
+# ── Ruff ──────────────────────────────────────────────────────────────────────
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear (real bugs + antipatterns)
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific (incl. RUF100 unused-noqa)
+    "TCH",    # flake8-type-checking (TYPE_CHECKING blocks)
+    "PTH",    # flake8-use-pathlib
+    "T20",    # flake8-print (no print() in library code)
+    "PT",     # flake8-pytest-style
+    "PERF",   # performance anti-patterns
+    "PLR1714",
+    "PLW2901", # select only non-noisy Pylint rules
+]
+ignore = [
+    "E501",    # line too long (formatter handles it)
+    "PLC0415", # import-not-at-top-level — intentional lazy imports behind extras
+    "TRY003",  # raise-vanilla-args — style preference
+    "PLR2004", # magic-value-comparison — numeric values are semantic here
+    "RUF002",
+    "RUF003",  # ambiguous unicode in docstrings/comments (Russian text ok)
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ARG",     # unused args common in fixtures/parametrize
+    "PLR2004", # magic numbers in test assertions are fine
+]
+
+# ── Mypy ──────────────────────────────────────────────────────────────────────
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
+pretty = true
+show_error_codes = true
+show_column_numbers = true
+show_error_context = true
+warn_unreachable = true
 
 # Optional third-party deps without type stubs (lazy-imported behind extras).
 [[tool.mypy.overrides]]
 module = ["jsonpath_ng.*", "deepeval.*", "langsmith.*", "deepdiff.*", "rapidfuzz.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -59,50 +122,19 @@ markers = [
     "property: invariant / metamorphic tests over generated inputs",
 ]
 
+# ── Coverage ──────────────────────────────────────────────────────────────────
+
 [tool.coverage.run]
 source = ["structured_eval"]
 branch = true
 
 [tool.coverage.report]
 show_missing = true
-# Metrics + model are the correctness core and stay near-100%; the suite as a
-# whole holds ~89%. Fail CI if it regresses meaningfully below that.
-fail_under = 85
+fail_under = 90
+omit = ["structured_eval/integrations/*"]
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
     "\\.\\.\\.",
-]
-
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "I",    # isort
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear (real bugs + antipatterns)
-    "C4",   # flake8-comprehensions
-    "SIM",  # flake8-simplify
-    "RUF",  # Ruff-specific (incl. RUF100 unused-noqa)
-    "TCH",  # flake8-type-checking (TYPE_CHECKING blocks)
-    "PTH",  # flake8-use-pathlib
-    "PLR1714", "PLW2901",  # select only non-noisy Pylint rules
-]
-ignore = [
-    "E501",    # line too long (formatter handles it)
-    "PLC0415", # import-not-at-top-level — intentional lazy imports behind extras
-    "TRY003",  # raise-vanilla-args — style preference
-    "PLR2004", # magic-value-comparison — numeric values are semantic here
-    "RUF002", "RUF003",  # ambiguous unicode in docstrings/comments (Russian text ok)
-]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = [
-    "ARG",     # unused args common in fixtures/parametrize
-    "PLR2004", # magic numbers in test assertions are fine
 ]

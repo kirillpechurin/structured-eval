@@ -14,7 +14,8 @@ pytestmark = pytest.mark.unit
 def test_equal_length_pairs_positionally() -> None:
     r = ByIndexAligner().align([1, 2, 3], [1, 2, 3])
     assert r.matched == [(0, 0), (1, 1), (2, 2)]
-    assert r.missed == [] and r.spurious == []
+    assert r.missed == []
+    assert r.spurious == []
 
 
 def test_more_actual_is_spurious() -> None:

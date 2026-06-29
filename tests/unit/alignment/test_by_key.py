@@ -16,7 +16,8 @@ def test_whole_element_key() -> None:
     r = ByKeyAligner().align([1, 2], [2, 1])  # (expected, actual)
     # expected 1 pairs actual idx1; expected 2 pairs actual idx0
     assert sorted(r.matched) == [(0, 1), (1, 0)]
-    assert r.missed == [] and r.spurious == []
+    assert r.missed == []
+    assert r.spurious == []
 
 
 def test_named_key_reorders() -> None:
@@ -63,7 +64,8 @@ def test_soft_key_global_greedy_is_order_independent() -> None:
         expected, actual
     )
     assert sorted(r.matched) == [(0, 1), (1, 0)]  # 10↔10, 8↔8
-    assert r.missed == [] and r.spurious == []
+    assert r.missed == []
+    assert r.spurious == []
 
 
 def test_strategy_recorded() -> None:

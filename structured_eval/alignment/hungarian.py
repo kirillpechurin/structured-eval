@@ -12,13 +12,6 @@ from structured_eval.metrics.numeric_closeness import NumericCloseness
 from structured_eval.model.config import ArrayStrategy
 from structured_eval.model.nodes.array_node import ArrayMatchResult
 
-try:
-    import rapidfuzz  # noqa: F401
-
-    _HAS_RAPIDFUZZ = True
-except ImportError:  # pragma: no cover
-    _HAS_RAPIDFUZZ = False
-
 _LARGE_MATRIX_WARN = 10_000  # rows*cols beyond which we warn (quadratic scoring cost)
 
 # A per-element similarity: a Metric instance (every Metric has ``score``), its
@@ -77,7 +70,13 @@ class HungarianAligner(ArrayAligner):
                 stacklevel=2,
             )
 
-        from scipy.optimize import linear_sum_assignment
+        try:
+            from scipy.optimize import linear_sum_assignment
+        except ImportError as exc:  # pragma: no cover
+            raise ImportError(
+                "scipy is required for HungarianAligner. "
+                "Install it with: pip install 'structured-eval[align]'"
+            ) from exc
 
         cost = [[1.0 - self._score(e, a) for a in actual] for e in expected]
         rows, cols = linear_sum_assignment(cost)
@@ -154,8 +153,4 @@ class HungarianAligner(ArrayAligner):
             return ExactMatch()
         if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
             return NumericCloseness()
-        if isinstance(expected, str) and isinstance(actual, str) and _HAS_RAPIDFUZZ:
-            from structured_eval.metrics.fuzzy import Fuzzy
-
-            return Fuzzy()
         return ExactMatch()

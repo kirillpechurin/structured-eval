@@ -54,7 +54,8 @@ def test_eval_config_holds_metric_instances() -> None:
 
 def test_field_config_holds_metric_list() -> None:
     fc = FieldConfig(metrics=[ExactMatch()], key_metric=ExactMatch())
-    assert fc.metrics is not None and isinstance(fc.metrics[0], ExactMatch)
+    assert fc.metrics is not None
+    assert isinstance(fc.metrics[0], ExactMatch)
 
 
 # ── nesting ──────────────────────────────────────────────────────────────────

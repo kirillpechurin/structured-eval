@@ -19,7 +19,8 @@ def _report(actual: Any, expected: Any) -> EvalReport:
 
 def test_verdict_success() -> None:
     score, success, reason = verdict(_report({"a": 1}, {"a": 1}), threshold=0.8)
-    assert score == 1.0 and success is True
+    assert score == 1.0
+    assert success is True
     assert "passed" in reason
 
 

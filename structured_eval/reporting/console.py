@@ -186,10 +186,7 @@ class ConsoleRenderer:
             return []
         width = max(len(k) for k, _ in items)
         cells = [f"{k:<{width}} {ConsoleRenderer._num(v)}" for k, v in items]
-        lines = []
-        for i in range(0, len(cells), 2):
-            lines.append("  " + "     ".join(cells[i : i + 2]))
-        return lines
+        return ["  " + "     ".join(cells[i : i + 2]) for i in range(0, len(cells), 2)]
 
 
 def render(report: EvalReport | BatchEvalReport | ConsistencyReport) -> str:
