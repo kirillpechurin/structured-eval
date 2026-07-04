@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "structured-eval"
 version = "0.1.0"
@@ -5,9 +9,40 @@ description = "The LLM Structured Output Evaluation Framework"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
+keywords = [
+    "structured llm evaluation",
+    "structured eval",
+    "json eval",
+    "llm",
+    "structured output",
+    "pydantic",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
 dependencies = [
     "pydantic>=2.5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/kirillpechurin/structured-eval"
+Repository = "https://github.com/kirillpechurin/structured-eval"
+Issues = "https://github.com/kirillpechurin/structured-eval/issues"
+
+[tool.setuptools.packages.find]
+include = ["structured_eval*"]
+
+[tool.setuptools.package-data]
+structured_eval = ["py.typed"]
 
 [project.optional-dependencies]
 yaml = ["pyyaml>=6.0"]
@@ -28,6 +63,7 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.4",
     "mypy>=1.10",
+    "pre-commit>=4.6.0",
     "pyyaml>=6.0",
     "rapidfuzz>=3.0",
     "types-pyyaml>=6.0",
@@ -107,6 +143,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+# Optional host-framework adapters subclass/call third-party types that are
+# `Any` when the extra isn't installed (deepeval/langsmith). Relax just these
+# two rules so the strict run is clean whether or not the extra is present.
+[[tool.mypy.overrides]]
+module = ["structured_eval.integrations.*"]
+disallow_subclassing_any = false
+disallow_untyped_calls = false
 
 # ── Pytest ────────────────────────────────────────────────────────────────────
 
