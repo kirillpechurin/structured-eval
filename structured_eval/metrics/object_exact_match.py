@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from structured_eval.metrics.base import ObjectMetric
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.object_node import ObjectNode
+    from structured_eval.models.nodes.object_node import ObjectNode
 
 
 class ObjectExactMatch(ObjectMetric):

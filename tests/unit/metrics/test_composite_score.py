@@ -6,19 +6,14 @@ Reads ``node.metric_results`` for the named metrics; best used as a node's
 
 import pytest
 
-from structured_eval import (
-    CharacterF1,
-    CompositeScore,
-    EvalConfig,
-    FieldConfig,
-    Fuzzy,
-)
+from structured_eval.metrics import CharacterF1, CompositeScore, Fuzzy
+from structured_eval.models import EvalConfig, EvalNode, FieldConfig
 from tests.conftest import build_tree
 
 pytestmark = pytest.mark.unit
 
 
-def _field_node(config: EvalConfig):
+def _field_node(config: EvalConfig) -> EvalNode:
     root = build_tree({"a": "kitten"}, {"a": "sitting"}, config)
     return next(c for c in root.children_nodes() if c.path == "a")
 

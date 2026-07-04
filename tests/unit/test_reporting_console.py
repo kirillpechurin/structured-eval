@@ -9,7 +9,9 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate
+from structured_eval import evaluate
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import EvalConfig, EvalReport
 from structured_eval.reporting.console import ConsoleRenderer
 
 pytestmark = pytest.mark.unit
@@ -61,7 +63,8 @@ def test_render_is_nonempty_str() -> None:
 
 
 def test_batch_report_renders() -> None:
-    from structured_eval import Sample, evaluate_batch
+    from structured_eval import evaluate_batch
+    from structured_eval.models import Sample
 
     report = evaluate_batch(
         [Sample(actual={"a": 1}, expected={"a": 1})], EvalConfig(key_metric=ObjectF1())

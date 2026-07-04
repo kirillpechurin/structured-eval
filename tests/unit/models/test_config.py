@@ -4,15 +4,14 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
+from structured_eval.metrics import ExactMatch, ObjectF1
+from structured_eval.models import (
     ArrayFieldConfig,
     ArrayStrategy,
     EvalConfig,
-    ExactMatch,
     ExtraKeysPolicy,
     FieldConfig,
     NullPolicy,
-    ObjectF1,
     ObjectFieldConfig,
 )
 

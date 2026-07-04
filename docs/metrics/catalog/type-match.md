@@ -40,7 +40,9 @@ score = 1.0 if json_type(actual) == json_type(expected) else 0.0
 Same type passes even when the value is wrong; a string-vs-number mismatch fails:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, TypeMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import TypeMatch
 
 config = EvalConfig(fields={
     "duration_hours": FieldConfig(metrics=[TypeMatch()]),

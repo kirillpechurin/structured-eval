@@ -41,7 +41,9 @@ The root carries two object metrics and uses `MeanScore` as its `key_metric`, so
 `report.score` is their mean:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectF1, ObjectAccuracy, MeanScore
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import MeanScore, ObjectAccuracy, ObjectF1
 
 config = EvalConfig(metrics=[ObjectF1(), ObjectAccuracy()], key_metric=MeanScore())
 report = evaluate({"a": 1, "b": 9}, {"a": 1, "b": 2}, config)

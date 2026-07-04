@@ -7,7 +7,7 @@ A whole-element key reduces to first-match; a named key reorders; a soft
 import pytest
 
 from structured_eval.alignment import ByKeyAligner
-from structured_eval.model.config import ArrayStrategy
+from structured_eval.models.config import ArrayStrategy
 
 pytestmark = pytest.mark.unit
 

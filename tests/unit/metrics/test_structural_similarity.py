@@ -7,7 +7,8 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, StructuralSimilarity
+from structured_eval.metrics import StructuralSimilarity
+from structured_eval.models import EvalConfig
 from tests.conftest import build_tree
 
 pytestmark = pytest.mark.unit

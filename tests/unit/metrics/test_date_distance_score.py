@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import DateDistanceScore
+from structured_eval.metrics import DateDistanceScore
 
 pytestmark = pytest.mark.unit
 
@@ -28,9 +28,9 @@ pytestmark = pytest.mark.unit
     ids=["identical", "5-days", "beyond-max", "iso-strings", "datetime", "symmetric"],
 )
 def test_date_distance(actual: Any, expected: Any, max_days: int, score: Any) -> None:
-    assert DateDistanceScore(max_days=max_days).score(actual, expected) == pytest.approx(
-        score
-    )
+    assert DateDistanceScore(max_days=max_days).score(
+        actual, expected
+    ) == pytest.approx(score)
 
 
 @pytest.mark.parametrize(

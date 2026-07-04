@@ -7,7 +7,7 @@ from structured_eval.metrics.utils import array as astats
 from structured_eval.metrics.utils import calculate as stats
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.array_node import ArrayNode
+    from structured_eval.models.nodes.array_node import ArrayNode
 
 
 class ArrayPRF1(ArrayMetric):

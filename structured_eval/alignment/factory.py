@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from structured_eval.alignment.by_index import ByIndexAligner
 from structured_eval.alignment.by_key import ByKeyAligner
 from structured_eval.alignment.hungarian import HungarianAligner
-from structured_eval.model.config import ArrayStrategy
+from structured_eval.models.config import ArrayStrategy
 
 if TYPE_CHECKING:
     from structured_eval.alignment.base import ArrayAligner

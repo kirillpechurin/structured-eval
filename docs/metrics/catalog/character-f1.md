@@ -38,7 +38,9 @@ Because it's a multiset, a repeated character only counts as many times as it ap
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, CharacterF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import CharacterF1
 
 config = EvalConfig(fields={"name": FieldConfig(metrics=[CharacterF1()])})
 

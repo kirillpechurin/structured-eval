@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import ExactMatch
+from structured_eval.metrics import ExactMatch
 
 pytestmark = pytest.mark.unit
 

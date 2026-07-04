@@ -7,13 +7,13 @@ from structured_eval.engine.metric_runner import MetricRunner
 from structured_eval.engine.parser import Parser
 from structured_eval.engine.report_builder import ReportBuilder
 from structured_eval.engine.tree_builder import TreeBuilder
-from structured_eval.model.config import EvalConfig
-from structured_eval.model.context import EvalContext
-from structured_eval.model.result import BatchEvalReport, ConsistencyReport, EvalReport
+from structured_eval.models.config import EvalConfig
+from structured_eval.models.context import EvalContext
+from structured_eval.models.result import BatchEvalReport, ConsistencyReport, EvalReport
 from structured_eval.utils.flatten import flatten
 
 if TYPE_CHECKING:
-    from structured_eval.model.sample import Sample
+    from structured_eval.models.sample import Sample
 
 
 class Evaluator:

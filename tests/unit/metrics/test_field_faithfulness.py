@@ -10,7 +10,9 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, FieldFaithfulness, MetricCollection, evaluate
+from structured_eval import evaluate
+from structured_eval.metrics import FieldFaithfulness
+from structured_eval.models import EvalConfig, MetricCollection
 
 pytestmark = pytest.mark.unit
 

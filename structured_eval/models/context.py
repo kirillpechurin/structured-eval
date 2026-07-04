@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from structured_eval.model.config import EvalConfig  # noqa: TC001
+from structured_eval.models.config import EvalConfig  # noqa: TC001
 
 
 class EvalContext(BaseModel):

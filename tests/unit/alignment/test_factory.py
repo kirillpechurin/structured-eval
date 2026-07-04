@@ -10,7 +10,7 @@ from structured_eval.alignment import (
     HungarianAligner,
     make_aligner,
 )
-from structured_eval.model.config import ArrayStrategy
+from structured_eval.models.config import ArrayStrategy
 
 pytestmark = pytest.mark.unit
 

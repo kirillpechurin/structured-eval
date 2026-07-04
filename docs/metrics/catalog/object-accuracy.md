@@ -44,7 +44,9 @@ score, counting each missing field as 0.
 `name` is right, `experience_years` is wrong, `title` is missing:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectAccuracy
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectAccuracy
 
 config = EvalConfig(metrics=[ObjectAccuracy()])
 report = evaluate(

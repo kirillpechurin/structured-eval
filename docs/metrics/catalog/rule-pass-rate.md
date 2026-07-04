@@ -52,7 +52,8 @@ Rule.custom(lambda doc: doc["hours"] > 0, name="positive_hours")
 Three rules, one document that violates two of them:
 
 ```python
-from structured_eval import evaluate, EvalConfig
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
 from structured_eval.metrics.rule_pass_rate import RulePassRate
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 

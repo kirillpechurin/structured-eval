@@ -8,7 +8,8 @@ from collections.abc import Callable
 
 import pytest
 
-from structured_eval import CoverageLeafScore, EvalNode
+from structured_eval.metrics import CoverageLeafScore
+from structured_eval.models import EvalNode
 
 pytestmark = pytest.mark.unit
 

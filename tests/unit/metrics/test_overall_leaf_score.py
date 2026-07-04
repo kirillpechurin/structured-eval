@@ -7,7 +7,8 @@ from collections.abc import Callable
 
 import pytest
 
-from structured_eval import EvalConfig, EvalNode, FieldConfig, OverallLeafScore, TokenF1
+from structured_eval.metrics import OverallLeafScore, TokenF1
+from structured_eval.models import EvalConfig, EvalNode, FieldConfig
 
 pytestmark = pytest.mark.unit
 

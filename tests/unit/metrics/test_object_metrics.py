@@ -9,10 +9,7 @@ from collections.abc import Callable
 
 import pytest
 
-from structured_eval import (
-    EvalConfig,
-    ExtraKeysPolicy,
-    FieldConfig,
+from structured_eval.metrics import (
     ObjectAccuracy,
     ObjectF1,
     ObjectPrecision,
@@ -21,8 +18,9 @@ from structured_eval import (
     ObjectTypeValidity,
 )
 from structured_eval.metrics.utils.calculate import GradingMode, WeightMode
-from structured_eval.model.nodes.base import EvalNode
-from structured_eval.model.nodes.object_node import ObjectNode
+from structured_eval.models import EvalConfig, ExtraKeysPolicy, FieldConfig
+from structured_eval.models.nodes.base import EvalNode
+from structured_eval.models.nodes.object_node import ObjectNode
 
 pytestmark = pytest.mark.unit
 
@@ -82,7 +80,7 @@ def test_accuracy_missing_counts_zero(tree_factory: Callable[..., EvalNode]) -> 
 
 
 def test_soft_mode_fractional(tree_factory: Callable[..., EvalNode]) -> None:
-    from structured_eval import TokenF1
+    from structured_eval.metrics import TokenF1
 
     cfg = EvalConfig(metrics=[TokenF1()])  # field metric cascades to every scalar
     root = tree_factory({"name": "the quick brown fox"}, {"name": "the quick fox"}, cfg)
@@ -130,7 +128,7 @@ def test_empty_object_vacuously_perfect(tree_factory: Callable[..., EvalNode]) -
 
 
 def _weighted_tree(tree_factory: Callable[..., EvalNode]) -> ObjectNode:
-    from structured_eval import FieldConfig
+    from structured_eval.models import FieldConfig
 
     # a correct, b wrong; b is 3× as important as a.
     cfg = EvalConfig(

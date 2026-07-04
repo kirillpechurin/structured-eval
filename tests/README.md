@@ -10,7 +10,7 @@ The test tree mirrors `structured_eval/` one-to-one, layer by layer:
 ```
 structured_eval/metrics/exact.py      → tests/unit/metrics/test_exact.py
 structured_eval/alignment/by_key.py   → tests/unit/test_alignment_by_key.py
-structured_eval/model/nodes/scalar.py → tests/unit/model/test_nodes_scalar.py
+structured_eval/models/nodes/scalar.py → tests/unit/models/test_nodes_scalar.py
 ```
 
 **One file = one unit under test.** Never mix independent units in one file.

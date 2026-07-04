@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import CharacterF1
+from structured_eval.metrics import CharacterF1
 
 pytestmark = pytest.mark.unit
 

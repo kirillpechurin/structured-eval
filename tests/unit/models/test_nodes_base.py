@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalContext
-from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
+from structured_eval.models import EvalContext
+from structured_eval.models.nodes.base import MISSING, EvalNode, navigate
 
 pytestmark = pytest.mark.unit
 

@@ -7,8 +7,10 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, EvalReport, ObjectF1, evaluate
+from structured_eval import evaluate
 from structured_eval.integrations._adapter import reason_text, verdict
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import EvalConfig, EvalReport
 
 pytestmark = pytest.mark.unit
 

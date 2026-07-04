@@ -6,8 +6,8 @@ from structured_eval.alignment.base import ArrayAligner, key_value
 from structured_eval.metrics.base import BaseMetric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
-from structured_eval.model.config import ArrayStrategy
-from structured_eval.model.nodes.array_node import ArrayMatchResult
+from structured_eval.models.config import ArrayStrategy
+from structured_eval.models.nodes.array_node import ArrayMatchResult
 
 
 class ByKeyAligner(ArrayAligner):

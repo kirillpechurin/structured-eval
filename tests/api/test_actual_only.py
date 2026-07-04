@@ -8,14 +8,14 @@ Metrics are instances in ``EvalConfig.metrics`` and results live in
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import (
+from structured_eval import evaluate
+from structured_eval.metrics import (
     CoverageLeafScore,
-    EvalConfig,
     Rule,
     RulePassRate,
     SchemaValidity,
-    evaluate,
 )
+from structured_eval.models import EvalConfig
 
 pytestmark = pytest.mark.engine
 

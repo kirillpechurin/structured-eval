@@ -33,7 +33,9 @@ score = 1.0 if actual is not None else 0.0
 Only `null` (or a missing key) counts as absent — falsy-but-present values still pass:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Presence
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Presence
 
 config = EvalConfig(fields={
     "title":   FieldConfig(metrics=[Presence()]),

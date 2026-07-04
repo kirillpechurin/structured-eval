@@ -42,7 +42,9 @@ score = rapidfuzz.fuzz.ratio(actual, expected) / 100        # string-only; non-s
 A one-character OCR-style slip scores high but not perfect:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Levenshtein
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Levenshtein
 
 config = EvalConfig(fields={"code": FieldConfig(metrics=[Levenshtein()])})
 report = evaluate({"code": "COURSE-1O1"}, {"code": "COURSE-101"}, config)
@@ -51,7 +53,7 @@ float(report.field_scores["code"].metrics["levenshtein"])   # 0.9 — one char o
 ```
 
 ```python
-from structured_eval import Levenshtein
+from structured_eval.metrics import Levenshtein
 
 Levenshtein().score("kitten", "sitting")   # 0.615 — three edits over 13 chars
 ```

@@ -9,8 +9,8 @@ from structured_eval.metrics.base import FieldMetric, Metric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.numeric_closeness import NumericCloseness
-from structured_eval.model.config import ArrayStrategy
-from structured_eval.model.nodes.array_node import ArrayMatchResult
+from structured_eval.models.config import ArrayStrategy
+from structured_eval.models.nodes.array_node import ArrayMatchResult
 
 _LARGE_MATRIX_WARN = 10_000  # rows*cols beyond which we warn (quadratic scoring cost)
 

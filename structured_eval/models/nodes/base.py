@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.context import EvalContext  # noqa: TC001
-from structured_eval.model.metric_result import MetricResult  # noqa: TC001
+from structured_eval.models.context import EvalContext  # noqa: TC001
+from structured_eval.models.metric_result import MetricResult  # noqa: TC001
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:

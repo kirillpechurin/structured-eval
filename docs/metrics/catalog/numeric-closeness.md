@@ -39,7 +39,9 @@ values are read with the same lenient parser as [`Numeric`](numeric.md).
 Each field gets partial credit proportional to how close it is:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, NumericCloseness
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import NumericCloseness
 
 config = EvalConfig(fields={
     "duration_hours": FieldConfig(metrics=[NumericCloseness()]),
@@ -58,7 +60,9 @@ float(report.field_scores["experience_years"].metrics["numeric_closeness"])  # 0
 Numeric strings are parsed before grading, so messy values still get a graded score:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, NumericCloseness
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import NumericCloseness
 
 config = EvalConfig(fields={"price": FieldConfig(metrics=[NumericCloseness()])})
 

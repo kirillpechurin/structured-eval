@@ -41,7 +41,9 @@ fractional scores. An array that produced no elements is vacuously `1.0`.
 Three produced, one wrong (`xxx`); no extras, so precision is "2 of 3 produced":
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayPrecision
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayPrecision
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayPrecision()])})
 report = evaluate(

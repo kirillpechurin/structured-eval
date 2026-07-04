@@ -188,7 +188,7 @@ def test_diff_type_string_values() -> None:
 
 
 def test_importable_from_top_level() -> None:
-    from structured_eval import (  # noqa: F401
+    from structured_eval.utils import (  # noqa: F401
         DiffEntry,
         DiffType,
         StructuredDiff,

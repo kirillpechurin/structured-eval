@@ -8,7 +8,7 @@ for colour later.
 
 from __future__ import annotations
 
-from structured_eval.model.result import (
+from structured_eval.models.result import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,

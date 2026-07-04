@@ -30,7 +30,9 @@ returns a **dict**, so the engine writes three keys — `array_precision`, `arra
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayPRF1
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayPRF1
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayPRF1()])})
 report = evaluate(

@@ -7,7 +7,8 @@ tests/unit/test_adapter.py (no host library needed).
 
 import pytest
 
-from structured_eval import EvalConfig, ObjectF1
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import EvalConfig
 
 pytestmark = pytest.mark.integration
 

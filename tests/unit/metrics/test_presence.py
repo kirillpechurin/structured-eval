@@ -8,8 +8,9 @@ from collections.abc import Callable
 
 import pytest
 
-from structured_eval import EvalContext, Presence
-from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.metrics import Presence
+from structured_eval.models import EvalContext
+from structured_eval.models.nodes.scalar import ScalarNode
 
 pytestmark = pytest.mark.unit
 

@@ -7,7 +7,7 @@ from structured_eval.utils.flatten import extract_paths
 
 if TYPE_CHECKING:
     from structured_eval.metrics.base import MetricOutput
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class StructuralSimilarity(RootMetric):

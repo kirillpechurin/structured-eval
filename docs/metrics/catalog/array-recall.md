@@ -42,7 +42,9 @@ Four expected, one wrong (`xxx`), one missing (`ml`) — one of four expected is
 plus `data`:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayRecall
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayRecall
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayRecall()])})
 report = evaluate(

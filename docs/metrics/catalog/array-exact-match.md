@@ -33,7 +33,9 @@ deep-equal values.
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayExactMatch
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayExactMatch
 
 config = EvalConfig(fields={
     "modules": ArrayFieldConfig(metrics=[ArrayExactMatch()]),

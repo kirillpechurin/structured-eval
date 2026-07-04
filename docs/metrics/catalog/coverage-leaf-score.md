@@ -38,7 +38,8 @@ score = covered_count / expected_count        # 1.0 if nothing is expected
 Three expected leaves (`title`, `meta.level`, `meta.hours`); the model omitted `meta.hours`:
 
 ```python
-from structured_eval import evaluate, EvalConfig
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
 from structured_eval.metrics.coverage_leaf_score import CoverageLeafScore
 
 config = EvalConfig(key_metric=CoverageLeafScore())

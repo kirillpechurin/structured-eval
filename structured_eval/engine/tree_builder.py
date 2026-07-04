@@ -19,7 +19,7 @@ from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import GENERIC_NODE_METHOD
 from structured_eval.metrics.mean_score import MeanScore
 from structured_eval.metrics.object_accuracy import ObjectAccuracy
-from structured_eval.model.config import (
+from structured_eval.models.config import (
     AnyFieldConfig,
     ArrayFieldConfig,
     ArrayStrategy,
@@ -28,14 +28,14 @@ from structured_eval.model.config import (
     ObjectFieldConfig,
     weight_of,
 )
-from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.base import MISSING, EvalNode, navigate
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.scalar import ScalarNode
-from structured_eval.model.result import EvalWarning, WarningType
+from structured_eval.models.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.base import MISSING, EvalNode, navigate
+from structured_eval.models.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.scalar import ScalarNode
+from structured_eval.models.result import EvalWarning, WarningType
 
 if TYPE_CHECKING:
-    from structured_eval.model.context import EvalContext
+    from structured_eval.models.context import EvalContext
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.

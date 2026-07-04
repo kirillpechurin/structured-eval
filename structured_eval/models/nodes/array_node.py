@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.config import ArrayStrategy  # noqa: TC001
-from structured_eval.model.nodes.base import EvalNode
+from structured_eval.models.config import ArrayStrategy  # noqa: TC001
+from structured_eval.models.nodes.base import EvalNode
 
 
 class ArrayMatchResult(BaseModel):

@@ -47,7 +47,9 @@ than silently skipping, because faithfulness is undefined without something to g
 `level` says `beginner`, but the source says the course is *advanced* — a hallucination:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldFaithfulness
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import FieldFaithfulness
 
 source = "Intro to Machine Learning. Duration: 40 hours. Level: advanced."
 config = EvalConfig(metrics=[FieldFaithfulness()])

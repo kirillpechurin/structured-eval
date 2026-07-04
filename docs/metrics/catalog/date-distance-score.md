@@ -34,7 +34,9 @@ ignored).
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, DateDistanceScore
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import DateDistanceScore
 
 config = EvalConfig(fields={
     "due_date": FieldConfig(metrics=[DateDistanceScore(max_days=30)]),

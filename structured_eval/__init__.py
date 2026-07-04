@@ -1,186 +1,27 @@
 """structured_eval — field-level evaluation of structured LLM outputs.
 
-Layered architecture (dependencies point downward):
+The top level exposes only the entrypoints. Everything else lives one level
+down, imported explicitly from its subsystem:
 
-- ``model``      — pure data: ``Sample``, ``EvalConfig``, ``EvalContext``,
-                   ``nodes``, ``EvalReport`` (and friends);
-- ``metrics``    — every metric as its own module/package (field/object/array/
-                   root), incl. ``SchemaValidity``, ``RulePassRate``,
-                   ``FieldFaithfulness``; ``alignment`` / ``formats`` / ``utils``;
-- ``engine``     — ``Evaluator`` plus the phase classes (parse → build tree →
-                   run metrics → build report) and batch aggregation;
-- ``reporting``  — console rendering; ``integrations`` — host-framework adapters.
+- ``structured_eval.models``   — user-facing data models: ``Sample``,
+  ``EvalConfig`` (+ the ``*FieldConfig`` family & policies), ``EvalReport`` /
+  ``BatchEvalReport`` / ``ConsistencyReport``. Lower-level model pieces live in
+  precise submodules (``models.nodes`` / ``models.result`` /
+  ``models.metric_result`` / ``models.context``).
+- ``structured_eval.metrics``  — every metric plus the base hierarchy
+  (``Metric`` / ``FieldMetric`` / …), ``resolve_metric``, and the rule DSL
+  (``Rule`` / ``RulePassRate``).
+- ``structured_eval.alignment`` / ``.formats`` / ``.utils`` — supporting
+  machinery (array alignment, parsers, ``flatten`` / ``structured_diff``).
 
-``evaluate`` / ``evaluate_batch`` / ``evaluate_consistency`` are thin wrappers over ``engine.Evaluator``.
+``evaluate`` / ``evaluate_batch`` / ``evaluate_consistency`` are thin wrappers
+over ``engine.Evaluator``.
 """
 
 from structured_eval.api import evaluate, evaluate_batch, evaluate_consistency
-from structured_eval.metrics import (
-    ArrayAccuracy,
-    ArrayCardinality,
-    ArrayExactMatch,
-    ArrayF1,
-    ArrayJaccardSimilarity,
-    ArrayMetric,
-    ArrayPrecision,
-    ArrayPRF1,
-    ArrayRecall,
-    BaseMetric,
-    CharacterF1,
-    CompositeScore,
-    CoverageLeafScore,
-    DateDistanceScore,
-    ExactMatch,
-    ExponentialNumericScore,
-    FieldFaithfulness,
-    FieldMetric,
-    Fuzzy,
-    GenericMetric,
-    Levenshtein,
-    MeanScore,
-    Metric,
-    Numeric,
-    NumericCloseness,
-    ObjectAccuracy,
-    ObjectExactMatch,
-    ObjectF1,
-    ObjectMetric,
-    ObjectPrecision,
-    ObjectPRF1,
-    ObjectRecall,
-    ObjectTypeValidity,
-    OverallLeafScore,
-    Presence,
-    RegexMatch,
-    RootMetric,
-    Rule,
-    RulePassRate,
-    SchemaValidity,
-    StructuralSimilarity,
-    TokenF1,
-    TypeMatch,
-)
-from structured_eval.model.config import (
-    ArrayFieldConfig,
-    ArrayStrategy,
-    EvalConfig,
-    ExtraKeysPolicy,
-    FieldConfig,
-    NullPolicy,
-    ObjectFieldConfig,
-)
-from structured_eval.model.context import EvalContext
-from structured_eval.model.metric_result import MetricCollection, MetricResult
-from structured_eval.model.nodes import (
-    ArrayMatchResult,
-    ArrayNode,
-    EvalNode,
-    ObjectNode,
-    ScalarNode,
-)
-from structured_eval.model.result import (
-    BatchEvalReport,
-    ConsistencyReport,
-    EvalReport,
-    EvalWarning,
-    FieldScore,
-    RegressionDiff,
-    RuleResult,
-    WarningType,
-)
-from structured_eval.model.sample import Sample
-from structured_eval.utils.flatten import flatten
-from structured_eval.utils.structured_diff import (
-    DiffEntry,
-    DiffType,
-    StructuredDiff,
-    structured_diff,
-)
 
 __all__ = [
-    # metrics — array
-    "ArrayAccuracy",
-    "ArrayCardinality",
-    "ArrayExactMatch",
-    "ArrayF1",
-    "ArrayFieldConfig",
-    "ArrayJaccardSimilarity",
-    "ArrayMatchResult",
-    "ArrayMetric",
-    "ArrayNode",
-    "ArrayPRF1",
-    "ArrayPrecision",
-    "ArrayRecall",
-    "ArrayStrategy",
-    # metrics — base hierarchy
-    "BaseMetric",
-    "BatchEvalReport",
-    # metrics — field / any-node
-    "CharacterF1",
-    "CompositeScore",
-    "ConsistencyReport",
-    "CoverageLeafScore",
-    "DateDistanceScore",
-    "DiffEntry",
-    "DiffType",
-    "EvalConfig",
-    "EvalContext",
-    # nodes
-    "EvalNode",
-    "EvalReport",
-    "EvalWarning",
-    # metrics — field
-    "ExactMatch",
-    "ExponentialNumericScore",
-    "ExtraKeysPolicy",
-    "FieldConfig",
-    "FieldFaithfulness",
-    "FieldMetric",
-    "FieldScore",
-    "Fuzzy",
-    "GenericMetric",
-    "Levenshtein",
-    "MeanScore",
-    "Metric",
-    "MetricCollection",
-    "MetricResult",
-    "NullPolicy",
-    "Numeric",
-    "NumericCloseness",
-    # metrics — object
-    "ObjectAccuracy",
-    "ObjectExactMatch",
-    "ObjectF1",
-    "ObjectFieldConfig",
-    "ObjectMetric",
-    "ObjectNode",
-    "ObjectPRF1",
-    "ObjectPrecision",
-    "ObjectRecall",
-    "ObjectTypeValidity",
-    # metrics — root
-    "OverallLeafScore",
-    "Presence",
-    "RegexMatch",
-    "RegressionDiff",
-    "RootMetric",
-    # rules / utils / diff
-    "Rule",
-    "RulePassRate",
-    "RuleResult",
-    # core
-    "Sample",
-    "ScalarNode",
-    "SchemaValidity",
-    "StructuralSimilarity",
-    "StructuredDiff",
-    "TokenF1",
-    "TypeMatch",
-    "WarningType",
-    # entrypoint
     "evaluate",
     "evaluate_batch",
     "evaluate_consistency",
-    "flatten",
-    "structured_diff",
 ]

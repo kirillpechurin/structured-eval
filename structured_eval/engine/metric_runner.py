@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.invoker import MetricInvoker
-from structured_eval.model.metric_result import MetricResult
+from structured_eval.models.metric_result import MetricResult
 
 if TYPE_CHECKING:
     from structured_eval.metrics.base import BaseMetric, MetricOutput
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class MetricRunner:

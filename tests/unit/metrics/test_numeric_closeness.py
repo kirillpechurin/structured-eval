@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import NumericCloseness
+from structured_eval.metrics import NumericCloseness
 
 pytestmark = pytest.mark.unit
 

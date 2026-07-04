@@ -12,22 +12,24 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
+from structured_eval.metrics import (
     ArrayAccuracy,
     ArrayCardinality,
     ArrayF1,
-    ArrayFieldConfig,
     ArrayPrecision,
     ArrayPRF1,
     ArrayRecall,
+)
+from structured_eval.models import (
+    ArrayFieldConfig,
     ArrayStrategy,
     EvalConfig,
     FieldConfig,
     ObjectFieldConfig,
 )
-from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.base import EvalNode
-from structured_eval.model.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.base import EvalNode
+from structured_eval.models.nodes.object_node import ObjectNode
 
 pytestmark = pytest.mark.unit
 

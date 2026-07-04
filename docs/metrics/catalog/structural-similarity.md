@@ -34,7 +34,9 @@ Values are ignored; only which paths exist matters.
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, StructuralSimilarity
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import StructuralSimilarity
 
 config = EvalConfig(metrics=[StructuralSimilarity()])
 

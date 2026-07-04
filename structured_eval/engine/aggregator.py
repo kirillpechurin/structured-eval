@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from statistics import mean, pvariance
 
-from structured_eval.model.result import (
+from structured_eval.models.result import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,

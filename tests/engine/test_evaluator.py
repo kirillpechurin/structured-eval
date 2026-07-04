@@ -11,21 +11,23 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import (
+from structured_eval.metrics import (
     CoverageLeafScore,
-    EvalConfig,
-    EvalReport,
-    ExtraKeysPolicy,
-    FieldConfig,
     FieldFaithfulness,
     ObjectF1,
     OverallLeafScore,
     RulePassRate,
     SchemaValidity,
     TokenF1,
-    WarningType,
 )
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
+from structured_eval.models import (
+    EvalConfig,
+    EvalReport,
+    ExtraKeysPolicy,
+    FieldConfig,
+    WarningType,
+)
 
 pytestmark = pytest.mark.engine
 
@@ -186,7 +188,7 @@ def test_per_field_metrics(evaluate_one: Callable[..., EvalReport]) -> None:
 def test_per_node_metric_at_depth(evaluate_one: Callable[..., EvalReport]) -> None:
     # ObjectFieldConfig.metrics applies to a nested object (recursive, each node
     # owns its metrics) — not only the global/root list.
-    from structured_eval import ObjectFieldConfig
+    from structured_eval.models import ObjectFieldConfig
 
     cfg = EvalConfig(fields={"inner": ObjectFieldConfig(metrics=[ObjectF1()])})
     r = evaluate_one({"inner": {"a": 1, "b": 2}}, {"inner": {"a": 1, "b": 99}}, cfg)
@@ -213,7 +215,7 @@ def test_default_key_metric_is_mean_of_node_metrics(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     # report.score defaults to MeanScore: the mean of the root's own metrics.
-    from structured_eval import ObjectAccuracy
+    from structured_eval.metrics import ObjectAccuracy
 
     cfg = EvalConfig(metrics=[ObjectF1(), ObjectAccuracy()])
     r = evaluate_one({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
@@ -231,7 +233,7 @@ def test_default_key_metric_is_mean_of_node_metrics(
 
 
 def test_nested_object_and_array(evaluate_one: Callable[..., EvalReport]) -> None:
-    from structured_eval import ArrayF1
+    from structured_eval.metrics import ArrayF1
 
     doc = {"vendor": {"name": "Acme"}, "lines": [1, 2, 3]}
     cfg = EvalConfig(metrics=[ObjectF1(), ArrayF1()])
@@ -247,7 +249,7 @@ def test_any_node_metric_cascades_onto_every_node(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     from structured_eval.metrics.base import AnyNodeMetric
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
     class ConstDepth(AnyNodeMetric):
         name = "const_depth"
@@ -269,7 +271,7 @@ def test_any_node_metric_usable_as_explicit_key_metric(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     from structured_eval.metrics.base import AnyNodeMetric
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
     class Half(AnyNodeMetric):
         name = "half"

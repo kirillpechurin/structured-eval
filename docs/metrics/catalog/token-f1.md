@@ -40,7 +40,9 @@ Word overlap earns partial credit — both of these miss one word out of three a
 `0.667`:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import TokenF1
 
 config = EvalConfig(fields={
     "title": FieldConfig(metrics=[TokenF1()]),

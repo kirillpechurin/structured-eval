@@ -22,7 +22,9 @@ Every strategy returns the same `ArrayMatchResult`, exposed at
 | `spurious` | actual indices absent from expected                  | FP             |
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayPRF1
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayPRF1
 
 cfg = EvalConfig(fields={"steps": ArrayFieldConfig(metrics=[ArrayPRF1()])})
 report = evaluate({"steps": ["mix", "bake", "cool"]}, {"steps": ["mix", "bake"]}, cfg)
@@ -62,7 +64,9 @@ Extracts a key from each element (the `key` field, or the whole element when
 those clearing `threshold`. Order no longer matters:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayStrategy, ArrayPRF1
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, ArrayStrategy, EvalConfig
+from structured_eval.metrics import ArrayPRF1
 
 cfg = EvalConfig(fields={"items": ArrayFieldConfig(
     strategy=ArrayStrategy.BY_KEY,

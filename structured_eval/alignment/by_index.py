@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.alignment.base import ArrayAligner
-from structured_eval.model.config import ArrayStrategy
-from structured_eval.model.nodes.array_node import ArrayMatchResult
+from structured_eval.models.config import ArrayStrategy
+from structured_eval.models.nodes.array_node import ArrayMatchResult
 
 
 class ByIndexAligner(ArrayAligner):

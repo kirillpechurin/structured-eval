@@ -30,7 +30,9 @@ name.
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectPRF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectPRF1
 
 config = EvalConfig(metrics=[ObjectPRF1()])
 report = evaluate(

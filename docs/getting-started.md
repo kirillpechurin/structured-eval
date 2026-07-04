@@ -119,14 +119,8 @@ paraphrased, a level differs only in casing, a duration is approximately right.
 Assign each field the comparison that actually fits it via `EvalConfig`:
 
 ```python
-from structured_eval import (
-    EvalConfig,
-    FieldConfig,
-    ObjectFieldConfig,
-    RegexMatch,
-    NumericCloseness,
-    TokenF1,
-)
+from structured_eval.models import EvalConfig, FieldConfig, ObjectFieldConfig
+from structured_eval.metrics import NumericCloseness, RegexMatch, TokenF1
 
 config = EvalConfig(
     fields={

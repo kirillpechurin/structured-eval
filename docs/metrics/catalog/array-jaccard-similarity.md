@@ -33,7 +33,9 @@ canonical JSON — but the metric is designed for scalar elements.
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayJaccardSimilarity
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayJaccardSimilarity
 
 config = EvalConfig(fields={
     "tags": ArrayFieldConfig(metrics=[ArrayJaccardSimilarity()]),

@@ -9,7 +9,8 @@ from collections.abc import Callable
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import EvalNode, SchemaValidity
+from structured_eval.metrics import SchemaValidity
+from structured_eval.models import EvalNode
 
 pytestmark = pytest.mark.unit
 

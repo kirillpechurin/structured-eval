@@ -7,7 +7,7 @@ from structured_eval.metrics.utils import calculate as stats
 from structured_eval.metrics.utils import object_utils as obj
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.object_node import ObjectNode
+    from structured_eval.models.nodes.object_node import ObjectNode
 
 
 class ObjectRecall(ObjectMetric):

@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-import structured_eval as se
+from structured_eval import metrics as se
 from structured_eval.metrics.base import (
     _METRIC_REGISTRY,
     Metric,

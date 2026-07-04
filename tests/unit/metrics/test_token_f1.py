@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import TokenF1
+from structured_eval.metrics import TokenF1
 
 pytestmark = pytest.mark.unit
 

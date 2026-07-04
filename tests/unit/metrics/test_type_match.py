@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import TypeMatch
+from structured_eval.metrics import TypeMatch
 
 pytestmark = pytest.mark.unit
 

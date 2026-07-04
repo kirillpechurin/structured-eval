@@ -34,9 +34,9 @@ metrics on the node **and** set `CompositeScore` as the `key_metric` (the engine
 ## Example
 
 ```python
-from structured_eval import (
-    evaluate, EvalConfig, FieldConfig, TokenF1, CharacterF1, CompositeScore,
-)
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import CharacterF1, CompositeScore, TokenF1
 
 config = EvalConfig(fields={
     "title": FieldConfig(

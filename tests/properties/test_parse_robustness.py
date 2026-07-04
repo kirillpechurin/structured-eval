@@ -12,7 +12,9 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, ObjectF1, evaluate
+from structured_eval import evaluate
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import EvalConfig
 
 from .conftest import SEEDS
 

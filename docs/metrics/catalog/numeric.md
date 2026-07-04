@@ -47,7 +47,9 @@ The default band is relative ±1%, so a tiny difference still matches but a real
 doesn't:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Numeric
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Numeric
 
 config = EvalConfig(fields={"duration_hours": FieldConfig(metrics=[Numeric()])})
 
@@ -62,7 +64,9 @@ Use an **absolute** band when you want "within N", regardless of magnitude — h
 ±1 hour:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Numeric
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Numeric
 
 config = EvalConfig(fields={
     "duration_hours": FieldConfig(metrics=[Numeric(absolute_tolerance=1)]),
@@ -78,7 +82,9 @@ Strings are parsed leniently, so messy numeric text still compares (here exactly
 `tolerance=0`):
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Numeric
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Numeric
 
 config = EvalConfig(fields={"price": FieldConfig(metrics=[Numeric(tolerance=0)])})
 

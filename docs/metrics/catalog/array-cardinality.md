@@ -33,7 +33,9 @@ The ratio of the shorter length to the longer (the same shape as
 Four expected items, three produced — regardless of whether those three are correct:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayCardinality
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayCardinality
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayCardinality()])})
 report = evaluate(

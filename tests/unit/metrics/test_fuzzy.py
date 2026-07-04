@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import Fuzzy, Levenshtein
+from structured_eval.metrics import Fuzzy, Levenshtein
 from structured_eval.metrics.fuzzy import FuzzyMethod
 
 pytestmark = pytest.mark.unit

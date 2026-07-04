@@ -35,7 +35,9 @@ strings (`"$120"`) are graded too.
 ## Example
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExponentialNumericScore
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExponentialNumericScore
 
 config = EvalConfig(fields={
     "duration_hours": FieldConfig(metrics=[ExponentialNumericScore(scale=5)]),

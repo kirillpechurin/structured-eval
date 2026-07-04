@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from structured_eval.model.result import RuleResult
+    from structured_eval.models.result import RuleResult
 
 
 class RuleProcessor:

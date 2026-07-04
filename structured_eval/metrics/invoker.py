@@ -19,12 +19,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.base import BaseMetric, GenericMetric, Metric, MetricOutput
-from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.models.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.scalar import ScalarNode
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 # A GenericMetric's per-kind method names, by node class, for each input mode.
 GENERIC_NODE_METHOD: dict[type, str] = {

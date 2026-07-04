@@ -4,7 +4,8 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, FieldConfig, ObjectExactMatch, ObjectFieldConfig
+from structured_eval.metrics import ObjectExactMatch
+from structured_eval.models import EvalConfig, FieldConfig, ObjectFieldConfig
 from tests.conftest import build_tree
 
 pytestmark = pytest.mark.unit

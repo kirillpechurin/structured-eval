@@ -38,7 +38,8 @@ A `Sample` bundles `actual` / `expected` / `source` / `id` into one object — h
 when you carry an identifier or build a list for batch evaluation:
 
 ```python
-from structured_eval import evaluate, Sample
+from structured_eval import evaluate
+from structured_eval.models import Sample
 
 sample = Sample(actual={"total": 100}, expected={"total": 100}, id="invoice-1")
 report = evaluate(sample)
@@ -72,7 +73,9 @@ Without `expected`, `SchemaValidity` checks the structure against a JSON Schema 
 the offending paths come back on the metric's `.extra`, grouped by kind of error:
 
 ```python
-from structured_eval import evaluate, EvalConfig, SchemaValidity
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import SchemaValidity
 
 schema = {
     "type": "object",
@@ -89,7 +92,9 @@ A `source` enables `FieldFaithfulness` — it flags values that aren't grounded 
 original text:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldFaithfulness
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import FieldFaithfulness
 
 report = evaluate(
     {"name": "Sarah", "city": "Berlin"},
@@ -111,10 +116,9 @@ a flat, path-addressable view (see
 all run against this one course-extraction example:
 
 ```python
-from structured_eval import (
-    evaluate, EvalConfig, FieldConfig, ObjectFieldConfig,
-    RegexMatch, NumericCloseness, TokenF1, ObjectF1,
-)
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig, ObjectFieldConfig
+from structured_eval.metrics import NumericCloseness, ObjectF1, RegexMatch, TokenF1
 
 expected = {
     "course_id": "COURSE-101",

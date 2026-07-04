@@ -26,7 +26,8 @@ metrics, and the report.
 ## A dataset — `evaluate_batch`
 
 ```python
-from structured_eval import evaluate_batch, Sample
+from structured_eval import evaluate_batch
+from structured_eval.models import Sample
 
 samples = [Sample(actual=a, expected=e) for a, e in pairs]
 report = evaluate_batch(samples, config)
@@ -39,7 +40,8 @@ See [evaluate_batch](evaluate-batch.md) for `per_sample`, batch metrics, and
 ## Repeated runs — `evaluate_consistency`
 
 ```python
-from structured_eval import evaluate_consistency, Sample
+from structured_eval import evaluate_consistency
+from structured_eval.models import Sample
 
 runs = [Sample(actual=output) for output in repeated_outputs]
 report = evaluate_consistency(runs, config, variance_threshold=0.05)

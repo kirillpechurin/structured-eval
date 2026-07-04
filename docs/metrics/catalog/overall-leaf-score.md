@@ -39,7 +39,9 @@ To make it the headline `report.score`, pass it as `key_metric` (it distributes 
 root). Here `title` is weighted 2×, and one nested leaf is wrong:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch
 from structured_eval.metrics.overall_leaf_score import OverallLeafScore
 
 config = EvalConfig(

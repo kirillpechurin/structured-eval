@@ -42,7 +42,9 @@ change it. Equivalent to soft recall.
 Four expected tags, three produced — one wrong (`xxx`), one missing (`ml`):
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayAccuracy
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayAccuracy
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayAccuracy()])})
 report = evaluate(

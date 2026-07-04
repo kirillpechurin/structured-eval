@@ -134,7 +134,9 @@ arithmetic and comparisons directly.
 `MetricResult`, usable as a number:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import TokenF1
 
 # course title scored with TokenF1: "Intro to Python" vs "Introduction to Python"
 report = evaluate(
@@ -153,7 +155,9 @@ metrics use this for their findings (`schema_validity` → `"schema_errors"`,
 `rule_pass_rate` → `"rule_results"`):
 
 ```python
-from structured_eval import evaluate, EvalConfig, SchemaValidity
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import SchemaValidity
 
 schema = {
     "type": "object",
@@ -175,7 +179,9 @@ res.extra["schema_errors"]    # the finding rides on .extra
 seen on every node it ran on, ready to reduce:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ObjectFieldConfig, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig, ObjectFieldConfig
+from structured_eval.metrics import TokenF1
 
 # TokenF1 placed on three fields, so it lands on three nodes of the tree
 config = EvalConfig(fields={

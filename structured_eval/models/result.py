@@ -7,11 +7,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.model.metric_result import (  # noqa: TC001
+from structured_eval.models.metric_result import (  # noqa: TC001
     MetricCollection,
     MetricResult,
 )
-from structured_eval.model.nodes.array_node import ArrayMatchResult  # noqa: TC001
+from structured_eval.models.nodes.array_node import ArrayMatchResult  # noqa: TC001
 
 
 class NodeType(StrEnum):

@@ -36,7 +36,9 @@ It is a plain Python `==`, so equality follows Python's rules: type usually matt
 Put `ExactMatch` on the fields you want compared verbatim:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch
 
 config = EvalConfig(fields={
     "level": FieldConfig(metrics=[ExactMatch()]),
@@ -55,7 +57,9 @@ float(report.field_scores["duration_hours"].metrics["exact_match"])  # 0.0 — 1
 It is strict about casing and string-vs-number — both of these score `0.0`:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch
 
 config = EvalConfig(fields={
     "level": FieldConfig(metrics=[ExactMatch()]),

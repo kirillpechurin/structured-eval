@@ -4,7 +4,9 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, ObjectF1, Sample, evaluate_consistency
+from structured_eval import evaluate_consistency
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import EvalConfig, Sample
 
 pytestmark = pytest.mark.engine
 

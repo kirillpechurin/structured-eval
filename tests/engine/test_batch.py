@@ -2,13 +2,9 @@
 
 import pytest
 
-from structured_eval import (
-    BatchEvalReport,
-    EvalConfig,
-    ObjectF1,
-    Sample,
-    evaluate_batch,
-)
+from structured_eval import evaluate_batch
+from structured_eval.metrics import ObjectF1
+from structured_eval.models import BatchEvalReport, EvalConfig, Sample
 
 pytestmark = pytest.mark.engine
 

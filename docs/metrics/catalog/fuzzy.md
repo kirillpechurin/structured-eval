@@ -48,7 +48,9 @@ score = rapidfuzz_scorer(a, e) / 100
 A typo'd instructor name still scores high, and the default ignores word order:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, Fuzzy
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Fuzzy
 
 config = EvalConfig(fields={
     "instructor_name": FieldConfig(metrics=[Fuzzy()]),
@@ -68,7 +70,7 @@ Switch `method` for a different notion of similarity — `ratio` is order-sensit
 `partial_ratio` rewards a substring match:
 
 ```python
-from structured_eval import Fuzzy
+from structured_eval.metrics import Fuzzy
 
 Fuzzy(method="ratio").score("Python Programming Intro", "Intro Python Programming")
 # 0.75 — plain ratio is hurt by the reordering

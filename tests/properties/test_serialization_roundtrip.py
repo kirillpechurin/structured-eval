@@ -13,16 +13,15 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import (
-    EvalConfig,
-    EvalReport,
+from structured_eval import evaluate
+from structured_eval.metrics import (
     ObjectF1,
     OverallLeafScore,
     RulePassRate,
     SchemaValidity,
-    evaluate,
 )
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
+from structured_eval.models import EvalConfig, EvalReport
 
 from .conftest import SEEDS, random_document
 

@@ -3,11 +3,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from structured_eval.model.metric_result import MetricResult
-from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.base import EvalNode
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.models.metric_result import MetricResult
+from structured_eval.models.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.base import EvalNode
+from structured_eval.models.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.scalar import ScalarNode
 
 # What a metric's ``compute`` may return; ``MetricRunner._apply`` normalizes any
 # of these to a ``MetricResult``. A bare value / dict of sub-scores, optionally

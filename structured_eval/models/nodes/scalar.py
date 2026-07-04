@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from structured_eval.model.nodes.base import EvalNode
+from structured_eval.models.nodes.base import EvalNode
 
 
 class ScalarNode(EvalNode):

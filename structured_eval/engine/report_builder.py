@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from structured_eval.model.metric_result import MetricCollection
-from structured_eval.model.nodes.array_node import ArrayNode
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.scalar import ScalarNode
-from structured_eval.model.result import EvalReport, EvalWarning, FieldScore, NodeType
+from structured_eval.models.metric_result import MetricCollection
+from structured_eval.models.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.scalar import ScalarNode
+from structured_eval.models.result import EvalReport, EvalWarning, FieldScore, NodeType
 
 if TYPE_CHECKING:
-    from structured_eval.model.context import EvalContext
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.context import EvalContext
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class ReportBuilder:

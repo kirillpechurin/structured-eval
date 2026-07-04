@@ -10,11 +10,12 @@ from typing import Any
 
 import pytest
 
-from structured_eval import EvalConfig, EvalReport, evaluate
+from structured_eval import evaluate
 from structured_eval.engine.metric_runner import MetricRunner
 from structured_eval.engine.tree_builder import TreeBuilder
-from structured_eval.model.context import EvalContext
-from structured_eval.model.nodes.base import EvalNode
+from structured_eval.models import EvalConfig, EvalReport
+from structured_eval.models.context import EvalContext
+from structured_eval.models.nodes.base import EvalNode
 from structured_eval.utils.flatten import flatten
 
 # ── engine helpers ──────────────────────────────────────────────────────────

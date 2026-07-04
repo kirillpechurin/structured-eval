@@ -10,16 +10,14 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
-    ArrayF1,
+from structured_eval import evaluate
+from structured_eval.metrics import ArrayF1, ObjectF1, OverallLeafScore
+from structured_eval.models import (
     ArrayFieldConfig,
     ArrayStrategy,
     EvalConfig,
     FieldConfig,
-    ObjectF1,
     ObjectFieldConfig,
-    OverallLeafScore,
-    evaluate,
 )
 
 pytestmark = pytest.mark.golden

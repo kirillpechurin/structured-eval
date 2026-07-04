@@ -48,7 +48,9 @@ objects — but several values are off. A small config says *how* to judge each
 field, and the report tells you exactly where the output stands:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, TokenF1, Numeric
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Numeric, TokenF1
 
 expected = {
     "course_id": "COURSE-101",
@@ -142,7 +144,9 @@ ground-truth answer:
 
 ```python
 from pydantic import BaseModel
-from structured_eval import evaluate, EvalConfig, SchemaValidity
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import SchemaValidity
 
 
 class Course(BaseModel):
@@ -164,7 +168,9 @@ report.metrics["schema_validity"].root().extra["schema_errors"]
 (*comparison is a metric*):
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, TokenF1, Numeric
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import Numeric, TokenF1
 
 report = evaluate(
     actual={"title": "Intro to Python", "duration_hours": 11},
@@ -182,7 +188,9 @@ Fields roll up into objects and arrays with precision / recall / F1, and arrays 
 [aligned](docs/core-concepts/array-alignment.md) by index, key, or optimally:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectF1
 
 report = evaluate(
     actual={"a": 1, "b": 9},
@@ -197,7 +205,9 @@ report.metrics["object_f1"].root()  # 0.4
 source — no `expected` required:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldFaithfulness
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import FieldFaithfulness
 
 report = evaluate(
     actual={"title": "Introduction to Python", "duration_hours": 40},
@@ -212,7 +222,9 @@ report.metrics["field_faithfulness"].by_path  # {'title': 1.0, 'duration_hours':
 **L6 — logic.** Assert cross-field business rules with a small DSL:
 
 ```python
-from structured_eval import evaluate, EvalConfig, Rule, RulePassRate
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import Rule, RulePassRate
 
 report = evaluate(
     actual={"subtotal": 100, "tax": 20, "total": 130},
@@ -228,7 +240,8 @@ report.score  # 0.0  — 130 ≠ 120
 Evaluate a whole dataset, or measure how stable a prompt is across repeated runs:
 
 ```python
-from structured_eval import evaluate_batch, evaluate_consistency, Sample
+from structured_eval import evaluate_batch, evaluate_consistency
+from structured_eval.models import Sample
 
 # one report per sample + dataset aggregates
 batch = evaluate_batch([

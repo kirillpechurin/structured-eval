@@ -49,7 +49,9 @@ Four expected tags, three produced — one of them wrong (`xxx`), one expected t
 (`ml`):
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayF1
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayF1
 
 config = EvalConfig(fields={"tags": ArrayFieldConfig(metrics=[ArrayF1()])})
 report = evaluate(

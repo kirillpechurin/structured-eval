@@ -34,9 +34,9 @@ type-strict (`1` ≠ `1.0`).
 ## Example
 
 ```python
-from structured_eval import (
-    evaluate, EvalConfig, FieldConfig, ObjectFieldConfig, ObjectExactMatch,
-)
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig, ObjectFieldConfig
+from structured_eval.metrics import ObjectExactMatch
 
 config = EvalConfig(fields={
     "certificate": ObjectFieldConfig(

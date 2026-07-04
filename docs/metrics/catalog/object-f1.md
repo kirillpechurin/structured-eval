@@ -51,7 +51,9 @@ partial credit.
 `name` is right, `experience_years` is wrong, and `title` is missing entirely:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectF1
 
 config = EvalConfig(metrics=[ObjectF1()])
 report = evaluate(

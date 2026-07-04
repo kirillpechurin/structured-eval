@@ -14,14 +14,10 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
-    EvalConfig,
-    ObjectAccuracy,
-    ObjectF1,
-    OverallLeafScore,
-    evaluate,
-)
+from structured_eval import evaluate
+from structured_eval.metrics import ObjectAccuracy, ObjectF1, OverallLeafScore
 from structured_eval.metrics.utils.calculate import WeightMode
+from structured_eval.models import EvalConfig
 
 from .conftest import SEEDS
 

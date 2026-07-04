@@ -7,7 +7,7 @@ from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.type_match import TypeMatch
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.object_node import ObjectNode
+    from structured_eval.models.nodes.object_node import ObjectNode
 
 
 class ObjectTypeValidity(ObjectMetric):

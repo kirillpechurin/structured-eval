@@ -46,7 +46,9 @@ If either value isn't a string the metric short-circuits to `0.0` before any of 
 Casing and irregular spacing are ignored; the wording still has to match:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, RegexMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import RegexMatch
 
 config = EvalConfig(fields={
     "level": FieldConfig(metrics=[RegexMatch()]),
@@ -66,7 +68,9 @@ Pass `pattern` / `repl` to ignore more — here, strip punctuation so `"Python: 
 Basics!"` matches `"python the basics"`:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, RegexMatch
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import RegexMatch
 
 config = EvalConfig(fields={
     "title": FieldConfig(metrics=[RegexMatch(pattern=r"[^\w\s]", repl="")]),

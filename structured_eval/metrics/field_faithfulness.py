@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from structured_eval.metrics.base import FieldMetric
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.scalar import ScalarNode
+    from structured_eval.models.nodes.scalar import ScalarNode
 
 
 class FieldFaithfulness(FieldMetric):

@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from structured_eval.metrics.base import RootMetric
-from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.models.nodes.scalar import ScalarNode
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class OverallLeafScore(RootMetric):

@@ -21,7 +21,9 @@ The examples below all run against this small batch of course extractions — tw
 clean documents and one that fails to parse:
 
 ```python
-from structured_eval import evaluate_batch, Sample, EvalConfig, FieldConfig, NumericCloseness, TokenF1
+from structured_eval import evaluate_batch
+from structured_eval.models import EvalConfig, FieldConfig, Sample
+from structured_eval.metrics import NumericCloseness, TokenF1
 
 config = EvalConfig(fields={
     "title": FieldConfig(metrics=[TokenF1()]),

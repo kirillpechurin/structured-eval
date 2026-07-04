@@ -42,7 +42,8 @@ also be bundled as a `Sample` (that's what batch and consistency take a *list*
 of — see [the evaluation functions](../evaluation/index.md)).
 
 ```python
-from structured_eval import evaluate, Sample
+from structured_eval import evaluate
+from structured_eval.models import Sample
 
 # the document can be given in several equivalent forms:
 # Python dicts
@@ -64,7 +65,8 @@ exact match). The config mirrors the **shape of your data**: one config type per
 node type.
 
 ```python
-from structured_eval import EvalConfig, FieldConfig, TokenF1, ObjectF1, ExactMatch, MeanScore
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch, MeanScore, ObjectF1, TokenF1
 
 # how to score — these are the knobs you'll reach for most:
 config = EvalConfig(
@@ -134,7 +136,9 @@ The core design choice: there is **no separate "comparison" step.** A comparison
 (cheap and expensive), each scoring the very same pair:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch, TokenF1
 
 # one field, two metrics scoring the same (actual, expected):
 report = evaluate(
@@ -161,7 +165,9 @@ that's `MeanScore`, the mean of the node's own metrics — but **any metric can 
 the `key_metric`**, so you can pick one to speak for the node:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch, TokenF1
 
 a, e = {"title": "Intro to Python"}, {"title": "Introduction to Python"}
 metrics = [ExactMatch(), TokenF1()]   # exact_match = 0.0, token_f1 = 0.67

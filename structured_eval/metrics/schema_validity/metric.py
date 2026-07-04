@@ -8,7 +8,7 @@ from structured_eval.metrics.schema_validity.validator import SchemaValidator
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class SchemaValidity(RootMetric):

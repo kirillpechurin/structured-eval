@@ -39,7 +39,9 @@ computes.
 fields is correct:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectRecall
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectRecall
 
 config = EvalConfig(metrics=[ObjectRecall()])
 report = evaluate(

@@ -32,7 +32,9 @@ expensive fuzzy one — each scoring the very same `(actual, expected)` pair, no
 computed speculatively.
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch, TokenF1, Fuzzy
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch, Fuzzy, TokenF1
 
 report = evaluate(
     {"title": "Intro to Python"},
@@ -59,7 +61,9 @@ different input. This is why metrics run **post-order** (children before parents
 an aggregating parent reads each child's representative.
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectF1
 
 report = evaluate(
     {"name": "Sarah", "experience_years": 5},
@@ -76,7 +80,9 @@ The same holds one level deeper, over a list of objects: each element is itself 
 node with its own representative, and the array metric averages those.
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayAccuracy
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, EvalConfig
+from structured_eval.metrics import ArrayAccuracy
 
 config = EvalConfig(fields={"instructors": ArrayFieldConfig(metrics=[ArrayAccuracy()])})
 report = evaluate(
@@ -104,7 +110,8 @@ that decision is made by scoring `(actual_key, expected_key)` with an ordinary
 metric.
 
 ```python
-from structured_eval import evaluate, EvalConfig, ArrayFieldConfig, ArrayStrategy
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, ArrayStrategy, EvalConfig
 
 # elements arrive in a different order — pair them by the `id` key, not position
 config = EvalConfig(fields={"items": ArrayFieldConfig(
@@ -137,9 +144,11 @@ and combine the already-computed scores however it likes — weight them, blend
 them, mix them with its own logic.
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig, ExactMatch, Fuzzy, TokenF1
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import ExactMatch, Fuzzy, TokenF1
 from structured_eval.metrics.base import AnyNodeMetric
-from structured_eval.model.nodes.base import EvalNode
+from structured_eval.models.nodes.base import EvalNode
 
 class WeightedBlend(AnyNodeMetric):
     """A representative that blends the field's other metrics by hand."""

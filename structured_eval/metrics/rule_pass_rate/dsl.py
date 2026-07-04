@@ -5,7 +5,7 @@ import operator
 import re
 from typing import TYPE_CHECKING, Any
 
-from structured_eval.model.result import RuleResult
+from structured_eval.models.result import RuleResult
 
 if TYPE_CHECKING:
     from collections.abc import Callable

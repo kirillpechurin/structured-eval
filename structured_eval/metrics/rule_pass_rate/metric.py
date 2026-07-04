@@ -6,7 +6,7 @@ from structured_eval.metrics.base import RootMetric
 from structured_eval.metrics.rule_pass_rate.engine import RuleProcessor
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.base import EvalNode
+    from structured_eval.models.nodes.base import EvalNode
 
 
 class RulePassRate(RootMetric):

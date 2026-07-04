@@ -25,8 +25,8 @@ from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.utils.calculate import WeightMode
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.base import EvalNode
-    from structured_eval.model.nodes.object_node import ObjectNode
+    from structured_eval.models.nodes.base import EvalNode
+    from structured_eval.models.nodes.object_node import ObjectNode
 
 
 def leaf_name(path: str) -> str:

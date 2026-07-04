@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from structured_eval.metrics.base import ArrayMetric
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.array_node import ArrayNode
+    from structured_eval.models.nodes.array_node import ArrayNode
 
 
 def _member(value: Any) -> Any:

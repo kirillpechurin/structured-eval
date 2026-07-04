@@ -6,7 +6,7 @@ Aligners only pair indices; value scoring happens later in the array metrics.
 import pytest
 
 from structured_eval.alignment import ByIndexAligner
-from structured_eval.model.config import ArrayStrategy
+from structured_eval.models.config import ArrayStrategy
 
 pytestmark = pytest.mark.unit
 

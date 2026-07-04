@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
+from structured_eval.models import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,
@@ -17,7 +17,7 @@ from structured_eval import (
     MetricCollection,
     MetricResult,
 )
-from structured_eval.model.result import NodeType
+from structured_eval.models.result import NodeType
 
 pytestmark = pytest.mark.unit
 
@@ -210,6 +210,6 @@ def test_consistency_stable_vs_unstable() -> None:
     ids=["single", "median", "p95"],
 )
 def test_percentile_helper(values: Any, pct: Any, expected: Any) -> None:
-    from structured_eval.model.result import _percentile
+    from structured_eval.models.result import _percentile
 
     assert _percentile(values, pct) == pytest.approx(expected)

@@ -22,8 +22,8 @@ from typing import Any
 
 from structured_eval.api import evaluate
 from structured_eval.integrations._adapter import verdict
-from structured_eval.model.config import EvalConfig
-from structured_eval.model.result import EvalReport
+from structured_eval.models.config import EvalConfig
+from structured_eval.models.result import EvalReport
 
 Extractor = Callable[[Any], Any]
 

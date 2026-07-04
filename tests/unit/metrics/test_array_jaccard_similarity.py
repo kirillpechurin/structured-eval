@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import ArrayJaccardSimilarity
+from structured_eval.metrics import ArrayJaccardSimilarity
 
 pytestmark = pytest.mark.unit
 

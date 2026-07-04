@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import (
+from structured_eval.metrics import (
     ExactMatch,
     Fuzzy,
     Levenshtein,

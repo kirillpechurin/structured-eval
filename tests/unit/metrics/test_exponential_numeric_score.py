@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval import ExponentialNumericScore
+from structured_eval.metrics import ExponentialNumericScore
 
 pytestmark = pytest.mark.unit
 
@@ -25,10 +25,12 @@ pytestmark = pytest.mark.unit
     ],
     ids=["exact", "scale-5", "scale-1", "str-exact", "currency"],
 )
-def test_exponential_score(actual: Any, expected: Any, scale: float, score: Any) -> None:
-    assert ExponentialNumericScore(scale=scale).score(actual, expected) == pytest.approx(
-        score
-    )
+def test_exponential_score(
+    actual: Any, expected: Any, scale: float, score: Any
+) -> None:
+    assert ExponentialNumericScore(scale=scale).score(
+        actual, expected
+    ) == pytest.approx(score)
 
 
 @pytest.mark.parametrize(

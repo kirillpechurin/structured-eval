@@ -29,7 +29,8 @@ Declaring the class **registers** it (via `name`), so you can use it either as a
 instance or by that name string:
 
 ```python
-from structured_eval import evaluate, EvalConfig, FieldConfig
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
 
 config = EvalConfig(fields={
     "course_id": FieldConfig(metrics=["code_prefix_match"]),   # by name…
@@ -52,7 +53,7 @@ instead of `score`:
 
 ```python
 from structured_eval.metrics.base import FieldMetric, MetricOutput
-from structured_eval.model.nodes.scalar import ScalarNode
+from structured_eval.models.nodes.scalar import ScalarNode
 
 class CodePrefixMatch(FieldMetric):
     name = "code_prefix_match"
@@ -112,8 +113,8 @@ not for a scalar (so no `compute_scalar`):
 
 ```python
 from structured_eval.metrics.base import GenericMetric
-from structured_eval.model.nodes.object_node import ObjectNode
-from structured_eval.model.nodes.array_node import ArrayNode
+from structured_eval.models.nodes.object_node import ObjectNode
+from structured_eval.models.nodes.array_node import ArrayNode
 
 class FilledRate(GenericMetric):
     name = "filled_rate"
@@ -128,7 +129,8 @@ class FilledRate(GenericMetric):
 ```
 
 ```python
-from structured_eval import evaluate, EvalConfig
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
 
 report = evaluate(
     {"title": "X", "level": None, "tags": ["a", None]},

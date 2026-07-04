@@ -39,7 +39,9 @@ alike; missing fields are out of scope. An object with no present fields is vacu
 `duration_hours` has the right type; `price` came back as a string — one of two valid:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectTypeValidity
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectTypeValidity
 
 config = EvalConfig(metrics=[ObjectTypeValidity()])
 report = evaluate(

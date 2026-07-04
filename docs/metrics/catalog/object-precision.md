@@ -39,7 +39,9 @@ vacuously `1.0`.
 `name` is right, `experience_years` is wrong — both were produced, so half are correct:
 
 ```python
-from structured_eval import evaluate, EvalConfig, ObjectPrecision
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import ObjectPrecision
 
 config = EvalConfig(metrics=[ObjectPrecision()])
 report = evaluate(

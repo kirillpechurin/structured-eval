@@ -24,7 +24,9 @@ The examples below run against three outputs of one course-extraction prompt:
 (12 → 10 → 14):
 
 ```python
-from structured_eval import evaluate_consistency, Sample, EvalConfig, FieldConfig, NumericCloseness
+from structured_eval import evaluate_consistency
+from structured_eval.models import EvalConfig, FieldConfig, Sample
+from structured_eval.metrics import NumericCloseness
 
 expected = {"course_id": "COURSE-101", "title": "Introduction to Python", "duration_hours": 12}
 config = EvalConfig(fields={"duration_hours": FieldConfig(metrics=[NumericCloseness()])})

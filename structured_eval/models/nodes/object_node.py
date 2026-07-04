@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from structured_eval.model.nodes.base import EvalNode
+from structured_eval.models.nodes.base import EvalNode
 
 
 class ObjectNode(EvalNode):

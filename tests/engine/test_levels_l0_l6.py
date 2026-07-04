@@ -22,17 +22,16 @@ breaks — which is the whole point.
 import pytest
 from pydantic import BaseModel
 
-from structured_eval import (
-    EvalConfig,
-    EvalReport,
+from structured_eval import evaluate
+from structured_eval.metrics import (
     FieldFaithfulness,
     ObjectF1,
     OverallLeafScore,
     RulePassRate,
     SchemaValidity,
-    evaluate,
 )
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
+from structured_eval.models import EvalConfig, EvalReport
 
 pytestmark = pytest.mark.engine
 

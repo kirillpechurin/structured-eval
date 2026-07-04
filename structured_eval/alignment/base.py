@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
-    from structured_eval.model.nodes.array_node import ArrayMatchResult
+    from structured_eval.models.nodes.array_node import ArrayMatchResult
 
 # Sentinel for a key that cannot be extracted (absent, or element not a dict).
 _MISSING_KEY = object()

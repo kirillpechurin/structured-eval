@@ -45,7 +45,8 @@ A document with a wrong-typed `hours` and a missing `title`:
 
 ```python
 from pydantic import BaseModel
-from structured_eval import evaluate, EvalConfig
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
 from structured_eval.metrics.schema_validity import SchemaValidity
 
 class Course(BaseModel):

@@ -7,7 +7,7 @@ metric/name/callable, or a per-field ``dict[str, Scorer]``.
 import pytest
 
 from structured_eval.alignment import HungarianAligner
-from structured_eval.model.config import ArrayStrategy
+from structured_eval.models.config import ArrayStrategy
 
 pytestmark = pytest.mark.unit
 
