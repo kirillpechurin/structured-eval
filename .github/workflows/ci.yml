@@ -21,7 +21,7 @@ jobs:
     name: lint & type-check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.2.0
         with:
@@ -50,12 +50,13 @@ jobs:
           # lowest-direct pins our declared floors (e.g. pydantic>=2.5.0); no --frozen
           - { python: "3.12", label: "lowest-direct", sync: "--resolution lowest-direct", cov: false }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.2.0
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
+          cache-suffix: ${{ matrix.python }}-${{ matrix.label }} # distinct cache per cell, avoids save races
       - name: Install (extra=all, ${{ matrix.label }})
         run: uv sync --python ${{ matrix.python }} --extra all ${{ matrix.sync }}
       - name: Run tests
@@ -80,7 +81,7 @@ jobs:
     name: core install (pydantic-only)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.2.0
         with:

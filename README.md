@@ -1,5 +1,11 @@
 # structured-eval
 
+[![CI](https://github.com/kirillpechurin/structured-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/kirillpechurin/structured-eval/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/kirillpechurin/structured-eval/graph/badge.svg)](https://codecov.io/gh/kirillpechurin/structured-eval)
+[![PyPI](https://img.shields.io/pypi/v/structured-eval.svg)](https://pypi.org/project/structured-eval/)
+[![Python versions](https://img.shields.io/pypi/pyversions/structured-eval.svg)](https://pypi.org/project/structured-eval/)
+[![License](https://img.shields.io/pypi/l/structured-eval.svg)](https://github.com/kirillpechurin/structured-eval/blob/main/LICENSE)
+
 **A declarative, field-level evaluation framework for LLM structured outputs (JSON/YAML).**
 
 Getting an LLM to return well-formed JSON is mostly a solved problem — it parses,
