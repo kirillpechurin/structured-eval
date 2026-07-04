@@ -33,12 +33,10 @@ class Parser:
     @staticmethod
     def _try_yaml(text: str) -> Any | None:
         """Parse ``text`` as YAML, returning a dict/list or None on any failure."""
-        try:
-            from structured_eval.formats.yaml_parser import YamlParser
-        except ImportError:
-            return None
+        from structured_eval.formats.yaml_parser import YamlParser
+
         try:
             value = YamlParser().parse(text)
-        except ParseError:
+        except (ParseError, ImportError):
             return None
         return value if isinstance(value, (dict, list)) else None
