@@ -45,7 +45,7 @@ include = ["structured_eval*"]
 structured_eval = ["py.typed"]
 
 [project.optional-dependencies]
-yaml = ["pyyaml>=6.0"]
+yaml = ["pyyaml>=6.0.1"] # 6.0.0 fails to build on Python 3.12 (cython_sources)
 fuzzy = ["rapidfuzz>=3.0.0"]
 jsonschema = ["jsonschema>=4.20.0"]
 rules = ["jsonpath-ng>=1.6.0"]
@@ -64,7 +64,7 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "pre-commit>=4.6.0",
-    "pyyaml>=6.0",
+    "pyyaml>=6.0.1",
     "rapidfuzz>=3.0",
     "types-pyyaml>=6.0",
     "jsonschema>=4.26.0",
