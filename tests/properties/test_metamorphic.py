@@ -6,7 +6,7 @@ re-tuning that preserves ordering.
 
   * C Monotonic degradation — corrupting one more field never raises the score.
   * D Weight decomposition  — with uniform weights, PROPORTIONAL collapses to
-    the plain count-based (NONE) result, exactly as CLAUDE.md promises.
+    the plain count-based (NONE) result.
 """
 
 import random

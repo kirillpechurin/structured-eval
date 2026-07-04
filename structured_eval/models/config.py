@@ -49,7 +49,6 @@ class FieldConfig(BaseModel):
     key_metric: Any = None  # Metric | name str used as the parent's match criterion
     threshold: float | None = None
     weight: float = DEFAULT_FIELD_WEIGHT
-    required: bool = False
 
 
 class ObjectFieldConfig(BaseModel):

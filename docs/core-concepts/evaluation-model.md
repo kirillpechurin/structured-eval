@@ -88,7 +88,7 @@ config = EvalConfig(
 
 | Data   | Config              | Key fields                                   |
 |--------|---------------------|----------------------------------------------|
-| scalar | `FieldConfig`       | `metrics`, `threshold`, `weight`, `required` |
+| scalar | `FieldConfig`       | `metrics`, `threshold`, `weight`             |
 | object | `ObjectFieldConfig` | `fields={…}` (nested configs)                |
 | array  | `ArrayFieldConfig`  | `item=…`, `strategy=…`                       |
 

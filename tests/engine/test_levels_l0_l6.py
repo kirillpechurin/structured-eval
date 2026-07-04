@@ -1,6 +1,6 @@
 """The L0→L6 thesis test: one document, every level reported independently.
 
-This is the project's reason to exist (CLAUDE.md / RFC): structural validity
+This is the project's reason to exist: structural validity
 (L0–L3) does not imply value correctness (L4), faithfulness to a source (L5),
 or business-rule consistency (L6). A document can be perfectly parseable,
 schema-valid and correctly typed while still being *wrong*.

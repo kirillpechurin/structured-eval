@@ -31,7 +31,6 @@ def test_eval_config_defaults() -> None:
 def test_field_config_defaults() -> None:
     fc = FieldConfig()
     assert fc.weight == 1.0
-    assert fc.required is False
 
 
 def test_array_config_defaults() -> None:
