@@ -20,7 +20,6 @@ from structured_eval.models.config import (
     EvalConfig,
     ExtraKeysPolicy,
     FieldConfig,
-    NullPolicy,
     ObjectFieldConfig,
 )
 from structured_eval.models.context import EvalContext
@@ -63,7 +62,6 @@ __all__ = [
     "MetricCollection",
     "MetricResult",
     "NodeType",
-    "NullPolicy",
     "ObjectFieldConfig",
     "ObjectNode",
     "RegressionDiff",

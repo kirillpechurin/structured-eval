@@ -13,14 +13,6 @@ DEFAULT_FIELD_WEIGHT: float = 1.0
 # ── Enums ─────────────────────────────────────────────────────────────────────
 
 
-class NullPolicy(StrEnum):
-    """How to treat a field whose actual or expected value is null."""
-
-    IGNORE = "ignore"  # null/null is skipped, does not affect the score
-    PENALIZE = "penalize"  # null in place of a value → score 0.0 (default)
-    REQUIRE_MATCH = "require_match"  # null == null → 1.0; null ≠ value → 0.0
-
-
 class ExtraKeysPolicy(StrEnum):
     """How to treat keys present in actual but absent from expected."""
 
@@ -58,7 +50,6 @@ class FieldConfig(BaseModel):
     threshold: float | None = None
     weight: float = DEFAULT_FIELD_WEIGHT
     required: bool = False
-    null_policy: NullPolicy | None = None  # None → inherit EvalConfig.null_policy
 
 
 class ObjectFieldConfig(BaseModel):
@@ -126,7 +117,6 @@ class EvalConfig(BaseModel):
     fields: dict[str, AnyFieldConfig] = Field(default_factory=dict)
     root: ObjectFieldConfig | ArrayFieldConfig | None = None
     key_metric: Any = None  # Metric whose value becomes report.score
-    null_policy: NullPolicy = NullPolicy.PENALIZE
     extra_keys: ExtraKeysPolicy = ExtraKeysPolicy.IGNORE
 
 

@@ -11,7 +11,6 @@ from structured_eval.models import (
     EvalConfig,
     ExtraKeysPolicy,
     FieldConfig,
-    NullPolicy,
     ObjectFieldConfig,
 )
 
@@ -25,7 +24,6 @@ def test_eval_config_defaults() -> None:
     cfg = EvalConfig()
     assert cfg.metrics == []
     assert cfg.fields == {}
-    assert cfg.null_policy == NullPolicy.PENALIZE
     assert cfg.extra_keys == ExtraKeysPolicy.IGNORE
     assert cfg.key_metric is None
 
@@ -34,7 +32,6 @@ def test_field_config_defaults() -> None:
     fc = FieldConfig()
     assert fc.weight == 1.0
     assert fc.required is False
-    assert fc.null_policy is None  # inherit
 
 
 def test_array_config_defaults() -> None:
@@ -83,11 +80,10 @@ def test_array_item_config() -> None:
 @pytest.mark.parametrize(
     ("enum", "values"),
     [
-        (NullPolicy, {"ignore", "penalize", "require_match"}),
         (ExtraKeysPolicy, {"ignore", "penalize"}),
         (ArrayStrategy, {"by_index", "by_key", "hungarian"}),
     ],
-    ids=["null-policy", "extra-keys", "array-strategy"],
+    ids=["extra-keys", "array-strategy"],
 )
 def test_enum_values(enum: Any, values: Any) -> None:
     assert {member.value for member in enum} == values
