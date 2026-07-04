@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from structured_eval.models.result import EvalReport
 
 
-class StructuredMetric(BaseMetric):  # type: ignore[no-untyped-call]  # deepeval.__init_subclass__ has no annotations
+class StructuredMetric(BaseMetric):
     """Field-level structured-output metric for deepeval."""
 
     def __init__(

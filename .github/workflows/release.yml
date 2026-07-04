@@ -1,0 +1,64 @@
+name: Release
+
+# Build and publish to (Test)PyPI when a v* tag is pushed.
+# NOTE: this does not re-run the CI checks — push tags only from a CI-green commit.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          version: "0.11.*"
+      - run: uv build
+      - name: twine check
+        run: uvx twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    name: publish to TestPyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/structured-eval
+    permissions:
+      id-token: write # OIDC — Trusted Publishing, no API token
+    steps:
+      # The dist built above is the one we ship.
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true # TestPyPI often has version collisions on re-runs
+
+  publish-pypi:
+    name: publish to PyPI
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/p/structured-eval
+    permissions:
+      id-token: write # OIDC — Trusted Publishing, no API token
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.11.*"
+
+jobs:
+  lint:
+    name: lint & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --extra all --frozen
+      - name: ruff check
+        run: make lintcheck
+        env:
+          RUFF_OUTPUT_FORMAT: github # inline annotations on the PR diff
+      - name: ruff format --check
+        run: make format-check
+      - name: mypy (strict)
+        run: make typecheck
+
+  test:
+    name: test (py${{ matrix.python }}, ${{ matrix.label }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # highest resolution (default world) across supported Pythons
+          - { python: "3.12", label: "highest", sync: "--frozen", cov: true }
+          - { python: "3.13", label: "highest", sync: "--frozen", cov: false }
+          # lowest-direct pins our declared floors (e.g. pydantic>=2.5.0); no --frozen
+          - { python: "3.12", label: "lowest-direct", sync: "--resolution lowest-direct", cov: false }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install (extra=all, ${{ matrix.label }})
+        run: uv sync --python ${{ matrix.python }} --extra all ${{ matrix.sync }}
+      - name: Run tests
+        run: make test-cov
+      - name: Coverage summary
+        if: matrix.cov
+        run: |
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          uv run coverage report >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      # Codecov hosts the human-readable, per-line coverage view — no HTML artifact needed.
+      - name: Upload to Codecov
+        if: matrix.cov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false # coverage gate is enforced by pytest-cov fail_under, not Codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  core-smoke:
+    name: core install (pydantic-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      # No extras, no dev group: proves the core stays importable on pydantic alone.
+      - run: uv sync --python 3.12 --no-dev
+      - name: Import & JSON evaluate smoke
+        run: |
+          uv run python -c "
+          from structured_eval import evaluate
+          assert evaluate({'a': 1, 'b': 'x'}, {'a': 1, 'b': 'x'}).score == 1.0
+          assert evaluate('{\"a\": 1}', '{\"a\": 1}').score == 1.0
+          print('core smoke OK')
+          "

@@ -1,0 +1,23 @@
+# Hooks call the same `make` targets as CI, so local, pre-commit and CI share
+# one source of truth. Install with: uv run pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: lintcheck
+        name: ruff check (make lintcheck)
+        entry: make lintcheck
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: format-check
+        name: ruff format --check (make format-check)
+        entry: make format-check
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: typecheck
+        name: mypy strict (make typecheck)
+        entry: make typecheck
+        language: system
+        pass_filenames: false
+        types: [python]
