@@ -8,9 +8,9 @@
 ## Setup
 
 ```bash
-git clone https://github.com/your-org/structured-eval
+git clone https://github.com/kirillpechurin/structured-eval
 cd structured-eval
-uv sync --extra dev
+uv sync --extra all   # optional feature libs; the dev group is synced by default
 ```
 
 ## Daily workflow
@@ -18,15 +18,32 @@ uv sync --extra dev
 The `Makefile` wraps the common commands (run `make help` to list them):
 
 ```bash
-make test        # uv run pytest
-make lintcheck   # uv run ruff check structured_eval tests
-make typecheck   # uv run mypy structured_eval tests
-make check       # lintcheck + typecheck
-make format      # ruff format + ruff --fix-only
+make test         # uv run pytest
+make test-cov     # pytest with coverage (html + xml + terminal)
+make lintcheck    # uv run ruff check
+make format-check # ruff format --check (no changes written)
+make typecheck    # uv run mypy --strict
+make check        # lintcheck + format-check + typecheck
+make format       # ruff format + ruff --fix-only (writes changes)
 ```
 
 Before opening a PR, `make check && make test` must be green. mypy runs in
-`--strict` mode and the test suite is the source of truth for behaviour.
+`--strict` mode and the test suite is the source of truth for behaviour. CI runs
+these same `make` targets, so a green local `make check` matches the CI lint job.
+
+## pre-commit hooks
+
+`.pre-commit-config.yaml` runs the same `make` targets as CI (`make lintcheck`,
+`make format-check`, `make typecheck`), so local hooks, pre-commit and CI share
+one source of truth. Install the git hook once:
+
+```bash
+uv run pre-commit install          # run automatically on every commit
+uv run pre-commit run --all-files  # run against the whole tree on demand
+```
+
+The hooks are check-only (they don't rewrite files) — run `make format` yourself
+to apply formatting fixes.
 
 ## Adding a dependency
 

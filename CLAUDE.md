@@ -24,20 +24,24 @@ faithfulness → L6 logic); the project's value is L4–L6.
 ## Commands
 
 ```bash
-make check       # lintcheck + typecheck (must be green before a PR)
+make check       # lintcheck + format-check + typecheck (must be green before a PR)
 make test        # uv run pytest
-make lintcheck   # uv run ruff check structured_eval tests
-make typecheck   # uv run mypy structured_eval tests   (--strict)
-make format      # ruff format + ruff --fix-only
+make test-cov    # pytest with coverage (html + xml + terminal, gated at 90%)
+make lintcheck   # uv run ruff check
+make typecheck   # uv run mypy --strict
+make format      # ruff format + ruff --fix-only (writes changes)
 
 uv run pytest tests/unit/metrics/test_numeric.py            # single file
 uv run pytest tests/unit/metrics/test_numeric.py::test_name # single test
 uv run pytest -m unit            # by marker: unit / engine / integration / golden / property
-uv run pytest --cov=structured_eval --cov-report=term-missing
 ```
 
-Environment: Python 3.12, `uv` / `.venv`. Setup with `uv sync --extra dev`.
-`make check && make test` must both be green before opening a PR; mypy is `--strict`.
+Environment: Python 3.12, `uv` / `.venv`. Setup
+with `uv sync --extra all`. `make check && make test` must both be green before a
+PR; mypy is `--strict`.
+
+CI (`.github/workflows/ci.yml`) runs these same `make` targets; the same targets
+also back the pre-commit hooks. 
 
 ## Architecture essentials
 
