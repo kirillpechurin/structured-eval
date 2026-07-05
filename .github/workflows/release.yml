@@ -74,3 +74,20 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: create GitHub Release
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create a Release and upload the built distributions
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true # auto-changelog from merged PRs/commits
+          files: dist/*
