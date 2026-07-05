@@ -6,35 +6,51 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/structured-eval.svg)](https://pypi.org/project/structured-eval/)
 [![License](https://img.shields.io/pypi/l/structured-eval.svg)](https://github.com/kirillpechurin/structured-eval/blob/main/LICENSE)
 
-**A declarative, field-level evaluation framework for LLM structured outputs (JSON/YAML).**
+**The LLM Structured Output Evaluation Framework**
 
-Getting an LLM to return well-formed JSON is mostly a solved problem — it parses,
-it fits the schema, the types line up. But well-formed isn't the same as *right*.
-The shape can be flawless while a price is wrong, a date is invented, or a status
-quietly contradicts the rest of the record. Structural checks wave all of that
-through.
+When interacting with an LLM, returning structured data is a common task.
+And in any such integration, the quality of the returned data deserves attention —
+it should be evaluated with the appropriate tools.
+However, quality evaluation of structured data is often limited to the following:
 
-structured-eval looks at what those checks skip: **the values themselves**. It
-scores your output field by field, so you don't just learn *that* a response is
-off — you see *which* fields matched and which didn't, where to look first, and,
-across a dataset, which fields your model keeps getting wrong.
+- Parses correctly
+- Data types are correct
+- Required fields are present and there are no extra fields
 
-structured-eval lets you check not just that the JSON is valid, but that the
-data itself is correct.
+That is not enough to be fully confident the data is correct, because these
+mechanisms target structural validation, not the values themselves.
 
-## The gap it closes
+**structured-eval** focuses on evaluating the quality of an LLM's structured output,
+such as JSON or YAML. The library makes it possible to compare
+values, objects, and arrays at every level of nesting, which lets you check
 
-Correctness is a ladder — each level assumes the ones below it:
+- Which fields matched or are close to the expected ones, and which are not
+- Whether values are grounded in a source
+- Whether fields are logically consistent with one another
 
-|           |                                                      |
-|-----------|------------------------------------------------------|
-| **L0–L3** | structure: parses · types · required · no extras     |
-| **L4**    | values are close to expected                         |
-| **L5**    | values are grounded in the source (no hallucination) |
-| **L6**    | fields are logically consistent with one another     |
+This kind of field-level evaluation gives you a systematic way to target improvements.
+A few examples of what you can learn using structured-eval:
 
-L0–L3 is where most tools stop. **L4–L6 is where structured-eval earns its keep.**
-See [the introduction](docs/introduction.md) for the full ladder.
+- How close an output value is to the expected one
+- Which scalars, objects, and arrays have problems most often
+- At dataset scale — how stable the LLM is
+
+## What it checks
+
+Correctness is a set of checks, where each check builds on the ones below it:
+
+| Level | Check                                     | How you can check it         |
+|-------|-------------------------------------------|------------------------------|
+| L0    | Parses correctly                          | structured-eval / jsonschema |
+| L1    | Data types are correct                    | structured-eval / jsonschema |
+| L2    | Required fields are present               | structured-eval / jsonschema |
+| L3    | No extra fields                           | structured-eval / jsonschema |
+| L4    | Values match or are close to the expected | structured-eval              |
+| L5    | Values are grounded in a source           | structured-eval              |
+| L6    | Fields are logically consistent           | structured-eval              |
+
+**The value of structured-eval is to provide a complete quality evaluation of
+structured data.**
 
 ## Install
 
@@ -43,15 +59,14 @@ pip install structured-eval          # core depends only on Pydantic
 pip install "structured-eval[all]"   # + YAML, fuzzy, schema, rules, scipy alignment…
 ```
 
-Optional features live behind [extras](docs/getting-started.md#install) — install
-only what you need.
+By default only `pydantic` is required, but to extend functionality there are
+[extras](docs/getting-started.md#install) — install only what you need.
 
 ## Quick start
 
-A model extracted a course record; you have the canonical one to check it against.
-The two are *structurally* identical — same keys, mixed types, a nested array of
-objects — but several values are off. A small config says *how* to judge each
-field, and the report tells you exactly where the output stands:
+The example uses a course record. The expected and the actual are structurally
+identical, but several values differ. A small evaluation config says *how* to
+judge each field, and the report shows where the data diverges:
 
 ```python
 from structured_eval import evaluate
@@ -80,73 +95,109 @@ actual = {
     "modules": [
         {"name": "Basics", "lessons": 5},
         {"name": "Functions", "lessons": 4},
-    ],  # "Classes" module missing
+    ],  # the "Classes" module is missing
 }
 
 config = EvalConfig(fields={
-    "title": FieldConfig(metrics=[TokenF1()]),                # reward paraphrases
+    "title": FieldConfig(metrics=[TokenF1()]),  # reward paraphrases
     "duration_hours": FieldConfig(metrics=[Numeric(tolerance=2)]),
     "rating": FieldConfig(metrics=[Numeric(tolerance=0.5)]),  # close enough is fine
 })
 
 report = evaluate(actual, expected, config)
 
-report.score  # 0.8889  — close, with the gaps pinpointed
-report.field_scores["title"].score  # 0.6667  — paraphrase gets partial credit
-report.field_scores["duration_hours"].score  # 1.0     — within tolerance
-report.field_scores["modules"].score  # 0.6667  — 2 of 3 modules recovered
-report.field_scores["modules[0]"].score  # 1.0     — first module is spot-on
+report.score  # 0.8889 — close, with the gaps pinpointed
+report.field_scores["title"].score  # 0.6667 — a paraphrase gets partial credit
+report.field_scores["duration_hours"].score  # 1.0 — within tolerance
+report.field_scores["modules"].score  # 0.6667 — 2 of 3 modules recovered
+report.field_scores["modules[0]"].score  # 1.0 — the first module is spot-on
 ```
 
-Every field is scored — nested objects and array elements included — so you see
-not a single pass/fail but exactly which fields hold up and which don't.
+You can assign several metrics to a single field and make the field's
+representative (`key_metric`) — the score that lands in the total — a separate
+aggregating metric over them. For example, `CompositeScore` blends metrics with
+given weights, while `MeanScore` takes their plain mean; metrics not included in
+the representative are still computed alongside, for detail:
+
+```python
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig, FieldConfig
+from structured_eval.metrics import (
+    CompositeScore, ExactMatch, Fuzzy, MeanScore, Numeric, NumericCloseness, TokenF1,
+)
+
+config = EvalConfig(fields={
+    # the field's representative — a weighted blend of token_f1 and fuzzy (exact_match is for detail only)
+    "title": FieldConfig(
+        metrics=[ExactMatch(), TokenF1(), Fuzzy()],
+        key_metric=CompositeScore(weights={"exact_match": 0.1, "token_f1": 0.6, "fuzzy": 0.3}),
+    ),
+    # the field's representative — the plain mean of two numeric metrics
+    "rating": FieldConfig(
+        metrics=[Numeric(tolerance=0.5), NumericCloseness()],
+        key_metric=MeanScore(),
+    ),
+})
+
+report = evaluate(
+    {"title": "Intro to Python", "rating": 4.5},
+    {"title": "Introduction to Python", "rating": 4.8},
+    config,
+)
+
+report.field_scores["title"].score  # 0.6432  — CompositeScore: 0.1·exact_match + 0.6·token_f1 + 0.3·fuzzy
+report.field_scores["title"].metrics["exact_match"]  # 0.0 — computed alongside, for detail
+report.field_scores["rating"].score  # 0.96875 — MeanScore: mean of numeric and numeric_closeness
+```
+
+This is the key idea: *comparison is a metric*, not a separate "matcher" with a
+pre-computed similarity. Learn more —
+[comparison is a metric](docs/core-concepts/comparison-is-a-metric.md).
+
+Every field is scored — nested objects and array elements of any depth included —
+so you see not a single pass/fail, but exactly which fields match and which
+don't.
 
 ### Sensible default metrics
 
-The config is optional. structured-eval ships a default metric for every node
-type, so you only configure the fields where the default isn't what you want —
-the rest just work. With no config at all, the same data is scored by those
-defaults:
+**structured-eval** ships a default metric for every node type, so you only
+configure the fields where the default isn't what you want. With no config at
+all, the same data is scored by these default metrics:
 
 ```python
 report = evaluate(actual, expected)  # no config
 
-report.score  # 0.4444  — scored entirely by the defaults
+report.score  # 0.4444 — scored entirely by the defaults
 report.field_scores["title"].score  # 0.0  — exact match: "Intro to Python" ≠ "Introduction to Python"
 ```
 
 Each node type gets a structural default, and every node's headline score (its
 *representative*) defaults to the mean of its own metrics:
 
-| Node                 | Default metric   | What it does                                   |
-|----------------------|------------------|------------------------------------------------|
-| scalar (leaf)        | `ExactMatch`     | the value must match exactly                   |
-| object               | `ObjectAccuracy` | mean correctness of its fields                 |
-| array                | `ArrayAccuracy`  | mean correctness of its aligned elements       |
-| any node (headline)  | `MeanScore`      | the node's representative = mean of its metrics |
+| Node                | Default metric   | What it does                                    |
+|---------------------|------------------|-------------------------------------------------|
+| scalar (leaf)       | `ExactMatch`     | the value must match exactly                    |
+| object              | `ObjectAccuracy` | mean correctness of its fields                  |
+| array               | `ArrayAccuracy`  | mean correctness of its aligned elements        |
+| any node (headline) | `MeanScore`      | the node's representative = mean of its metrics |
 
-Exact match is a strict baseline — it punishes every paraphrase and rounded value
-as wrong, which is why the no-config score is low. Tuning metrics per field, as in
-the first example, is how you tell the evaluator what "close enough" means for
-*your* data. The defaults and the representative score are covered in
+Exact match is a strict baseline. Tuning metrics per field, as in the first
+example, is how you tell the evaluator what "close enough" means for *your* data.
+The defaults and the representative score are covered in
 [the evaluation model](docs/core-concepts/evaluation-model.md) and the
 [metric catalog](docs/metrics/index.md).
 
 ## Explore — every level of correctness
 
-structured-eval covers the whole ladder, L0 through L6. Each level has a tool and
-a concept page behind it:
+structured-eval covers the whole ladder, L0 through L6. Behind each level there
+is a tool and a concept page:
 
-| Level               | The question                        | Reach for                                                   | Learn more                                                             |
-|---------------------|-------------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------|
-| **L0–L3** structure | does it parse / fit the schema?     | `SchemaValidity`                                            | [schema validity](docs/metrics/catalog/schema-validity.md)             |
-| **L4** values       | is each value right?                | field metrics — `ExactMatch`, `Numeric`, `TokenF1`, `Fuzzy` | [comparison is a metric](docs/core-concepts/comparison-is-a-metric.md) |
-| **L4** roll-up      | how do fields & elements aggregate? | `ObjectF1` / `ArrayF1`, alignment, weights                  | [array alignment](docs/core-concepts/array-alignment.md)               |
-| **L5** faithfulness | is it grounded in the source?       | `FieldFaithfulness(source=…)`                               | [field faithfulness](docs/metrics/catalog/field_faithfulness.md)       |
-| **L6** logic        | are fields mutually consistent?     | `RulePassRate` + `Rule` DSL                                 | [rule pass rate](docs/metrics/catalog/rule-pass-rate.md)               |
+### Structural checks
 
-**L0–L3 — structure.** Validate against a Pydantic model or JSON Schema, with no
-ground-truth answer:
+Levels L0–L3 let you check successful parsing, data types, required fields, and
+the absence of extra fields.
+
+Validate against a Pydantic model or JSON Schema, with no ground-truth answer:
 
 ```python
 from pydantic import BaseModel
@@ -170,8 +221,13 @@ report.metrics["schema_validity"].root().extra["schema_errors"]
 #   {'type_errors': ['duration_hours'], 'missing_required': [], 'extra_fields': []}
 ```
 
-**L4 — values.** Pick *how* each field is judged — exact match is just the default
-(*comparison is a metric*):
+### Value correctness
+
+Level L4 lets you choose how flexibly to judge values,
+on your own criteria — for leaves as well as objects and arrays.
+
+**structured-eval** provides a large set of metrics, see more in the
+[metric catalog](docs/metrics/index.md).
 
 ```python
 from structured_eval import evaluate
@@ -186,12 +242,13 @@ report = evaluate(
         "duration_hours": FieldConfig(metrics=[Numeric(tolerance=2)]),
     }),
 )
-report.field_scores["title"].score  # 0.6667  — partial credit for a paraphrase
-report.field_scores["duration_hours"].score  # 1.0     — within tolerance
+report.field_scores["title"].score  # 0.6667 — partial credit for a paraphrase
+report.field_scores["duration_hours"].score  # 1.0 — within tolerance
 ```
 
-Fields roll up into objects and arrays with precision / recall / F1, and arrays are
-[aligned](docs/core-concepts/array-alignment.md) by index, key, or optimally:
+Leaf scores can be rolled up into a metric on the object or array. The base
+metrics for such structures are precision, recall, F1 — see more in the full
+[metric catalog](docs/metrics/index.md).
 
 ```python
 from structured_eval import evaluate
@@ -207,8 +264,41 @@ report = evaluate(
 report.metrics["object_f1"].root()  # 0.4
 ```
 
-**L5 — faithfulness.** Catch hallucinations by checking each value against its
-source — no `expected` required:
+For an array of objects the elements are first *aligned* (which actual element
+corresponds to which expected one), and then each pair is evaluated field by
+field. You set the strategy on `ArrayFieldConfig` — for example, `by_key` matches
+elements by a key, and array order stops mattering:
+
+```python
+from structured_eval import evaluate
+from structured_eval.models import ArrayFieldConfig, ArrayStrategy, EvalConfig
+from structured_eval.metrics import ArrayF1
+
+config = EvalConfig(fields={"items": ArrayFieldConfig(
+    strategy=ArrayStrategy.BY_KEY,  # match elements by the sku key
+    params={"key": "sku"},
+    metrics=[ArrayF1()],
+)})
+
+report = evaluate(
+    {"items": [{"sku": "B", "qty": 5}, {"sku": "A", "qty": 2}]},
+    {"items": [{"sku": "A", "qty": 2}, {"sku": "B", "qty": 3}]},
+    config,
+)
+
+report.array_matches["items"].matched  # [(0, 1), (1, 0)] — A↔A, B↔B despite the order
+report.field_scores["items"].score  # 0.5  — A matched (qty 2), B didn't (qty 5 ≠ 3)
+```
+
+Learn more about strategies in
+[array alignment](docs/core-concepts/array-alignment.md).
+
+### Source grounding
+
+Level L5 lets you catch hallucinations by checking each value against a source.
+Note that `expected` is not required for the computation.
+
+Learn more — [field faithfulness](docs/metrics/catalog/field_faithfulness.md).
 
 ```python
 from structured_eval import evaluate
@@ -225,7 +315,12 @@ report = evaluate(
 report.metrics["field_faithfulness"].by_path  # {'title': 1.0, 'duration_hours': 0.0 ← 40 ≠ 12}
 ```
 
-**L6 — logic.** Assert cross-field business rules with a small DSL:
+### Logical consistency of values
+
+Level L6 offers an interface for describing cross-field business rules with a
+small DSL.
+
+Learn more — [rule pass rate](docs/metrics/catalog/rule-pass-rate.md).
 
 ```python
 from structured_eval import evaluate
@@ -243,7 +338,10 @@ report.score  # 0.0  — 130 ≠ 120
 
 ## Scale it
 
-Evaluate a whole dataset, or measure how stable a prompt is across repeated runs:
+**structured-eval** offers ways to evaluate
+
+- A whole dataset
+- Prompt stability across repeated runs
 
 ```python
 from structured_eval import evaluate_batch, evaluate_consistency
@@ -265,7 +363,7 @@ runs = [
 ]
 report = evaluate_consistency(runs, variance_threshold=0.05)
 report.stable_fields  # ['score']
-report.unstable_fields  # ['sentiment']  — flipped on one run
+report.unstable_fields  # ['sentiment'] — flipped on one run
 ```
 
 ## Documentation
