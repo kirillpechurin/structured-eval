@@ -26,7 +26,6 @@ Each extra enables a specific capability, so you can install only what you need:
 | `jsonschema` | `SchemaValidity` against a JSON Schema |
 | `rules` | the `Rule` DSL / `RulePassRate` |
 | `diff` | the `structured_diff` utility (deepdiff) |
-| `report` | richer console rendering |
 | `align` | the `hungarian` array alignment strategy (scipy) |
 
 The examples on this page use only core metrics, so plain `pip install
