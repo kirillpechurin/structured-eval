@@ -71,7 +71,7 @@ from structured_eval.metrics import ExactMatch, MeanScore, ObjectF1, TokenF1
 # how to score — these are the knobs you'll reach for most:
 config = EvalConfig(
     metrics=[
-      # you can define metrics in the root of config, these metrics will be applied to each appropriate nodes
+      # metrics defined at the config root cascade to every applicable node
       ObjectF1(),
       ExactMatch(),
       ...

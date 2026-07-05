@@ -15,8 +15,8 @@ structured-eval has three entry points. They share one engine and the same
 ```python
 from structured_eval import evaluate
 
-report = evaluate(actual, expected, config, source=None)
-report.score  # → EvalReport
+report = evaluate(actual, expected, config, source=None)  # → EvalReport
+report.score  # a float in [0, 1]
 ```
 
 A bare `list` is treated as one document with an array root, **not** a batch.
@@ -30,8 +30,8 @@ from structured_eval import evaluate_batch
 from structured_eval.models import Sample
 
 samples = [Sample(actual=a, expected=e) for a, e in pairs]
-report = evaluate_batch(samples, config)
-report.per_sample  # → BatchEvalReport: per-sample reports + aggregates
+report = evaluate_batch(samples, config)  # → BatchEvalReport
+report.per_sample  # per-sample reports + aggregates
 ```
 
 See [evaluate_batch](evaluate-batch.md) for `per_sample`, batch metrics, and
@@ -44,8 +44,8 @@ from structured_eval import evaluate_consistency
 from structured_eval.models import Sample
 
 runs = [Sample(actual=output) for output in repeated_outputs]
-report = evaluate_consistency(runs, config, variance_threshold=0.05)
-report.stable_fields, report.unstable_fields  # → ConsistencyReport
+report = evaluate_consistency(runs, config, variance_threshold=0.05)  # → ConsistencyReport
+report.stable_fields, report.unstable_fields  # per-field stability
 ```
 
 See [evaluate_consistency](evaluate-consistency.md) for variance, stable /
