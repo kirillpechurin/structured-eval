@@ -44,6 +44,7 @@ from structured_eval.metrics.schema_validity import SchemaValidity
 from structured_eval.metrics.structural_similarity import StructuralSimilarity
 from structured_eval.metrics.token_f1 import TokenF1
 from structured_eval.metrics.type_match import TypeMatch
+from structured_eval.metrics.url_match import UrlMatch
 
 __all__ = [
     # array metrics
@@ -96,6 +97,7 @@ __all__ = [
     "StructuralSimilarity",
     "TokenF1",
     "TypeMatch",
+    "UrlMatch",
     "get_metric_class",
     "resolve_metric",
 ]
