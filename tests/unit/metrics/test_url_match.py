@@ -20,7 +20,6 @@ pytestmark = pytest.mark.unit
     [
         ("https://example.com", "https://example.com", 1.0),  # identical
         ("https://Example.com", "https://example.com/", 1.0),  # case + slash
-        ("https://example.com:443/", "https://example.com", 1.0),  # default port
         ("https://www.example.com", "https://example.com", 1.0),  # www stripped
         (
             "https://example.com/?b=2&a=1",
@@ -32,12 +31,11 @@ pytestmark = pytest.mark.unit
         ("https://a.com", "https://b.com", 0.0),  # different host
         ("http://example.com", "https://example.com", 0.0),  # different scheme
         ("https://example.com?a=1", "https://example.com?a=2", 0.0),  # query value
-        ("https://example.com:8080", "https://example.com", 0.0),  # non-default port
+        ("https://example.com:8080", "https://example.com", 0.0),  # differing port
     ],
     ids=[
         "identical",
         "case-slash",
-        "default-port",
         "www",
         "query-order",
         "fragment",
@@ -45,7 +43,7 @@ pytestmark = pytest.mark.unit
         "diff-host",
         "diff-scheme",
         "query-value",
-        "non-default-port",
+        "diff-port",
     ],
 )
 def test_url_match(actual: Any, expected: Any, score: float) -> None:

@@ -13,9 +13,9 @@ A **binary** URL equivalence verdict (`1.0` / `0.0`). It compares two URLs by th
 meaningful components rather than raw string equality, so cosmetically different but
 equivalent URLs score as matching. Comparing extracted URL fields with
 [`ExactMatch`](exact-match.md) or a text metric misclassifies equivalent URLs — trailing
-slashes, scheme/host casing, `www.` prefixes, default ports, percent-encoding and
-query-parameter order all differ without changing the target. `UrlMatch` normalizes those
-away before comparing.
+slashes, scheme/host casing, `www.` prefixes, percent-encoding and query-parameter order
+all differ without changing the target. `UrlMatch` normalizes those away before comparing.
+(Ports are compared as-is — `:443` is significant.)
 
 ## Parameters
 
@@ -29,7 +29,6 @@ away before comparing.
 normalize(url):
     lowercase scheme and host
     strip leading "www." from host            (unless ignore_www=False)
-    drop the default port for the scheme       (:80 http, :443 https, …)
     percent-decode the path; drop a trailing "/"
     sort query params by (key, value)          (dropped if ignore_query)
     drop the fragment                          (unless ignore_fragment=False)
@@ -71,8 +70,8 @@ float(report.field_scores["enroll_url"].metrics["url_match"])   # 1.0 — query 
   is unparseable → `0.0`.
 - **Different scheme/host/path → `0.0`** — `http://` vs `https://`, different hosts, and
   different paths are all non-matches.
-- **Non-default ports matter** — `:8080` is kept, so it differs from the default; only the
-  scheme's default port (`:443` for `https`) is dropped.
+- **Ports are compared as-is** — `:443` and `:8080` are kept, so
+  `https://example.com:443` does not match `https://example.com`.
 - **Query values matter** — only parameter *order* is normalized; `?a=1` vs `?a=2` is a
   non-match unless `ignore_query=True`.
 

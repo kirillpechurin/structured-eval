@@ -5,8 +5,6 @@ from urllib.parse import parse_qsl, unquote, urlsplit, urlunsplit
 
 from structured_eval.metrics.base import FieldMetric
 
-_DEFAULT_PORTS = {"http": "80", "https": "443", "ftp": "21", "ws": "80", "wss": "443"}
-
 
 class UrlMatch(FieldMetric):
     """Equivalence match for URL fields after normalization.
@@ -18,7 +16,6 @@ class UrlMatch(FieldMetric):
 
     - **scheme** and **host** are lowercased;
     - a leading ``www.`` on the host is stripped (unless ``ignore_www=False``);
-    - a **default port** for the scheme (e.g. ``:443`` for ``https``) is dropped;
     - the **path** is percent-decoded and a trailing slash is normalized away;
     - **query** parameters are percent-decoded and sorted, so parameter order
       does not matter (dropped entirely when ``ignore_query=True``);
@@ -61,10 +58,7 @@ class UrlMatch(FieldMetric):
         if self.ignore_www and host.startswith("www."):
             host = host[4:]
 
-        netloc = host
-        port = parts.port
-        if port is not None and str(port) != _DEFAULT_PORTS.get(scheme):
-            netloc = f"{host}:{port}"
+        netloc = f"{host}:{parts.port}" if parts.port is not None else host
 
         path = unquote(parts.path)
         if path.endswith("/"):
