@@ -59,6 +59,7 @@ Leaf comparisons of `actual` vs `expected` — all need `expected`, except
 | [`Levenshtein`](catalog/levenshtein.md)         | `levenshtein`       | edit-distance ratio (thin alias of `Fuzzy(RATIO)`)             |
 | [`Presence`](catalog/presence.md)            | `presence`          | whether the field is present / non-null                        |
 | [`TypeMatch`](catalog/type-match.md)           | `type_match`        | whether actual and expected share a JSON type                  |
+| [`UrlMatch`](catalog/url-match.md)             | `url_match`         | URL equivalence after normalization (1.0 / 0.0; string-only)   |
 | [`FieldFaithfulness`](catalog/field_faithfulness.md) | `field_faithfulness` | whether each value is grounded in the `source` text (needs `source`, not `expected`) |
 
 ## Object metrics
