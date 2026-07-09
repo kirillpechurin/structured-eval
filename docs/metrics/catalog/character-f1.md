@@ -18,12 +18,26 @@ extra dependency.
 
 ## Parameters
 
-None — `CharacterF1()`.
+| Name                 | Type   | Default | Meaning                                            |
+|----------------------|--------|---------|----------------------------------------------------|
+| `ignore_case`        | `bool` | `True`  | lowercase both sides before comparing              |
+| `ignore_whitespace`  | `bool` | `True`  | drop all whitespace characters                     |
+| `ignore_punctuation` | `bool` | `True`  | drop everything that is neither word char nor space |
+
+The defaults apply all three normalizations. Turn one off when the characters it
+removes are semantically significant — codes, identifiers, formatted strings:
+
+```python
+CharacterF1(ignore_case=False)         # "AB" vs "ab" scores below 1.0
+CharacterF1(ignore_punctuation=False)  # "," and "." count toward the multiset
+CharacterF1(ignore_whitespace=False)   # spaces count toward the multiset
+```
 
 ## How it's computed
 
-Both sides are lowercased, stripped of punctuation and whitespace, and reduced to a
-multiset of characters (a `Counter`). The shared count is the multiset intersection:
+Both sides are normalized (by default: lowercased, stripped of punctuation and
+whitespace) and reduced to a multiset of characters (a `Counter`). The shared count is
+the multiset intersection:
 
 ```text
 same = Σ min(count_a(c), count_e(c))
@@ -54,6 +68,8 @@ report.field_scores["name"].metrics["character_f1"]   # 0.615
 - **String only** — if either side isn't a `str` the score is `0.0` (no coercion); that
   includes `None` and numbers.
 - **Both empty → `1.0`** — two empty (or punctuation-only) strings match vacuously.
+- **`ignore_punctuation=False`** — punctuation is kept, so `"!!!"` is no longer an empty
+  string and is compared like any other.
 - **One side empty → `0.0`** — including a string that normalizes to empty.
 - **Order-blind** — `"abc"` and `"cba"` score `1.0` (it's a multiset, not a sequence).
   Use [`Levenshtein`](levenshtein.md) when order matters.
