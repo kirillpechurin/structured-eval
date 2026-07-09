@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import re
+import string
 from collections import Counter
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
 
-_IGNORE_PUNCTUATION_REGEX = re.compile(r"[^\w\s]")
+_IGNORE_PUNCTUATION_CHARS = frozenset(string.punctuation)
 _IGNORE_WHITESPACE_REGEX = re.compile(r"\s+")
 
 
@@ -26,7 +27,9 @@ class CharacterF1(FieldMetric):
         CharacterF1(ignore_punctuation=False)  # "," and "." count as characters
         CharacterF1(ignore_whitespace=False)   # spaces count as characters
 
-    The defaults keep every normalization on.
+    The defaults keep every normalization on. ``ignore_punctuation`` drops the
+    ASCII punctuation of ``string.punctuation`` — the same set :class:`TokenF1`
+    uses, so ``_`` is dropped and non-ASCII punctuation such as ``«»—`` is kept.
     """
 
     name = "character_f1"
@@ -45,7 +48,7 @@ class CharacterF1(FieldMetric):
         if self.ignore_case:
             value = value.lower()
         if self.ignore_punctuation:
-            value = _IGNORE_PUNCTUATION_REGEX.sub("", value)
+            value = "".join(ch for ch in value if ch not in _IGNORE_PUNCTUATION_CHARS)
         if self.ignore_whitespace:
             value = _IGNORE_WHITESPACE_REGEX.sub("", value)
         return list(value)

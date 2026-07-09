@@ -24,8 +24,19 @@ pytestmark = pytest.mark.unit
         ("a, b, c", "abc", 1.0),  # punctuation/whitespace dropped
         ("abc", "xyz", 0.0),  # no shared characters
         ("aabb", "ab", 2 / 3),  # multiset: p=2/4, r=2/2 → F1=2/3
+        ("a_b", "ab", 1.0),  # "_" is ASCII punctuation, dropped
+        ("«a»", "a", 0.5),  # non-ASCII punctuation kept: p=1/3, r=1 → F1=0.5
     ],
-    ids=["identical", "both-empty", "case", "punct-stripped", "disjoint", "multiset"],
+    ids=[
+        "identical",
+        "both-empty",
+        "case",
+        "punct-stripped",
+        "disjoint",
+        "multiset",
+        "underscore-stripped",
+        "non-ascii-punct-kept",
+    ],
 )
 def test_character_f1(actual: Any, expected: Any, score: Any) -> None:
     assert CharacterF1().score(actual, expected) == pytest.approx(score)

@@ -22,7 +22,7 @@ extra dependency.
 |----------------------|--------|---------|----------------------------------------------------|
 | `ignore_case`        | `bool` | `True`  | lowercase both sides before comparing              |
 | `ignore_whitespace`  | `bool` | `True`  | drop all whitespace characters                     |
-| `ignore_punctuation` | `bool` | `True`  | drop everything that is neither word char nor space |
+| `ignore_punctuation` | `bool` | `True`  | delete punctuation (Python's `string.punctuation`)  |
 
 The defaults apply all three normalizations. Turn one off when the characters it
 removes are semantically significant — codes, identifiers, formatted strings:
@@ -70,6 +70,9 @@ report.field_scores["name"].metrics["character_f1"]   # 0.615
 - **Both empty → `1.0`** — two empty (or punctuation-only) strings match vacuously.
 - **`ignore_punctuation=False`** — punctuation is kept, so `"!!!"` is no longer an empty
   string and is compared like any other.
+- **ASCII punctuation only** — the set is Python's `string.punctuation`, the same one
+  [`TokenF1`](token-f1.md) uses. So `_` *is* dropped (`"a_b"` vs `"ab"` → `1.0`), while
+  non-ASCII punctuation such as `«»—` is **not** and counts toward the multiset.
 - **One side empty → `0.0`** — including a string that normalizes to empty.
 - **Order-blind** — `"abc"` and `"cba"` score `1.0` (it's a multiset, not a sequence).
   Use [`Levenshtein`](levenshtein.md) when order matters.
