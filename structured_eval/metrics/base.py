@@ -30,11 +30,28 @@ class BaseMetric(ABC):  # noqa: B024 — registry root; subclasses define the in
 
     ``name`` is the key under which a scalar result lands in ``report.metrics``
     and ``FieldScore.metrics``. A metric that returns a ``dict`` instead writes
-    each of its keys directly (the ``name`` is then only a registry handle).
-    Declaring a subclass with a ``name`` registers it automatically.
+    each of its keys directly (the ``name`` is then only a registry handle, and
+    a per-instance override does not affect those keys). Declaring a subclass
+    with a ``name`` registers it automatically.
+
+    Passing ``name=`` at construction overrides the key **for that instance
+    only** — ``Numeric(tolerance=0.01, name="strict")``. Two instances of one
+    metric can then sit on the same node and report under distinct keys instead
+    of overwriting each other. The class registry, which backs name-string
+    resolution (``resolve_metric("numeric")``), is untouched.
+
+    Every metric defining its own ``__init__`` must accept ``name`` and forward
+    it here via ``super().__init__(name=name)``; ``test_metric_contracts.py``
+    enforces this across the registry.
     """
 
     name: str = ""
+
+    def __init__(self, name: str | None = None) -> None:
+        if name is not None:
+            if not name:
+                raise ValueError("metric name must be a non-empty string")
+            self.name = name
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)

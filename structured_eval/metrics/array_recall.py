@@ -20,8 +20,12 @@ class ArrayRecall(ArrayMetric):
     name = "array_recall"
 
     def __init__(
-        self, threshold: float = 1.0, mode: stats.GradingMode = stats.GradingMode.HARD
+        self,
+        threshold: float = 1.0,
+        mode: stats.GradingMode = stats.GradingMode.HARD,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.threshold = threshold
         self.mode = stats.GradingMode(mode)
 

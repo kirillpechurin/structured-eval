@@ -12,5 +12,10 @@ class Levenshtein(Fuzzy):
 
     name = "levenshtein"
 
-    def __init__(self, method: FuzzyMethod = FuzzyMethod.RATIO, normalize: bool = True):
-        super().__init__(method=method, normalize=normalize)
+    def __init__(
+        self,
+        method: FuzzyMethod = FuzzyMethod.RATIO,
+        normalize: bool = True,
+        name: str | None = None,
+    ):
+        super().__init__(method=method, normalize=normalize, name=name)

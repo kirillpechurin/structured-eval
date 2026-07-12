@@ -36,7 +36,9 @@ class Fuzzy(FieldMetric):
         self,
         method: FuzzyMethod = FuzzyMethod.TOKEN_SORT_RATIO,
         normalize: bool = True,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.method = FuzzyMethod(method)
         self.normalize = normalize
 

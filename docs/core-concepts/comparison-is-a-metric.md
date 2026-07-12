@@ -52,6 +52,31 @@ In a matcher-based design you would commit to one similarity up front. Here you
 attach as many lenses as you want and decide *later* which one speaks for the
 field (see [the representative score](#the-representative-score-key_metric)).
 
+### Two configurations of the *same* metric
+
+Results are keyed by the metric's name, so two `Numeric()` instances on one field
+would both key on `"numeric"` and the second would overwrite the first. Pass
+`name=` to give an instance its own key:
+
+```python
+from structured_eval.metrics import Numeric
+
+config = EvalConfig(fields={"total": FieldConfig(metrics=[
+    Numeric(tolerance=0.001, name="strict"),
+    Numeric(tolerance=0.1, name="loose"),
+])})
+
+report = evaluate({"total": 100.5}, {"total": 100.0}, config)
+float(report.metrics["strict"].by_path["total"])  # 0.0 — 0.5% off, outside 0.1%
+float(report.metrics["loose"].by_path["total"])   # 1.0 — inside 10%
+```
+
+Any metric accepts `name=`. It renames that *instance* only: the class keeps its
+registered name, so `key_metric="numeric"` and other name-string lookups are
+unaffected — though `key_metric="strict"` now works too. Metrics that return a
+dict of sub-scores (`ObjectPRF1` → `precision` / `recall` / `f1`) write those
+keys directly, so `name=` does not rename them.
+
 ## Consequence 2 — aggregation is also a metric
 
 There is no privileged "aggregate" phase either. An `ObjectF1` or an

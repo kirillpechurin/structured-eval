@@ -23,7 +23,8 @@ class ObjectTypeValidity(ObjectMetric):
 
     name = "object_type_validity"
 
-    def __init__(self) -> None:
+    def __init__(self, name: str | None = None) -> None:
+        super().__init__(name=name)
         self._type_match = MetricInvoker(TypeMatch())
 
     def compute(self, node: ObjectNode) -> float:

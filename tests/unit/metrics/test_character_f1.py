@@ -113,6 +113,6 @@ def test_non_overlap_or_non_string_is_zero(actual: Any, expected: Any) -> None:
     ],
 )
 def test_normalization_toggles(
-    kwargs: dict[str, bool], actual: str, expected: str, score: float
+    kwargs: dict[str, Any], actual: str, expected: str, score: float
 ) -> None:
     assert CharacterF1(**kwargs).score(actual, expected) == pytest.approx(score)

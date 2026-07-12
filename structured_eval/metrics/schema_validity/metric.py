@@ -21,7 +21,10 @@ class SchemaValidity(RootMetric):
 
     name = "schema_validity"
 
-    def __init__(self, schema: type[BaseModel] | dict[str, Any]):
+    def __init__(
+        self, schema: type[BaseModel] | dict[str, Any], name: str | None = None
+    ):
+        super().__init__(name=name)
         self.validator = SchemaValidator(schema)
 
     def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:

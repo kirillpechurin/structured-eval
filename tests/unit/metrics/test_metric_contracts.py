@@ -90,6 +90,72 @@ def test_resolve_passes_instances_through() -> None:
     assert resolve_metric(inst) is inst
 
 
+# ── per-instance name override ───────────────────────────────────────────────
+
+# Constructor args for the metrics that require them. Exhaustiveness is asserted
+# below, so a new arg-taking metric cannot silently skip the name contract.
+ARG_METRICS: dict[str, tuple[Any, ...]] = {
+    "composite_score": ({"exact_match": 1.0},),
+    "rule_pass_rate": ([],),
+    "schema_validity": ({"type": "object"},),
+}
+
+CONSTRUCTIBLE = [(name, cls, ARG_METRICS.get(name, ())) for name, cls in ALL_METRICS]
+_CTOR_IDS = [name for name, _, _ in CONSTRUCTIBLE]
+
+
+def test_arg_metric_table_is_exhaustive() -> None:
+    """New metrics with required ctor args must be added to ``ARG_METRICS``."""
+    needs_args = {n for n, _ in ALL_METRICS} - {n for n, _ in NO_ARG_METRICS}
+    assert needs_args == set(ARG_METRICS)
+
+
+@pytest.mark.parametrize(("name", "cls", "args"), CONSTRUCTIBLE, ids=_CTOR_IDS)
+def test_omitting_name_keeps_the_class_name(name: Any, cls: Any, args: Any) -> None:
+    assert cls(*args).name == name
+
+
+@pytest.mark.parametrize(("name", "cls", "args"), CONSTRUCTIBLE, ids=_CTOR_IDS)
+def test_custom_name_shadows_only_the_instance(name: Any, cls: Any, args: Any) -> None:
+    """Every metric forwards ``name`` to BaseMetric; the class stays untouched.
+
+    Guards the ``super().__init__(name=name)`` convention: a metric that defines
+    ``__init__`` and forgets to forward will fail here.
+    """
+    instance = cls(*args, name="custom")
+    assert instance.name == "custom"
+    assert cls.name == name  # class attribute unchanged
+    assert cls(*args).name == name  # a sibling instance is unaffected
+
+
+@pytest.mark.parametrize(("name", "cls", "args"), CONSTRUCTIBLE, ids=_CTOR_IDS)
+def test_registry_key_is_unaffected_by_a_custom_name(
+    name: Any, cls: Any, args: Any
+) -> None:
+    cls(*args, name="custom")
+    assert _METRIC_REGISTRY[name] is cls
+
+
+@pytest.mark.parametrize(
+    ("name", "cls"), NO_ARG_METRICS, ids=[n for n, _ in NO_ARG_METRICS]
+)
+def test_name_resolution_survives_a_custom_name(name: Any, cls: Any) -> None:
+    """``resolve_metric("numeric")`` still yields a default-named instance."""
+    cls(name="custom")
+    assert resolve_metric(name).name == name
+
+
+@pytest.mark.parametrize("bad", ["", None])
+def test_name_must_be_a_nonempty_string(bad: Any) -> None:
+    from structured_eval.metrics.exact import ExactMatch
+
+    if bad is None:  # None means "no override" — the default path, not an error
+        assert ExactMatch(name=bad).name == "exact_match"
+    else:
+        with pytest.raises(ValueError, match="non-empty"):
+            ExactMatch(name=bad)
+
+
 # ── score laws (field metrics) ───────────────────────────────────────────────
 
 
