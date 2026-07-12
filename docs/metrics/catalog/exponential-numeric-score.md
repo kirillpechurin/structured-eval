@@ -51,8 +51,10 @@ report.field_scores["duration_hours"].metrics["exponential_numeric_score"]   # 0
 ## Edge cases
 
 - **Numbers only** — if either side isn't numeric the score is `0.0`: that includes
-  `None`, non-numeric strings, and `bool` (`True` is *not* `1`), matching
-  [`Numeric`](numeric.md) / [`NumericCloseness`](numeric-closeness.md).
+  non-numeric strings, `bool` (`True` is *not* `1`), and a `None` facing a number,
+  matching [`Numeric`](numeric.md) / [`NumericCloseness`](numeric-closeness.md).
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Never exactly `0.0`** — the decay is asymptotic; the score is always in `(0, 1]` for
   two numbers. Pair it with a `threshold` if you need a pass/fail gate.
 - **`scale` must be > 0** — a non-positive `scale` raises `ValueError`.

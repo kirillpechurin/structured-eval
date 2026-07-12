@@ -4,6 +4,7 @@ from typing import Any
 from urllib.parse import parse_qsl, unquote, urlsplit, urlunsplit
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 
 class UrlMatch(FieldMetric):
@@ -27,7 +28,9 @@ class UrlMatch(FieldMetric):
 
     Both sides must be non-empty strings that parse to a URL with a scheme and a
     host. Anything else — a non-string, an empty string, or a bare path with no
-    scheme/host — scores ``0.0``.
+    scheme/host — scores ``0.0``. Two ``None``s are the exception — no URL was
+    expected and none was given, so they agree (``1.0``; see
+    ``metrics.utils.null``).
     """
 
     name = "url_match"
@@ -77,6 +80,8 @@ class UrlMatch(FieldMetric):
         return (urlunsplit((scheme, netloc, path, query, fragment)),)
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         norm_actual = self._normalize(actual)
         norm_expected = self._normalize(expected)
         if norm_actual is None or norm_expected is None:

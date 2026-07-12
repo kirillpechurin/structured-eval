@@ -66,7 +66,9 @@ report.field_scores["name"].metrics["character_f1"]   # 0.615
 ## Edge cases
 
 - **String only** — if either side isn't a `str` the score is `0.0` (no coercion); that
-  includes `None` and numbers.
+  includes numbers, and a `None` facing a string.
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Both empty → `1.0`** — two empty (or punctuation-only) strings match vacuously.
 - **`ignore_punctuation=False`** — punctuation is kept, so `"!!!"` is no longer an empty
   string and is compared like any other.

@@ -109,6 +109,8 @@ float(evaluate({"price": "1e3"}, {"price": 1000}, config)
   parse and scores `0.0`.
 - **Non-numeric → `0.0`** — anything that doesn't parse (including `bool`: `True` is
   *not* `1` here).
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **All-or-nothing** — it's a pass/fail band, no partial credit. For a *graded* closeness
   score use [`NumericCloseness`](numeric-closeness.md).
 

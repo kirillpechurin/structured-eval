@@ -65,7 +65,9 @@ float(report.field_scores["enroll_url"].metrics["url_match"])   # 1.0 — query 
 
 ## Edge cases
 
-- **Strings only** — a non-string, an empty string, or `None` scores `0.0`.
+- **Strings only** — a non-string, an empty string, or a `None` facing a URL scores `0.0`.
+- **Both `null` → `1.0`** — no URL was expected and none was given, which is a correct
+  answer. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Must be an absolute URL** — a bare path (`"/course"`) or plain text with no scheme/host
   is unparseable → `0.0`.
 - **Different scheme/host/path → `0.0`** — `http://` vs `https://`, different hosts, and

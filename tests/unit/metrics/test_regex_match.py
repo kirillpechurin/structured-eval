@@ -18,8 +18,9 @@ pytestmark = pytest.mark.unit
         ("  Acme   Corp ", "acme corp", 1.0),  # default lower+strip+collapse
         ("a\tb", "a b", 1.0),  # whitespace collapsed
         ("Acme", "Globex", 0.0),  # genuinely different
+        (None, None, 1.0),
     ],
-    ids=["case-and-whitespace", "collapse-tabs", "distinct-values"],
+    ids=["case-and-whitespace", "collapse-tabs", "distinct-values", "both-null"],
 )
 def test_default_normalization(actual: Any, expected: Any, score: Any) -> None:
     assert RegexMatch().score(actual, expected) == score
@@ -32,8 +33,8 @@ def test_custom_pattern_drops_punctuation() -> None:
 
 @pytest.mark.parametrize(
     ("actual", "expected"),
-    [(12, 12.0), (None, None), (None, "none"), ("12", 12)],
-    ids=["int-int", "null-null", "null-str", "str-int"],
+    [(12, 12.0), (None, "none"), ("12", 12)],
+    ids=["int-int", "null-str", "str-int"],
 )
 def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert RegexMatch().score(actual, expected) == 0.0

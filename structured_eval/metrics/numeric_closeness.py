@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 from structured_eval.metrics.utils.number import parse_number
 
 
@@ -19,12 +20,15 @@ class NumericCloseness(FieldMetric):
     Values are parsed with the shared lenient numeric parser (same as
     :class:`Numeric`), so numeric strings are graded too. The metric applies
     **only to numbers**: if either side isn't numeric (``None``, a non-numeric
-    string, or a ``bool`` — ``True`` is not ``1``) the score is 0.0.
+    string, or a ``bool`` — ``True`` is not ``1``) the score is 0.0. Two
+    ``None``s are the exception — they agree (1.0; see ``metrics.utils.null``).
     """
 
     name = "numeric_closeness"
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         a = parse_number(actual)
         e = parse_number(expected)
         if a is None or e is None:

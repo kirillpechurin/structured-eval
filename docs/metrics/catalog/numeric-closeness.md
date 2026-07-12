@@ -73,8 +73,9 @@ float(evaluate({"price": "$120"}, {"price": 100}, config)
 ## Edge cases
 
 - **Numbers only** — if either side isn't numeric the score is `0.0`. That includes
-  `None` (a null makes the metric inapplicable → `0.0`, never a match), non-numeric
-  strings, and `bool` (`True` is *not* `1`).
+  non-numeric strings, `bool` (`True` is *not* `1`), and a `None` facing a number.
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Opposite signs → `0.0`** — `5` vs `-5` scores `0.0` (the formula is clamped at 0).
 - **`0` vs `0` → `1.0`** — equal values always score `1.0`, including both-zero.
 - **Lenient parsing** — same as [`Numeric`](numeric.md): strips currency/separators,

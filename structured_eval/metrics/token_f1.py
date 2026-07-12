@@ -6,6 +6,7 @@ from collections import Counter
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 _IGNORE_PUNCTUATION_CHARS = frozenset(string.punctuation)
 _IGNORE_ARTICLES_REGEX = re.compile(r"\b(a|an|the)\b", re.IGNORECASE)
@@ -31,7 +32,8 @@ class TokenF1(FieldMetric):
     Two deliberate departures from the reference script, both because this scores
     fields rather than question answers: two empty strings score 1.0 (the script
     returns 0.0, an empty answer being a failed answer), and a value that is not a
-    ``str`` scores 0.0 with no coercion.
+    ``str`` scores 0.0 with no coercion — except two ``None``s, which agree (1.0;
+    see ``metrics.utils.null``).
     """
 
     name = "token_f1"
@@ -58,6 +60,8 @@ class TokenF1(FieldMetric):
         return value.split()
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):
             return 0.0
 

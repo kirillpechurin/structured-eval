@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import TypeAdapter
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 
 def _to_date(value: Any) -> date | None:
@@ -34,7 +35,9 @@ class DateDistanceScore(FieldMetric):
     compared by their calendar date only (time-of-day is ignored).
 
     If either side cannot be read as a date — ``None``, an unparseable string,
-    or any non-date type — the score is ``0.0``.
+    or any non-date type — the score is ``0.0``. Two ``None``s are the exception
+    — no date was expected and none was given, so they agree (``1.0``; see
+    ``metrics.utils.null``).
     """
 
     name = "date_distance_score"
@@ -46,6 +49,8 @@ class DateDistanceScore(FieldMetric):
         self.max_days = max_days
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         if not isinstance(actual, (date, datetime)):
             actual = _to_date(actual)
         if not isinstance(expected, (date, datetime)):

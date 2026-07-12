@@ -169,3 +169,29 @@ def test_score_is_total_and_bounded(metric: Any, pair: Any) -> None:
     score = metric.score(actual, expected)
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0, f"{metric.name}({actual!r},{expected!r}) = {score}"
+
+
+@pytest.mark.parametrize("metric", _FIELD_INSTANCES, ids=_FIELD_IDS)
+def test_two_nulls_agree(metric: Any) -> None:
+    """Null expected + null produced = a correct answer, not a mismatch.
+
+    A metric's type gate (str / number / date) would otherwise reject the pair
+    and score a right answer 0.0 — the schemas under evaluation ask for ``null``
+    whenever a value is absent, so this is the common case.
+    """
+    assert metric.score(None, None) == 1.0
+
+
+# One side ``None``: a value was expected and nothing came back, or vice versa.
+HALF_NULL_PAIRS = [(None, "x"), ("x", None), (None, 7), (7, None)]
+
+
+@pytest.mark.parametrize("metric", _FIELD_INSTANCES, ids=_FIELD_IDS)
+@pytest.mark.parametrize(
+    "pair",
+    HALF_NULL_PAIRS,
+    ids=["expected-str", "actual-str", "expected-num", "actual-num"],
+)
+def test_one_sided_null_scores_zero(metric: Any, pair: Any) -> None:
+    actual, expected = pair
+    assert metric.score(actual, expected) == 0.0

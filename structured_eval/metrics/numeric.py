@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 from structured_eval.metrics.utils.number import parse_number
 
 
@@ -32,6 +33,9 @@ class Numeric(FieldMetric):
     * ``relative_tolerance`` and/or ``absolute_tolerance`` — explicit bands; a
       value matches if it falls within *either* band. When either is supplied it
       takes precedence over ``tolerance``/``mode``.
+
+    Two ``None``s agree (1.0; see ``metrics.utils.null``); a one-sided ``None``
+    is 0.0.
     """
 
     name = "numeric"
@@ -51,6 +55,8 @@ class Numeric(FieldMetric):
         self.absolute_tolerance = absolute_tolerance
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         a = parse_number(actual)
         e = parse_number(expected)
         if a is None or e is None:

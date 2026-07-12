@@ -49,8 +49,10 @@ report.field_scores["due_date"].metrics["date_distance_score"]   # 0.833
 
 ## Edge cases
 
-- **Unparseable → `0.0`** — if either side can't be read as a date (`None`, a non-date
-  type, or a string pydantic can't parse) the score is `0.0`.
+- **Unparseable → `0.0`** — if either side can't be read as a date (a non-date type, a
+  string pydantic can't parse, or a `None` facing a date) the score is `0.0`.
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Beyond `max_days` → `0.0`** — the linear score is clamped at `0`; it never goes
   negative.
 - **Time ignored** — two datetimes on the same calendar day score `1.0` regardless of

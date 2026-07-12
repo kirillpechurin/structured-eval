@@ -99,7 +99,10 @@ float(report.field_scores["summary"].metrics["token_f1"])   # 0.75  — shares l
   `"a cat and an ox"` and `"cat and ox"` score `1.0`. Pass `ignore_articles=False` to
   count them as ordinary tokens.
 - **Strings only** — if either side isn't a `str` the score is `0.0` (no coercion);
-  `None` vs `"none"` is `0.0`, not a match. Empty *strings*: both empty → `1.0`,
+  `None` vs `"none"` is `0.0`, not a match.
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
+- **Empty strings** — both empty → `1.0`,
   exactly one empty → `0.0` — where "empty" means empty after normalization, so `"the"`
   vs `""` is `1.0`.
 - **Word order is ignored** — it's a bag of tokens. For order-sensitive or
