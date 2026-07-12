@@ -12,14 +12,13 @@ faithfulness → L6 logic); the project's value is L4–L6.
 
 ## Canonical docs — read these first
 
-- **`coding-guides.md`** is the authoritative architecture + as-built API reference
-  (layers, the metric hierarchy, the `EvalNode` tree, config shapes, the full
-  metric catalog, current state). Treat it as the primary map before touching code.
+- **`docs/`** — user-facing documentation: `core-concepts/` explains the evaluation
+  model, "comparison is a metric", and array alignment; `metrics/catalog/` documents
+  every metric one page each. The closest thing to an architecture map.
 - **`tests/README.md`** — test architecture and conventions; read before writing tests.
-- `rfcs/RFC.md` and `rfcs/USER_STORIES.md` are the source-of-truth design docs.
-  **When docs and code disagree, the code wins** (per RFC §12). `rfcs/_archive/`
-  is history and does **not** reflect current code.
-- `docs/` is user-facing documentation (concepts + metric catalog).
+- **`CONTRIBUTING.md`** — workflow, PR expectations.
+- **When the docs and the code disagree, the code wins.** The source is the only
+  authority on current behaviour; treat prose as intent, not as a spec.
 
 ## Commands
 
@@ -75,7 +74,13 @@ list → compute every node's metrics post-order → build report**. The key ide
 - **One metric = one module** in `structured_eval/metrics/<snake>.py` (a metric with
   helper code becomes a package). Declaring the class auto-registers its `name`; also
   add the import **and** `__all__` entry in `metrics/__init__.py`. Never group metrics
-  by node type. Use the `/add-metric` skill when adding one.
+  by node type.
+- **A metric defining `__init__` must accept a trailing `name: str | None = None` and
+  forward it via `super().__init__(name=name)`.** That is the per-instance name
+  override (`Numeric(tolerance=0.01, name="strict")`), which lets two configurations
+  of one metric coexist on a node under distinct report keys. The class-level `name`
+  stays the registry key. `tests/unit/metrics/test_metric_contracts.py` enforces this
+  across the whole registry.
 - **Data models are pydantic v2** — use `model_dump` / `model_validate`.
 - **Optional features are lazy-imported behind extras** (`yaml`, `fuzzy`, `jsonschema`,
   `rules`, `diff`, `report`, `deepeval`, `langsmith`, `all`). Guard any new optional
