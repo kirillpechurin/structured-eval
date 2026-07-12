@@ -42,7 +42,9 @@ class Numeric(FieldMetric):
         mode: NumericMode = NumericMode.RELATIVE,
         relative_tolerance: float | None = None,
         absolute_tolerance: float | None = None,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.tolerance = tolerance
         self.mode = NumericMode(mode)
         self.relative_tolerance = relative_tolerance

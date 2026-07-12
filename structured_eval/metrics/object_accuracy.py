@@ -31,7 +31,9 @@ class ObjectAccuracy(ObjectMetric):
         self,
         score_policy: dict[str, Any] | None = None,
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.score_policy = score_policy
         self.weight_mode = stats.WeightMode(weight_mode)
 

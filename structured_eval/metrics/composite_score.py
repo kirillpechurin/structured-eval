@@ -29,7 +29,8 @@ class CompositeScore(AnyNodeMetric):
 
     name = "composite_score"
 
-    def __init__(self, weights: dict[str, float]) -> None:
+    def __init__(self, weights: dict[str, float], name: str | None = None) -> None:
+        super().__init__(name=name)
         if not weights:
             raise ValueError("CompositeScore requires at least one metric weight")
         total = sum(weights.values())

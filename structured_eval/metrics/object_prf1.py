@@ -26,7 +26,9 @@ class ObjectPRF1(ObjectMetric):
         threshold: float | None = None,
         mode: stats.GradingMode = stats.GradingMode.HARD,
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.score_policy = score_policy
         self.threshold = threshold
         self.mode = stats.GradingMode(mode)

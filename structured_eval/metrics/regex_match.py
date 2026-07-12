@@ -31,7 +31,9 @@ class RegexMatch(FieldMetric):
         repl: str = " ",
         lower: bool = True,
         strip: bool = True,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.pattern = re.compile(pattern) if isinstance(pattern, str) else pattern
         self.repl = repl
         self.lower = lower

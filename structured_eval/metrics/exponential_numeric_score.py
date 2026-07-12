@@ -34,7 +34,8 @@ class ExponentialNumericScore(FieldMetric):
 
     name = "exponential_numeric_score"
 
-    def __init__(self, scale: float = 1.0) -> None:
+    def __init__(self, scale: float = 1.0, name: str | None = None) -> None:
+        super().__init__(name=name)
         if scale <= 0:
             raise ValueError("scale must be greater than 0")
         self.scale = scale

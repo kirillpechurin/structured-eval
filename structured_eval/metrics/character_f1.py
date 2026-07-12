@@ -39,7 +39,9 @@ class CharacterF1(FieldMetric):
         ignore_case: bool = True,
         ignore_whitespace: bool = True,
         ignore_punctuation: bool = True,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.ignore_case = ignore_case
         self.ignore_whitespace = ignore_whitespace
         self.ignore_punctuation = ignore_punctuation

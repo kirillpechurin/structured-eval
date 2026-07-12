@@ -41,7 +41,9 @@ class TokenF1(FieldMetric):
         ignore_case: bool = True,
         ignore_punctuation: bool = True,
         ignore_articles: bool = True,
+        name: str | None = None,
     ):
+        super().__init__(name=name)
         self.ignore_case = ignore_case
         self.ignore_punctuation = ignore_punctuation
         self.ignore_articles = ignore_articles

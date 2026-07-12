@@ -38,7 +38,9 @@ class UrlMatch(FieldMetric):
         ignore_query: bool = False,
         ignore_fragment: bool = True,
         ignore_www: bool = True,
+        name: str | None = None,
     ) -> None:
+        super().__init__(name=name)
         self.ignore_query = ignore_query
         self.ignore_fragment = ignore_fragment
         self.ignore_www = ignore_www

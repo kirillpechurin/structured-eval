@@ -21,7 +21,8 @@ class RulePassRate(RootMetric):
 
     name = "rule_pass_rate"
 
-    def __init__(self, rules: list[Any]):
+    def __init__(self, rules: list[Any], name: str | None = None):
+        super().__init__(name=name)
         self.rules = rules
         self.processor = RuleProcessor()
 

@@ -39,7 +39,8 @@ class DateDistanceScore(FieldMetric):
 
     name = "date_distance_score"
 
-    def __init__(self, max_days: int = 30) -> None:
+    def __init__(self, max_days: int = 30, name: str | None = None) -> None:
+        super().__init__(name=name)
         if max_days <= 0:
             raise ValueError("max_days must be greater than 0")
         self.max_days = max_days
