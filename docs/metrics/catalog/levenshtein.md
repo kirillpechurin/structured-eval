@@ -61,7 +61,7 @@ Levenshtein().score("kitten", "sitting")   # 0.615 — three edits over 13 chars
 ## Edge cases
 
 - **Strings only** — non-`str` on either side scores `0.0` (inherited from
-  [`Fuzzy`](fuzzy.md)).
+  [`Fuzzy`](fuzzy.md)), except two `None`s, which agree → `1.0`.
 - **Order-sensitive** — reordered words score low; use
   [`Fuzzy(method="token_sort_ratio")`](fuzzy.md) or [`TokenF1`](token-f1.md) for
   order-insensitive comparison.

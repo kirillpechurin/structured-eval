@@ -6,6 +6,7 @@ from collections import Counter
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 _IGNORE_PUNCTUATION_CHARS = frozenset(string.punctuation)
 _IGNORE_WHITESPACE_REGEX = re.compile(r"\s+")
@@ -18,7 +19,8 @@ class CharacterF1(FieldMetric):
     characters contribute only as many times as they appear on both sides.
     Precision and recall are computed over character counts, and their
     harmonic mean is returned. String-only: if either side is not a ``str``
-    the score is ``0.0`` (no coercion).
+    the score is ``0.0`` (no coercion) — except two ``None``s, which agree
+    (``1.0``; see ``metrics.utils.null``).
 
     Normalization is applied to both sides before the comparison and each
     step can be turned off independently::
@@ -56,6 +58,8 @@ class CharacterF1(FieldMetric):
         return list(value)
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):
             return 0.0
 

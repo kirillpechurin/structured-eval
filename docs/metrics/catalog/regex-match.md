@@ -89,6 +89,8 @@ float(report.field_scores["title"].metrics["regex_match"])   # 1.0 — punctuati
 - **String-only** — non-`str` on either side scores `0.0`, never coerced. `12` vs
   `12.0` is `0.0` here (use [`Numeric`](numeric.md)), and `None` vs `"none"` is `0.0`
   (no accidental match on stringified `None`).
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Default scope is narrow** — only case and whitespace. Accents and punctuation are
   **kept**: `"Café" ≠ "cafe"` and `"Hello!" ≠ "hello"` out of the box. Widen with
   `pattern` (e.g. `r"[^\w\s]"` to drop punctuation).

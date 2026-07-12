@@ -18,6 +18,10 @@ def test_identical_is_one() -> None:
     assert Fuzzy().score("hello world", "hello world") == 1.0
 
 
+def test_null() -> None:
+    assert Fuzzy().score(None, None) == 1.0
+
+
 def test_token_sort_is_order_insensitive() -> None:
     # default token_sort_ratio ignores word order
     assert Fuzzy().score("world hello", "hello world") == pytest.approx(1.0)
@@ -43,8 +47,8 @@ def test_normalize_controls_case_folding(normalize: Any, predicate: Any) -> None
 
 @pytest.mark.parametrize(
     ("actual", "expected"),
-    [(None, None), (None, "none"), (123, 123.0)],
-    ids=["null-null", "null-str", "int-float"],
+    [(None, "none"), (123, 123.0)],
+    ids=["null-str", "int-float"],
 )
 def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert Fuzzy().score(actual, expected) == 0.0

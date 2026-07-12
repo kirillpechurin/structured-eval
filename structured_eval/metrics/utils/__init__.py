@@ -7,4 +7,6 @@ Clearly-scoped modules:
 * ``object_utils`` — turning an object's matched fields into the
   ``(score, threshold)`` pairs that ``calculate.prf_counts`` consumes.
 * ``array`` — the same for an array's aligned items, plus missing/spurious counts.
+* ``number`` — the lenient numeric parsing shared by the numeric field metrics.
+* ``null`` — the ``(None, None) → 1.0`` rule shared by the comparison field metrics.
 """

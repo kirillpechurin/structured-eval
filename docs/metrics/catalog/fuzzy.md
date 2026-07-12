@@ -84,6 +84,8 @@ Fuzzy(method="partial_ratio").score("Python", "Intro to Python Programming")
 - **Strings only** — if either side isn't a `str` the score is `0.0` (no coercion);
   `None` vs `"none"` is `0.0`, numbers like `123` vs `123.0` are `0.0`. Score numbers
   with [`Numeric`](numeric.md) / [`NumericCloseness`](numeric-closeness.md).
+- **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
+  not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **`normalize=False`** — keeps case and surrounding whitespace, so `"ACME"` vs
   `"acme"` drops below `1.0`.
 - **Order sensitivity depends on `method`** — `token_sort_ratio` / `token_set_ratio`

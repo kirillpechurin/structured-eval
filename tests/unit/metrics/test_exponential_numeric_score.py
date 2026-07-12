@@ -22,8 +22,9 @@ pytestmark = pytest.mark.unit
         (10, 12, 1.0, math.exp(-2)),  # smaller scale → steeper decay
         ("100", 100, 1.0, 1.0),  # numeric string parsed
         ("$120", 100, 50.0, math.exp(-20 / 50)),  # currency parsed then scored
+        (None, None, 1.0, 1.0),  # null → inapplicable -> 1,0
     ],
-    ids=["exact", "scale-5", "scale-1", "str-exact", "currency"],
+    ids=["exact", "scale-5", "scale-1", "str-exact", "currency", "both-null"],
 )
 def test_exponential_score(
     actual: Any, expected: Any, scale: float, score: Any
@@ -38,9 +39,8 @@ def test_exponential_score(
     [
         (True, 1),  # bool is not numeric
         ("abc", 100),
-        (None, None),  # null → inapplicable
     ],
-    ids=["bool", "non-numeric", "null"],
+    ids=["bool", "non-numeric"],
 )
 def test_non_number_is_zero(actual: Any, expected: Any) -> None:
     assert ExponentialNumericScore().score(actual, expected) == 0.0

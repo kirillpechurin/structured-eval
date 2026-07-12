@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 
 class FuzzyMethod(StrEnum):
@@ -27,7 +28,8 @@ class Fuzzy(FieldMetric):
 
     ``normalize`` strips surrounding whitespace and lowercases before comparison.
     String-only: if either side is not a ``str`` the score is 0.0 (no coercion),
-    consistent with the other text metrics.
+    consistent with the other text metrics — except two ``None``s, which agree
+    (1.0; see ``metrics.utils.null``).
     """
 
     name = "fuzzy"
@@ -43,6 +45,8 @@ class Fuzzy(FieldMetric):
         self.normalize = normalize
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):
             return 0.0
         try:

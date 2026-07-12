@@ -29,6 +29,7 @@ pytestmark = pytest.mark.unit
         ("the", "", 1.0),  # both normalize to empty
         # multiset: "cat cat"(2) vs "cat"(1), common 1 → p=1/2, r=1
         ("cat cat", "cat", 2 * 0.5 * 1.0 / 1.5),
+        (None, None, 1.0),  # no text expected, none given → they agree
     ],
     ids=[
         "identical",
@@ -42,6 +43,7 @@ pytestmark = pytest.mark.unit
         "articles",
         "articles-only",
         "multiset",
+        "both-null",
     ],
 )
 def test_score_defaults(actual: Any, expected: Any, score: Any) -> None:
@@ -108,8 +110,8 @@ def test_score_toggles(kwargs: Any, actual: Any, expected: Any, score: Any) -> N
 
 @pytest.mark.parametrize(
     ("actual", "expected"),
-    [(None, None), (None, "none"), (123, 123.0)],
-    ids=["null-null", "null-str", "int-float"],
+    [(None, "none"), (123, 123.0)],
+    ids=["null-str", "int-float"],
 )
 def test_string_only_non_str_is_zero(actual: Any, expected: Any) -> None:
     assert TokenF1().score(actual, expected) == 0.0

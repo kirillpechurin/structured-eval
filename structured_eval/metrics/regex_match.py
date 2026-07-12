@@ -4,6 +4,7 @@ import re
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
+from structured_eval.metrics.utils.null import both_null
 
 
 class RegexMatch(FieldMetric):
@@ -11,7 +12,8 @@ class RegexMatch(FieldMetric):
 
     A **string-only** metric: if either side is not a ``str`` the score is
     ``0.0`` (use ``Numeric`` for numbers, ``ExactMatch`` for verbatim
-    equality). For two strings it applies, in order, optional ``lower`` and
+    equality) — except two ``None``s, which agree (``1.0``; see
+    ``metrics.utils.null``). For two strings it applies, in order, optional ``lower`` and
     ``strip``, then substitutes every match of ``pattern`` with ``repl``, and
     compares the results exactly.
 
@@ -48,6 +50,8 @@ class RegexMatch(FieldMetric):
         return value.strip() if self.strip else value
 
     def score(self, actual: Any, expected: Any) -> float:
+        if both_null(actual, expected):
+            return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):
             return 0.0
         return 1.0 if self._normalize(actual) == self._normalize(expected) else 0.0

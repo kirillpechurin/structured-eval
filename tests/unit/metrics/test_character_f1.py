@@ -26,6 +26,7 @@ pytestmark = pytest.mark.unit
         ("aabb", "ab", 2 / 3),  # multiset: p=2/4, r=2/2 → F1=2/3
         ("a_b", "ab", 1.0),  # "_" is ASCII punctuation, dropped
         ("«a»", "a", 0.5),  # non-ASCII punctuation kept: p=1/3, r=1 → F1=0.5
+        (None, None, 1.0),  # no text expected, none given → they agree
     ],
     ids=[
         "identical",
@@ -36,6 +37,7 @@ pytestmark = pytest.mark.unit
         "multiset",
         "underscore-stripped",
         "non-ascii-punct-kept",
+        "both-null",
     ],
 )
 def test_character_f1(actual: Any, expected: Any, score: Any) -> None:
@@ -49,9 +51,9 @@ def test_character_f1(actual: Any, expected: Any, score: Any) -> None:
         ("!!!", "abc"),  # normalizes to empty → no overlap
         (123, "123"),  # non-str actual
         ("123", 123),  # non-str expected
-        (None, None),  # null → 0.0 (no equality fallback)
+        (None, "abc"),  # a value was expected, nothing came back
     ],
-    ids=["one-empty", "punct-only", "int-actual", "int-expected", "null"],
+    ids=["one-empty", "punct-only", "int-actual", "int-expected", "one-sided-null"],
 )
 def test_non_overlap_or_non_string_is_zero(actual: Any, expected: Any) -> None:
     assert CharacterF1().score(actual, expected) == 0.0

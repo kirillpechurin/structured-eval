@@ -24,6 +24,7 @@ pytestmark = pytest.mark.unit
         ("100", 100, 1.0),  # numeric string parsed
         ("100", "110", 100 / 110),
         ("$120", 100, 100 / 120),  # currency parsed then graded
+        (None, None, 1.0),  # null → inapplicable
     ],
     ids=[
         "ratio",
@@ -34,6 +35,7 @@ pytestmark = pytest.mark.unit
         "str-exact",
         "str-graded",
         "currency-graded",
+        "both-null",
     ],
 )
 def test_graded_similarity(actual: Any, expected: Any, score: Any) -> None:
@@ -45,10 +47,9 @@ def test_graded_similarity(actual: Any, expected: Any, score: Any) -> None:
     [
         (True, 1),  # bool is not numeric
         ("abc", 100),
-        (None, None),  # null → inapplicable
         ("abc", "abc"),  # no equality fallback for non-numbers
     ],
-    ids=["bool", "non-numeric", "null", "equal-non-number"],
+    ids=["bool", "non-numeric", "equal-non-number"],
 )
 def test_non_number_is_zero(actual: Any, expected: Any) -> None:
     assert NumericCloseness().score(actual, expected) == 0.0
