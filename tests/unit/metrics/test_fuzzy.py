@@ -37,24 +37,33 @@ def test_partial_match_is_between() -> None:
 
 
 # ``ignore_case`` and ``ignore_whitespace`` are independent: each folds only its
-# own dimension, leaving the other significant. Pinned to ``ratio`` — the default
-# ``token_sort_ratio`` normalizes surrounding whitespace itself. Compared to "acme".
+# own dimension, leaving the other significant. ``ignore_whitespace`` collapses
+# whitespace runs to one space and trims the ends. Pinned to ``ratio`` — the
+# default ``token_sort_ratio`` normalizes whitespace itself.
 @pytest.mark.parametrize(
-    ("kwargs", "actual", "predicate"),
+    ("kwargs", "actual", "expected", "predicate"),
     [
-        ({"ignore_case": True}, "ACME", lambda s: s == 1.0),  # case folded
-        ({"ignore_case": False}, "ACME", lambda s: s < 1.0),  # case significant
+        ({"ignore_case": True}, "ACME", "acme", lambda s: s == 1.0),  # case folded
+        ({"ignore_case": False}, "ACME", "acme", lambda s: s < 1.0),  # case sig.
         # case-only: whitespace stays significant
         (
             {"ignore_case": True, "ignore_whitespace": False},
-            "  acme  ",
+            " a  b ",
+            "a b",
             lambda s: s < 1.0,
         ),
         # whitespace-only: case stays significant
-        ({"ignore_case": False, "ignore_whitespace": True}, "ACME", lambda s: s < 1.0),
         (
             {"ignore_case": False, "ignore_whitespace": True},
-            "  acme  ",
+            "ACME",
+            "acme",
+            lambda s: s < 1.0,
+        ),
+        # whitespace-only: runs collapsed and ends trimmed → identical
+        (
+            {"ignore_case": False, "ignore_whitespace": True},
+            " a  b ",
+            "a b",
             lambda s: s == 1.0,
         ),
     ],
@@ -63,13 +72,13 @@ def test_partial_match_is_between() -> None:
         "case-off",
         "case-only-ws-sig",
         "ws-only-case-sig",
-        "ws-only-trims",
+        "ws-only-collapses",
     ],
 )
 def test_normalization_flags_are_independent(
-    kwargs: Any, actual: Any, predicate: Any
+    kwargs: Any, actual: Any, expected: Any, predicate: Any
 ) -> None:
-    assert predicate(Fuzzy(method=FuzzyMethod.RATIO, **kwargs).score(actual, "acme"))
+    assert predicate(Fuzzy(method=FuzzyMethod.RATIO, **kwargs).score(actual, expected))
 
 
 @pytest.mark.parametrize(

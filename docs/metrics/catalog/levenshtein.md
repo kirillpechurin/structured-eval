@@ -24,7 +24,7 @@ discoverable name.
 | Param               | Default   | Meaning                                          |
 |---------------------|-----------|--------------------------------------------------|
 | `ignore_case`       | `True`    | lowercase both sides before comparing            |
-| `ignore_whitespace` | `True`    | strip surrounding whitespace before comparing    |
+| `ignore_whitespace` | `True`    | collapse whitespace runs to one space + trim ends|
 
 (It also accepts `method`, but the point of `Levenshtein` is the ratio; for other
 RapidFuzz scorers use [`Fuzzy`](fuzzy.md) directly.)
@@ -67,8 +67,8 @@ Levenshtein().score("kitten", "sitting")   # 0.615 — three edits over 13 chars
   [`Fuzzy(method="token_sort_ratio")`](fuzzy.md) or [`TokenF1`](token-f1.md) for
   order-insensitive comparison.
 - **Independent normalization** — `ignore_case=False` keeps case,
-  `ignore_whitespace=False` keeps surrounding whitespace; the two toggle
-  separately (inherited from [`Fuzzy`](fuzzy.md)).
+  `ignore_whitespace=False` keeps every space (default collapses runs and trims
+  ends); the two toggle separately (inherited from [`Fuzzy`](fuzzy.md)).
 - **Optional dependency** — raises `ImportError` (with install hint) without
   `rapidfuzz`.
 

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Any
 
 from structured_eval.metrics.base import FieldMetric
 from structured_eval.metrics.utils.null import both_null
+
+_IGNORE_WHITESPACE_REGEX = re.compile(r"\s+")
 
 
 class FuzzyMethod(StrEnum):
@@ -26,10 +29,10 @@ class Fuzzy(FieldMetric):
     * ``token_sort_ratio`` (default) — order-insensitive, sorts tokens;
     * ``token_set_ratio`` — set-based, ignores duplicate/extra tokens.
 
-    ``ignore_case`` lowercases and ``ignore_whitespace`` strips surrounding
-    whitespace before comparison; the two are independent, so a
-    case-insensitive but whitespace-sensitive comparison (or the reverse) is
-    expressible. Both default to ``True``.
+    ``ignore_case`` lowercases and ``ignore_whitespace`` collapses each run of
+    whitespace to a single space and trims the ends before comparison; the two
+    are independent, so a case-insensitive but whitespace-sensitive comparison
+    (or the reverse) is expressible. Both default to ``True``.
     String-only: if either side is not a ``str`` the score is 0.0 (no coercion),
     consistent with the other text metrics — except two ``None``s, which agree
     (1.0; see ``metrics.utils.null``).
@@ -71,7 +74,8 @@ class Fuzzy(FieldMetric):
 
         a, e = actual, expected
         if self.ignore_whitespace:
-            a, e = a.strip(), e.strip()
+            a = _IGNORE_WHITESPACE_REGEX.sub(" ", a).strip()
+            e = _IGNORE_WHITESPACE_REGEX.sub(" ", e).strip()
         if self.ignore_case:
             a, e = a.lower(), e.lower()
         return float(scorer(a, e)) / 100.0

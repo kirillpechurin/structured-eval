@@ -25,7 +25,7 @@ Pick the comparison style with `method`; by default it's order-insensitive
 |---------------------|----------------------|----------------------------------------------------|
 | `method`            | `"token_sort_ratio"` | which RapidFuzz scorer to use (see below)          |
 | `ignore_case`       | `True`               | lowercase both sides before comparing              |
-| `ignore_whitespace` | `True`               | strip surrounding whitespace before comparing      |
+| `ignore_whitespace` | `True`               | collapse whitespace runs to one space + trim ends  |
 
 `ignore_case` and `ignore_whitespace` are independent, so a case-insensitive but
 whitespace-sensitive comparison (or the reverse) is expressible.
@@ -43,7 +43,7 @@ whitespace-sensitive comparison (or the reverse) is expressible.
 
 ```text
 a, e = actual, expected            # string-only; non-str → 0.0
-if ignore_whitespace: a, e = strip(a), strip(e)
+if ignore_whitespace: a, e = collapse_ws(a).strip(), collapse_ws(e).strip()
 if ignore_case:       a, e = lower(a), lower(e)
 score = rapidfuzz_scorer(a, e) / 100
 ```
@@ -92,8 +92,8 @@ Fuzzy(method="partial_ratio").score("Python", "Intro to Python Programming")
 - **Both `null` → `1.0`** — a null expectation met by a null value is a correct answer,
   not a type mismatch. Only both sides `None` count; one-sided `None` stays `0.0`.
 - **Independent normalization** — `ignore_case=False` keeps case (so `"ACME"` vs
-  `"acme"` drops below `1.0`) while surrounding whitespace is still trimmed;
-  `ignore_whitespace=False` keeps padding while casing is still folded.
+  `"acme"` drops below `1.0`) while whitespace is still collapsed and trimmed;
+  `ignore_whitespace=False` keeps every space while casing is still folded.
 - **Order sensitivity depends on `method`** — `token_sort_ratio` / `token_set_ratio`
   ignore word order; `ratio` does not.
 - **Optional dependency** — without `rapidfuzz` installed, using `Fuzzy` raises
