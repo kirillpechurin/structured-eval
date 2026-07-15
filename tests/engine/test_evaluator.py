@@ -24,6 +24,7 @@ from structured_eval.metrics import (
 )
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 from structured_eval.models import (
+    ArrayFieldConfig,
     EvalConfig,
     EvalReport,
     ExtraKeysPolicy,
@@ -285,6 +286,125 @@ def test_any_node_metric_usable_as_explicit_key_metric(
     assert r.score == 0.5
 
 
+# ── per-node key_metric override on object / array (#49) ─────────────────────
+# ObjectFieldConfig / ArrayFieldConfig can pick a node's representative (roll-up)
+# metric, the same override FieldConfig offers for scalar leaves. Each case
+# carries *two* metrics whose values diverge, so the override is observable: the
+# representative equals the chosen metric, not the default MeanScore of both.
+
+
+def test_object_key_metric_override(evaluate_one: Callable[..., EvalReport]) -> None:
+    # vendor: x,y correct, z missing → object_f1 (0.8) ≠ object_accuracy (0.667).
+    actual = {"vendor": {"x": 1, "y": 2}}
+    expected = {"vendor": {"x": 1, "y": 2, "z": 3}}
+    metrics = [ObjectF1(), ObjectAccuracy()]
+
+    default = evaluate_one(
+        actual,
+        expected,
+        EvalConfig(fields={"vendor": ObjectFieldConfig(metrics=metrics)}),
+    )
+    override = evaluate_one(
+        actual,
+        expected,
+        EvalConfig(
+            fields={"vendor": ObjectFieldConfig(metrics=metrics, key_metric=ObjectF1())}
+        ),
+    )
+
+    f1 = float(override.metrics["object_f1"].by_path["vendor"])
+    acc = float(override.metrics["object_accuracy"].by_path["vendor"])
+    assert f1 != acc  # the two metrics genuinely diverge on this node
+    # default: representative is MeanScore of the node's two metrics
+    assert default.field_scores["vendor"].score == pytest.approx((f1 + acc) / 2)
+    # override: representative is object_f1 exactly — not the mean
+    assert override.field_scores["vendor"].score == pytest.approx(f1)
+    assert override.field_scores["vendor"].score != default.field_scores["vendor"].score
+
+
+def test_array_key_metric_override(evaluate_one: Callable[..., EvalReport]) -> None:
+    from structured_eval.metrics import ArrayAccuracy, ArrayF1
+
+    # lines: 2 correct, 1 wrong, 1 missing → array_f1 (0.571) ≠ array_accuracy (0.667).
+    actual = {"lines": [1, 2, 3, 4]}
+    expected = {"lines": [1, 2, 9]}
+    metrics = [ArrayF1(), ArrayAccuracy()]
+
+    default = evaluate_one(
+        actual,
+        expected,
+        EvalConfig(fields={"lines": ArrayFieldConfig(metrics=metrics)}),
+    )
+    override = evaluate_one(
+        actual,
+        expected,
+        EvalConfig(
+            fields={"lines": ArrayFieldConfig(metrics=metrics, key_metric=ArrayF1())}
+        ),
+    )
+
+    f1 = float(override.metrics["array_f1"].by_path["lines"])
+    acc = float(override.metrics["array_accuracy"].by_path["lines"])
+    assert f1 != acc
+    assert default.field_scores["lines"].score == pytest.approx((f1 + acc) / 2)
+    assert override.field_scores["lines"].score == pytest.approx(f1)
+    assert override.field_scores["lines"].score != default.field_scores["lines"].score
+
+
+def test_object_key_metric_rolls_up_into_parent(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # a soft root metric reads each child's representative, so overriding vendor's
+    # representative changes what rolls up into the root — the point of the feature.
+    actual = {"vendor": {"x": 1, "y": 2}, "id": "K"}
+    expected = {"vendor": {"x": 1, "y": 2, "z": 3}, "id": "K"}
+    metrics = [ObjectF1(), ObjectAccuracy()]
+    root = EvalConfig(metrics=[ObjectAccuracy()])
+
+    default = evaluate_one(
+        actual,
+        expected,
+        root.model_copy(
+            update={"fields": {"vendor": ObjectFieldConfig(metrics=metrics)}}
+        ),
+    )
+    override = evaluate_one(
+        actual,
+        expected,
+        root.model_copy(
+            update={
+                "fields": {
+                    "vendor": ObjectFieldConfig(metrics=metrics, key_metric=ObjectF1())
+                }
+            }
+        ),
+    )
+
+    # vendor's representative differs between the two configs …
+    assert override.field_scores["vendor"].score != default.field_scores["vendor"].score
+    # … and that difference propagates into the root's soft accuracy roll-up.
+    assert (
+        override.metrics["object_accuracy"].representative()
+        != default.metrics["object_accuracy"].representative()
+    )
+
+
+def test_object_array_config_without_key_metric_unchanged(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # an object/array config with no key_metric leaves the representative as-is:
+    # identical to evaluating with no per-field config at all.
+    actual = {"vendor": {"name": "Acme", "city": "NY"}, "lines": [1, 2, 3]}
+    expected = {"vendor": {"name": "Acme", "city": "LA"}, "lines": [1, 2, 9]}
+    baseline = evaluate_one(actual, expected)
+    cfg = EvalConfig(
+        fields={"vendor": ObjectFieldConfig(), "lines": ArrayFieldConfig()}
+    )
+    r = evaluate_one(actual, expected, cfg)
+    assert r.field_scores["vendor"].score == baseline.field_scores["vendor"].score
+    assert r.field_scores["lines"].score == baseline.field_scores["lines"].score
+
+
 # ── incompatible metric assignment fails fast ────────────────────────────────
 # An explicit per-node metric that cannot score the node's type is a config
 # mistake — deterministic, input-independent — so TreeBuilder raises at build
@@ -312,16 +432,27 @@ _DOC = {"vendor": {"name": "Acme"}, "total": 100.0}
             "total",
             "ScalarNode",
         ),
-        # an explicit per-node key_metric is checked the same way (only a scalar
-        # FieldConfig carries key_metric, so the mismatch is an object metric there)
+        # an explicit per-node key_metric is checked the same way — on a scalar
+        # FieldConfig and (since #49) on object/array configs too
         (
             EvalConfig(fields={"total": FieldConfig(key_metric=ObjectAccuracy())}),
             "object_accuracy",
             "total",
             "ScalarNode",
         ),
+        (
+            EvalConfig(fields={"vendor": ObjectFieldConfig(key_metric=ExactMatch())}),
+            "exact_match",
+            "vendor",
+            "ObjectNode",
+        ),
     ],
-    ids=["scalar-on-object", "object-on-scalar", "incompatible-key-metric"],
+    ids=[
+        "scalar-on-object",
+        "object-on-scalar",
+        "incompatible-key-metric-scalar",
+        "incompatible-key-metric-object",
+    ],
 )
 def test_incompatible_metric_raises(
     evaluate_one: Callable[..., EvalReport],

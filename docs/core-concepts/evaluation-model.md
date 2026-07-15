@@ -182,6 +182,10 @@ r = evaluate(a, e, EvalConfig(
 r.field_scores["title"].score    # 0.67   — token_f1 speaks for the node
 ```
 
+The same `key_metric` override is available on `ObjectFieldConfig` and
+`ArrayFieldConfig`, so an object or array node can also elect one metric — e.g.
+its per-object faithfulness verdict — to speak for it.
+
 `report.score` is simply the root node's representative.
 
 > Metrics run **post-order** — children before parents — so an aggregating parent

@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from structured_eval.metrics import ExactMatch, ObjectF1
+from structured_eval.metrics import ArrayAccuracy, ExactMatch, ObjectF1
 from structured_eval.models import (
     ArrayFieldConfig,
     ArrayStrategy,
@@ -51,6 +51,26 @@ def test_field_config_holds_metric_list() -> None:
     fc = FieldConfig(metrics=[ExactMatch()], key_metric=ExactMatch())
     assert fc.metrics is not None
     assert isinstance(fc.metrics[0], ExactMatch)
+
+
+def test_object_and_array_config_hold_key_metric() -> None:
+    # #49: the representative-metric override, symmetric with FieldConfig.
+    oc = ObjectFieldConfig(key_metric=ObjectF1())
+    ac = ArrayFieldConfig(key_metric=ArrayAccuracy())
+    assert isinstance(oc.key_metric, ObjectF1)
+    assert isinstance(ac.key_metric, ArrayAccuracy)
+
+
+def test_array_representative_key_metric_is_distinct_from_by_key_param() -> None:
+    # the node's representative key_metric and the BY_KEY alignment key_metric
+    # in params are different concepts and coexist independently.
+    ac = ArrayFieldConfig(
+        key_metric=ArrayAccuracy(),
+        strategy=ArrayStrategy.BY_KEY,
+        params={"key": "id", "key_metric": ExactMatch()},
+    )
+    assert isinstance(ac.key_metric, ArrayAccuracy)  # representative
+    assert isinstance(ac.params["key_metric"], ExactMatch)  # alignment matcher
 
 
 # ── nesting ──────────────────────────────────────────────────────────────────
