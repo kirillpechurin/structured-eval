@@ -15,7 +15,13 @@ class Levenshtein(Fuzzy):
     def __init__(
         self,
         method: FuzzyMethod = FuzzyMethod.RATIO,
-        normalize: bool = True,
+        ignore_case: bool = True,
+        ignore_whitespace: bool = True,
         name: str | None = None,
     ):
-        super().__init__(method=method, normalize=normalize, name=name)
+        super().__init__(
+            method=method,
+            ignore_case=ignore_case,
+            ignore_whitespace=ignore_whitespace,
+            name=name,
+        )
