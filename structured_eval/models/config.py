@@ -52,7 +52,13 @@ class FieldConfig(BaseModel):
 
 
 class ObjectFieldConfig(BaseModel):
-    """Configuration for an object (dict) field."""
+    """Configuration for an object (dict) field.
+
+    ``key_metric`` picks this object node's *representative* (roll-up) metric —
+    a metric instance or a registered name, ``None`` → the default (a global
+    distributable ``key_metric``, else ``MeanScore``). Same override
+    ``FieldConfig`` offers for scalar leaves.
+    """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -60,6 +66,7 @@ class ObjectFieldConfig(BaseModel):
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
     metrics: list[Any] | None = None
+    key_metric: Any = None  # Metric | name str: this node's representative score
 
 
 class ArrayFieldConfig(BaseModel):
@@ -76,6 +83,11 @@ class ArrayFieldConfig(BaseModel):
     * ``HUNGARIAN`` → ``{"scorer": <Scorer | dict[str, Scorer] | None>,
       "threshold": <float>, "key": <field|None>}``. Optimal one-to-one
       assignment; ``scorer`` as a per-field dict scores arrays of objects.
+
+    ``key_metric`` picks this array node's *representative* (roll-up) metric —
+    a metric instance or a registered name, ``None`` → the default. This is
+    distinct from a ``key_metric`` inside ``params`` for the ``BY_KEY``
+    strategy, which is the element-alignment matching metric.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -86,6 +98,7 @@ class ArrayFieldConfig(BaseModel):
     weight: float = DEFAULT_FIELD_WEIGHT
     threshold: float | None = None
     metrics: list[Any] | None = None
+    key_metric: Any = None  # Metric | name str: this node's representative score
 
 
 AnyFieldConfig = FieldConfig | ObjectFieldConfig | ArrayFieldConfig
