@@ -13,7 +13,9 @@ from pydantic import BaseModel
 
 from structured_eval.metrics import (
     CoverageLeafScore,
+    ExactMatch,
     FieldFaithfulness,
+    ObjectAccuracy,
     ObjectF1,
     OverallLeafScore,
     RulePassRate,
@@ -26,6 +28,7 @@ from structured_eval.models import (
     EvalReport,
     ExtraKeysPolicy,
     FieldConfig,
+    ObjectFieldConfig,
     WarningType,
 )
 
@@ -188,8 +191,6 @@ def test_per_field_metrics(evaluate_one: Callable[..., EvalReport]) -> None:
 def test_per_node_metric_at_depth(evaluate_one: Callable[..., EvalReport]) -> None:
     # ObjectFieldConfig.metrics applies to a nested object (recursive, each node
     # owns its metrics) — not only the global/root list.
-    from structured_eval.models import ObjectFieldConfig
-
     cfg = EvalConfig(fields={"inner": ObjectFieldConfig(metrics=[ObjectF1()])})
     r = evaluate_one({"inner": {"a": 1, "b": 2}}, {"inner": {"a": 1, "b": 99}}, cfg)
     assert r.field_scores["inner"].metrics["object_f1"] == 0.5
@@ -215,8 +216,6 @@ def test_default_key_metric_is_mean_of_node_metrics(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     # report.score defaults to MeanScore: the mean of the root's own metrics.
-    from structured_eval.metrics import ObjectAccuracy
-
     cfg = EvalConfig(metrics=[ObjectF1(), ObjectAccuracy()])
     r = evaluate_one({"a": 1, "b": 9}, {"a": 1, "b": 2}, cfg)
     assert r.score_label == "mean_score"
@@ -284,3 +283,74 @@ def test_any_node_metric_usable_as_explicit_key_metric(
     )
     assert r.score_label == "half"
     assert r.score == 0.5
+
+
+# ── incompatible metric assignment fails fast ────────────────────────────────
+# An explicit per-node metric that cannot score the node's type is a config
+# mistake — deterministic, input-independent — so TreeBuilder raises at build
+# time instead of silently dropping it. Globals cascaded from EvalConfig stay
+# exempt: cascading-by-type is intended, so a global that does not fit is filtered.
+
+# doc is a perfect self-match: any raise is about the config, never the data.
+_DOC = {"vendor": {"name": "Acme"}, "total": 100.0}
+
+
+@pytest.mark.parametrize(
+    ("config", "metric_name", "path", "node_type"),
+    [
+        # scalar-only metric on an object field
+        (
+            EvalConfig(fields={"vendor": ObjectFieldConfig(metrics=[ExactMatch()])}),
+            "exact_match",
+            "vendor",
+            "ObjectNode",
+        ),
+        # object metric on a scalar field
+        (
+            EvalConfig(fields={"total": FieldConfig(metrics=[ObjectAccuracy()])}),
+            "object_accuracy",
+            "total",
+            "ScalarNode",
+        ),
+        # an explicit per-node key_metric is checked the same way (only a scalar
+        # FieldConfig carries key_metric, so the mismatch is an object metric there)
+        (
+            EvalConfig(fields={"total": FieldConfig(key_metric=ObjectAccuracy())}),
+            "object_accuracy",
+            "total",
+            "ScalarNode",
+        ),
+    ],
+    ids=["scalar-on-object", "object-on-scalar", "incompatible-key-metric"],
+)
+def test_incompatible_metric_raises(
+    evaluate_one: Callable[..., EvalReport],
+    config: EvalConfig,
+    metric_name: str,
+    path: str,
+    node_type: str,
+) -> None:
+    with pytest.raises(ValueError, match="cannot score") as exc:
+        evaluate_one(_DOC, _DOC, config)
+    message = str(exc.value)
+    assert metric_name in message  # names the metric
+    assert path in message  # names the field path
+    assert node_type in message  # names the node type
+
+
+def test_global_cascaded_metric_does_not_raise(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # ObjectAccuracy cascades globally: it fits the objects and is silently
+    # filtered from the scalar ``total`` node — never raised.
+    r = evaluate_one(_DOC, _DOC, EvalConfig(metrics=[ObjectAccuracy()]))
+    assert "object_accuracy" in r.field_scores["vendor"].metrics
+    assert "object_accuracy" not in r.field_scores["total"].metrics
+
+
+def test_global_key_metric_does_not_raise(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # The global key_metric is distributable: applied where it fits, else ignored.
+    r = evaluate_one(_DOC, _DOC, EvalConfig(key_metric=ObjectAccuracy()))
+    assert isinstance(r, EvalReport)
