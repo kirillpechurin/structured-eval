@@ -36,13 +36,40 @@ def test_partial_match_is_between() -> None:
     assert 0.0 < Fuzzy().score("Acme Corporation", "Acme Corp") < 1.0
 
 
+# ``ignore_case`` and ``ignore_whitespace`` are independent: each folds only its
+# own dimension, leaving the other significant. Pinned to ``ratio`` — the default
+# ``token_sort_ratio`` normalizes surrounding whitespace itself. Compared to "acme".
 @pytest.mark.parametrize(
-    ("normalize", "predicate"),
-    [(False, lambda s: s < 1.0), (True, lambda s: s == 1.0)],
-    ids=["normalize-off", "normalize-on"],
+    ("kwargs", "actual", "predicate"),
+    [
+        ({"ignore_case": True}, "ACME", lambda s: s == 1.0),  # case folded
+        ({"ignore_case": False}, "ACME", lambda s: s < 1.0),  # case significant
+        # case-only: whitespace stays significant
+        (
+            {"ignore_case": True, "ignore_whitespace": False},
+            "  acme  ",
+            lambda s: s < 1.0,
+        ),
+        # whitespace-only: case stays significant
+        ({"ignore_case": False, "ignore_whitespace": True}, "ACME", lambda s: s < 1.0),
+        (
+            {"ignore_case": False, "ignore_whitespace": True},
+            "  acme  ",
+            lambda s: s == 1.0,
+        ),
+    ],
+    ids=[
+        "case-on",
+        "case-off",
+        "case-only-ws-sig",
+        "ws-only-case-sig",
+        "ws-only-trims",
+    ],
 )
-def test_normalize_controls_case_folding(normalize: Any, predicate: Any) -> None:
-    assert predicate(Fuzzy(normalize=normalize).score("ACME", "acme"))
+def test_normalization_flags_are_independent(
+    kwargs: Any, actual: Any, predicate: Any
+) -> None:
+    assert predicate(Fuzzy(method=FuzzyMethod.RATIO, **kwargs).score(actual, "acme"))
 
 
 @pytest.mark.parametrize(
@@ -66,3 +93,12 @@ def test_levenshtein_matches_fuzzy_ratio() -> None:
     assert Levenshtein().score("kitten", "sitting") == Fuzzy(
         method=FuzzyMethod.RATIO
     ).score("kitten", "sitting")
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "actual"),
+    [({"ignore_case": False}, "ACME"), ({"ignore_whitespace": False}, "  acme  ")],
+    ids=["case", "whitespace"],
+)
+def test_levenshtein_inherits_normalization_options(kwargs: Any, actual: Any) -> None:
+    assert Levenshtein(**kwargs).score(actual, "acme") < 1.0
