@@ -4,6 +4,8 @@ Owns its element-similarity logic and a ``Scorer`` type: a single
 metric/name/callable, or a per-field ``dict[str, Scorer]``.
 """
 
+from typing import Any
+
 import pytest
 
 from structured_eval.alignment import HungarianAligner
@@ -37,6 +39,38 @@ def test_empty_actual_side() -> None:
     assert r.matched == []
     assert r.missed == [0, 1]
     assert r.spurious == []
+
+
+@pytest.mark.parametrize(
+    ("expected", "actual", "matched"),
+    [
+        # Numbers are graded by NumericCloseness: 1 - 1/9 = 0.89 clears 0.8 ...
+        ([9], [8], [(0, 0)]),
+        # ... while 1 - 4/9 = 0.56 does not.
+        ([9], [5], []),
+        # bool is an int subclass, so without the explicit bool branch these
+        # would reach NumericCloseness — which rejects bools (True is not 1) and
+        # would score even equal ones 0.0, leaving them unmatched.
+        ([True, False], [True, False], [(0, 0), (1, 1)]),
+        ([True], [False], []),
+        # Strings fall through to ExactMatch, so a near miss does not align even
+        # though Fuzzy("pythn", "python") would score ~0.91 and clear 0.8.
+        (["python"], ["python"], [(0, 0)]),
+        (["python"], ["pythn"], []),
+    ],
+    ids=[
+        "number-near",
+        "number-far",
+        "bool-equal",
+        "bool-differ",
+        "str-equal",
+        "str-near-miss",
+    ],
+)
+def test_default_scorer_is_type_aware(
+    expected: list[Any], actual: list[Any], matched: list[tuple[int, int]]
+) -> None:
+    assert HungarianAligner().align(expected, actual).matched == matched
 
 
 def test_dict_elements_mean_agreement() -> None:
