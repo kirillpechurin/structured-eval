@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.
+# Overridable per node type via EvalConfig.default_<type>_metrics.
 DEFAULT_SCALAR_METRIC = ExactMatch
 DEFAULT_OBJECT_METRIC = ObjectAccuracy
 DEFAULT_ARRAY_METRIC = ArrayAccuracy
@@ -61,6 +62,7 @@ class TreeBuilder:
         self.config: EvalConfig = context.config
         self.warnings: list[EvalWarning] = []
         self._globals = self._resolve_globals()
+        self._defaults = self._resolve_defaults()
 
     def build(self) -> tuple[EvalNode, list[EvalWarning]]:
         root = self.node("$", "$", self.root_config())
@@ -98,47 +100,77 @@ class TreeBuilder:
             return method is not None and hasattr(metric, method)
         return False
 
+    @staticmethod
+    def _resolve_metrics(specs: list[Any]) -> list[BaseMetric]:
+        """Resolve a list of metric specs to instances."""
+        return [resolve_metric(spec) for spec in specs]
+
     def _resolve_globals(self) -> list[BaseMetric]:
-        """The cascade set: ``config.metrics``, deduped by identity.
+        """The cascade set: ``config.metrics``.
 
         ``key_metric`` is *not* cascaded here — it is each node's representative
         metric, resolved per node by ``_key_metric`` (and computed last).
         """
-        out: list[BaseMetric] = []
-        for spec in self.config.metrics:
-            metric = resolve_metric(spec)
-            if not any(metric is seen for seen in out):
-                out.append(metric)
+        return self._resolve_metrics(self.config.metrics)
+
+    def _resolve_defaults(self) -> dict[type, list[BaseMetric]]:
+        """The per-type fallback sets, resolved once and shared across nodes.
+
+        ``config.default_<type>_metrics`` replaces the hard-coded constant for
+        that node type; ``None`` keeps the constant. Unlike ``_globals`` these do
+        not cascade — ``_node_metrics`` reaches for them only when a node would
+        otherwise carry no metric at all, and type-checks them there like any
+        other explicit assignment.
+        """
+        configured: dict[type, tuple[str, type[BaseMetric]]] = {
+            ScalarNode: ("default_scalar_metrics", DEFAULT_SCALAR_METRIC),
+            ObjectNode: ("default_object_metrics", DEFAULT_OBJECT_METRIC),
+            ArrayNode: ("default_array_metrics", DEFAULT_ARRAY_METRIC),
+        }
+        out: dict[type, list[BaseMetric]] = {}
+        for node_cls, (config_attr, fallback) in configured.items():
+            specs = getattr(self.config, config_attr)
+            out[node_cls] = self._resolve_metrics(specs) if specs else [fallback()]
         return out
 
-    def _resolve_metrics(
+    def _node_metrics(
         self, path: str, node_cls: type, cfg: AnyFieldConfig | None, is_root: bool
     ) -> list[BaseMetric]:
         """Metrics for one node: applicable globals + this node's own (additive).
 
         Globals cascade by type (a ``RootMetric`` only at the root) and are
         silently filtered where they do not apply — cascading-by-type is
-        intentional. Per-node ``cfg.metrics`` are *added* (not a replacement),
-        deduped by identity, but an explicit assignment that cannot score this
-        node's type is a configuration mistake and **raises** here (build time,
-        before any metric runs) rather than being dropped.
+        intentional. Per-node ``cfg.metrics`` are *added*, but an explicit
+        assignment that cannot score this node's type is a configuration mistake
+        and **raises** here (build time, before any metric runs) rather than
+        being dropped.
 
         ``out`` only ever holds metrics applicable to this node; if it ends up
-        empty the node gets the default for its type so every node always
-        carries at least one metric for its ``key_metric`` to summarise (a
-        different default is set by putting a metric of that type in
-        ``config.metrics``, which cascades).
+        empty the node falls back to the default set for its type, so every node
+        always carries at least one metric for its ``key_metric`` to summarise.
+        That set is ``config.default_<type>_metrics`` when configured, else the
+        hard-coded constant, and is type-checked here the same way.
+
+        A name is the key a metric's result lands under, so a node never carries
+        two metrics sharing one — the second would silently overwrite the first.
+        Across *layers* that is an override: this node's own metric displaces the
+        equally-named global, which is how one field runs a stricter
+        configuration (global ``Numeric(0.1)``, this field ``Numeric(0.001)``).
+        Within *one* list it is ambiguous and **raises**; two configurations of
+        one metric there need distinct names (``Numeric(0.01, name="strict")``).
         """
         out: list[BaseMetric] = []
+        seen: set[str] = set()  # names already taken on this node
 
-        def add(metric: BaseMetric) -> None:
-            if self._applies_to(metric, node_cls, is_root) and not any(
-                metric is s for s in out
-            ):
-                out.append(metric)
+        duplicated_metric_error_msg = (
+            "Metric {metric_name!r} is assigned twice to the "
+            f"{node_cls.__name__} field {path!r}; a metric name must be "
+            f"unique per node. Pass name= to tell two configurations of "
+            f"one metric apart."
+        )
 
-        for metric in self._globals:
-            add(metric)
+        # The node's own metrics go first: they are the most specific layer, so
+        # they claim their names before the cascade gets to add anything.
         for spec in getattr(cfg, "metrics", None) or []:
             metric = resolve_metric(spec)
             if not self._applies_to(metric, node_cls, is_root):
@@ -146,15 +178,47 @@ class TreeBuilder:
                     f"Metric {metric.name!r} cannot score the "
                     f"{node_cls.__name__} field {path!r}."
                 )
-            add(metric)
+            if metric.name in seen:
+                raise ValueError(
+                    duplicated_metric_error_msg.format(metric_name=metric.name)
+                )
+            seen.add(metric.name)
+            out.append(metric)
 
+        own = set(seen)  # frozen before the cascade, to tell the two cases apart
+        for metric in self._globals:
+            if not self._applies_to(metric, node_cls, is_root):
+                continue
+            if metric.name in own:
+                # This node redefines the metric — the specific layer wins over
+                # the cascade, so the global is dropped rather than rejected.
+                continue
+            if metric.name in seen:
+                # Not an override, then: two globals named alike, which is
+                # ambiguous wherever they land together.
+                raise ValueError(
+                    duplicated_metric_error_msg.format(metric_name=metric.name)
+                )
+            seen.add(metric.name)
+            out.append(metric)
+
+        # Nothing applied — fall back so the node's key_metric has something to
+        # summarise. `seen` is necessarily empty here (any own metric would have
+        # filled `out`), so a clash can only be inside the default list itself.
         if not out:
-            if issubclass(node_cls, ScalarNode):
-                add(DEFAULT_SCALAR_METRIC())
-            elif issubclass(node_cls, ObjectNode):
-                add(DEFAULT_OBJECT_METRIC())
-            elif issubclass(node_cls, ArrayNode):
-                add(DEFAULT_ARRAY_METRIC())
+            for metric in self._defaults[node_cls]:
+                if not self._applies_to(metric, node_cls, is_root):
+                    raise ValueError(
+                        f"Metric {metric.name!r} cannot score the "
+                        f"{node_cls.__name__} field {path!r}."
+                    )
+                if metric.name in seen:
+                    raise ValueError(
+                        duplicated_metric_error_msg.format(metric_name=metric.name)
+                    )
+                seen.add(metric.name)
+                out.append(metric)
+
         return out
 
     def _key_metric(
@@ -270,7 +334,7 @@ class TreeBuilder:
             )
 
         is_root = apath == "$"
-        metrics = self._resolve_metrics(apath, ObjectNode, cfg, is_root)
+        metrics = self._node_metrics(apath, ObjectNode, cfg, is_root)
         return ObjectNode(
             path=apath,
             context=self.context,
@@ -311,7 +375,7 @@ class TreeBuilder:
             for eidx, aidx in result.matched
         ]
         is_root = apath == "$"
-        metrics = self._resolve_metrics(apath, ArrayNode, cfg, is_root)
+        metrics = self._node_metrics(apath, ArrayNode, cfg, is_root)
         return ArrayNode(
             path=apath,
             context=self.context,
@@ -326,7 +390,7 @@ class TreeBuilder:
 
     def _scalar(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> ScalarNode:
         is_root = apath == "$"
-        metrics = self._resolve_metrics(apath, ScalarNode, cfg, is_root)
+        metrics = self._node_metrics(apath, ScalarNode, cfg, is_root)
         return ScalarNode(
             path=apath,
             context=self.context,

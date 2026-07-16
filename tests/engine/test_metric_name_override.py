@@ -1,7 +1,8 @@
 """Per-instance metric names: two configurations of one metric on one node.
 
-Without a custom name both instances key on the class name and the second
-overwrites the first in ``node.metric_results`` / ``report.metrics``.
+The name is the key a result lands under, so a node's names must be unique:
+without a custom name both instances key on the class name and one would
+silently overwrite the other, which TreeBuilder rejects at build time.
 """
 
 from collections.abc import Callable
@@ -40,10 +41,10 @@ def test_two_configs_of_one_metric_coexist(
     assert report.field_scores["total"].metrics.keys() >= {"strict", "loose"}
 
 
-def test_without_custom_names_the_second_instance_wins(
+def test_without_custom_names_the_collision_raises(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    """The collision this feature exists to remove — pinned as current behaviour."""
+    """The collision this feature exists to remove: silent overwrite is refused."""
     config = EvalConfig(
         fields={
             "total": FieldConfig(
@@ -51,10 +52,12 @@ def test_without_custom_names_the_second_instance_wins(
             )
         }
     )
-    report = evaluate_one(ACTUAL, EXPECTED, config)
-
-    assert set(report.field_scores["total"].metrics) == {"numeric", "mean_score"}
-    assert report.metrics["numeric"].by_path["total"] == 1.0  # the loose one
+    with pytest.raises(ValueError, match="assigned twice") as exc:
+        evaluate_one(ACTUAL, EXPECTED, config)
+    message = str(exc.value)
+    assert "numeric" in message  # names the metric
+    assert "total" in message  # names the field path
+    assert "name=" in message  # points at the fix
 
 
 def test_default_name_is_used_when_none_given(
