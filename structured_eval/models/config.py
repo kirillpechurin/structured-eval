@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 
@@ -119,6 +119,16 @@ class EvalConfig(BaseModel):
     ``fields`` accepts canonical nested configs as well as dot-notation keys
     (``"vendor.name"``) as syntactic sugar. ``root`` explicitly declares the
     type of the root node; when omitted it is inferred from ``type(actual)``.
+
+    ``metrics`` and ``default_*_metrics`` are different knobs. ``metrics``
+    *cascades*: every listed metric is added to every node whose type it fits.
+    ``default_*_metrics`` is the *fallback*: it replaces the built-in default
+    (``ExactMatch`` / ``ObjectAccuracy`` / ``ArrayAccuracy``) for nodes of that
+    type which ended up with no metric at all, so that every node still carries
+    one for its ``key_metric`` to summarise. A node reached by a cascading
+    global, or carrying its own ``cfg.metrics``, never sees the default. ``None``
+    keeps the built-in; a list must be non-empty (a node with zero metrics would
+    silently score ``0.0``).
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -130,6 +140,22 @@ class EvalConfig(BaseModel):
     root: ObjectFieldConfig | ArrayFieldConfig | None = None
     key_metric: Any = None  # Metric whose value becomes report.score
     extra_keys: ExtraKeysPolicy = ExtraKeysPolicy.IGNORE
+    # list[Metric] | name str; None → the engine's built-in default for the type
+    default_scalar_metrics: list[Any] | None = None
+    default_object_metrics: list[Any] | None = None
+    default_array_metrics: list[Any] | None = None
+
+    @field_validator(
+        "default_scalar_metrics", "default_object_metrics", "default_array_metrics"
+    )
+    @classmethod
+    def _non_empty(cls, value: list[Any] | None, info: Any) -> list[Any] | None:
+        if value is not None and not value:
+            raise ValueError(
+                f"{info.field_name} must list at least one metric; "
+                f"omit it (None) to keep the built-in default."
+            )
+        return value
 
 
 ObjectFieldConfig.model_rebuild()

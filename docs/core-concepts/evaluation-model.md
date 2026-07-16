@@ -152,10 +152,47 @@ report.field_scores["title"].metrics["token_f1"]  # 0.67 — they share "to pyth
 ```
 
 Where a node's metrics come from: the config's global `metrics` cascade by type,
-any per-field `metrics` are merged in, and if a scalar is left with none it falls
-back to its structural default (`ExactMatch` / `ObjectAccuracy` / `ArrayAccuracy`).
+any per-field `metrics` are merged in, and if a node is left with none it falls
+back to the default for its kind (`ExactMatch` / `ObjectAccuracy` /
+`ArrayAccuracy`).
 
 > So every node is guaranteed at least one metric of its own kind.
+
+That fallback is configurable per node type — state the document-wide choice
+once instead of repeating it on every field:
+
+```python
+from structured_eval import evaluate
+from structured_eval.models import EvalConfig
+from structured_eval.metrics import Numeric
+
+a, e = {"total": 100.5, "tax": 20.1}, {"total": 100.0, "tax": 20.0}
+
+# without a config every scalar is compared exactly — 0.5% off is simply wrong
+r = evaluate(a, e)
+r.field_scores["total"].metrics["exact_match"]  # 0.0
+
+# default_scalar_metrics replaces ExactMatch on every scalar that has no metric
+# of its own — one line instead of a FieldConfig per field
+r = evaluate(a, e, EvalConfig(default_scalar_metrics=[Numeric(tolerance=0.01)]))
+r.field_scores["total"].metrics["numeric"]  # 1.0 — 0.5% is inside the 1% band
+r.field_scores["tax"].metrics["numeric"]  # 1.0 — same default, every scalar
+r.score  # 1.0
+```
+
+`default_object_metrics` and `default_array_metrics` do the same for object and
+array nodes (replacing `ObjectAccuracy` / `ArrayAccuracy`).
+
+It stays a *fallback*: a node reached by the `metrics` cascade, or carrying its
+own `metrics`, never sees it. Note the difference — `metrics` **adds** a metric
+to every node it fits, while `default_*_metrics` **replaces** the built-in for
+nodes that would otherwise have none.
+
+A metric's name is the key its result lands under, so a node never carries two
+metrics sharing one. Between layers that's an override — a field's own metric
+displaces the equally-named global, which is how one field runs a stricter
+configuration. Listing both in the *same* list is ambiguous and raises; give
+them distinct names instead (`Numeric(0.01, name="strict")`).
 
 ### The representative score (`key_metric`)
 
