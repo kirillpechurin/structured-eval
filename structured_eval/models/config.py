@@ -77,12 +77,14 @@ class ArrayFieldConfig(BaseModel):
     aligner built in ``make_aligner``), so new strategies add no new fields here:
 
     * ``BY_INDEX`` → ``params`` empty.
-    * ``BY_KEY`` → ``{"key": <field|None>, "key_metric": <metric|name>,
+    * ``BY_KEY`` → ``{"key": <field|[fields]|None>, "key_metric": <metric|name>,
       "threshold": <float>}``. The generalized ``BY_KEY`` subsumes value- and
-      similarity-based matching (technical_details_v3 §5).
+      similarity-based matching (technical_details_v3 §5); several ``key``
+      fields form a composite key, scored as their mean.
     * ``HUNGARIAN`` → ``{"scorer": <Scorer | dict[str, Scorer] | None>,
-      "threshold": <float>, "key": <field|None>}``. Optimal one-to-one
-      assignment; ``scorer`` as a per-field dict scores arrays of objects.
+      "threshold": <float>, "key": <field|[fields]|None>}``. Optimal one-to-one
+      assignment; ``scorer`` as a per-field dict scores arrays of objects, and
+      with ``key`` set it binds a scorer per key field.
 
     ``key_metric`` picks this array node's *representative* (roll-up) metric —
     a metric instance or a registered name, ``None`` → the default. This is

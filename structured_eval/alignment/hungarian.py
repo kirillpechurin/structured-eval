@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from structured_eval.alignment.base import ArrayAligner, key_value
+from structured_eval.alignment.base import ArrayAligner, key_value, normalize_key
 from structured_eval.metrics.base import FieldMetric, Metric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
 from structured_eval.metrics.numeric_closeness import NumericCloseness
 from structured_eval.models.config import ArrayStrategy
 from structured_eval.models.nodes.array_node import ArrayMatchResult
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 _LARGE_MATRIX_WARN = 10_000  # rows*cols beyond which we warn (quadratic scoring cost)
 
@@ -37,22 +40,36 @@ class HungarianAligner(ArrayAligner):
     * a ``dict[str, Scorer]`` — per-field scorers for arrays of objects; the
       element score is the mean over the union of fields (a field with no entry
       falls back to its type default);
-    * ``None`` — type-aware default (graded numeric / ``Fuzzy`` / exact), with
-      objects scored field-by-field.
+    * ``None`` — type-aware default (graded numeric, exact for everything else),
+      with objects scored field-by-field.
 
-    ``key`` scores on a named sub-field instead of the whole element. Requires
-    the ``align`` extra (scipy).
+    ``key`` scores on named field(s) instead of the whole element: one field
+    path, or several — ``["sku", "warehouse"]`` — for records identified by a
+    combination. Paths may be nested (``"who.first"``). ``key`` picks *what* is
+    compared and ``scorer`` *how*: with ``key`` set, a ``dict`` scorer binds a
+    scorer per key field (naming a field outside ``key`` is an error), a single
+    scorer applies to each key field, and the element score is the mean over
+    the key fields. Requires the ``align`` extra (scipy).
     """
 
     def __init__(
         self,
         scorer: Scorer | dict[str, Scorer] | None = None,
         threshold: float = 0.8,
-        key: str | None = None,
+        key: str | Sequence[str] | None = None,
     ):
         self.scorer = scorer
         self.threshold = threshold
-        self.key = key
+        # One key or many, ``self.key`` is a list of field paths from here on
+        # (``None`` keeps its meaning: score on the whole element).
+        self.key = normalize_key(key, self.__class__.__name__)
+        if self.key is not None and isinstance(scorer, dict):
+            unknown = [field for field in scorer if field not in self.key]
+            if unknown:
+                raise ValueError(
+                    f"HungarianAligner: scorer names field(s) {sorted(unknown)} that "
+                    f"are not in key {self.key}; a scorer only tunes a key field."
+                )
 
     def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
         if not expected or not actual:
@@ -102,10 +119,19 @@ class HungarianAligner(ArrayAligner):
     # ── element similarity ──────────────────────────────────────────────────
 
     def _score(self, expected: Any, actual: Any) -> float:
-        return self._similarity(
-            key_value(expected, self.key),
-            key_value(actual, self.key),
-            self.scorer,
+        if self.key is None:
+            return self._similarity(expected, actual, self.scorer)
+        # ``key`` picks the fields to compare on, ``scorer`` says how: a dict
+        # binds a scorer per key field, a single scorer applies to each of them.
+        scorers = (
+            self.scorer
+            if isinstance(self.scorer, dict)
+            else dict.fromkeys(self.key, self.scorer)
+        )
+        return self._object_similarity(
+            {field: key_value(expected, field) for field in self.key},
+            {field: key_value(actual, field) for field in self.key},
+            scorers,
         )
 
     def _similarity(
@@ -123,7 +149,7 @@ class HungarianAligner(ArrayAligner):
         return self._apply(self._default_scorer(expected, actual), expected, actual)
 
     def _object_similarity(
-        self, expected: Any, actual: Any, scorers: dict[str, Scorer]
+        self, expected: Any, actual: Any, scorers: Mapping[str, Scorer | None]
     ) -> float:
         if not isinstance(expected, dict) or not isinstance(actual, dict):
             return 1.0 if expected == actual else 0.0
@@ -146,8 +172,9 @@ class HungarianAligner(ArrayAligner):
     def _default_scorer(expected: Any, actual: Any) -> FieldMetric:
         """Type-aware default similarity metric for a pair of scalar values.
 
-        ``bool`` → exact, number → graded :class:`NumericCloseness`, ``str`` →
-        :class:`Fuzzy` (or exact without rapidfuzz), everything else → exact.
+        Number → graded :class:`NumericCloseness`; everything else, ``bool`` and
+        ``str`` included, → :class:`ExactMatch`. Strings are *not* graded by
+        default: pass ``scorer="fuzzy"`` to pair them by similarity.
         """
         if isinstance(expected, bool) or isinstance(actual, bool):
             return ExactMatch()

@@ -1,7 +1,8 @@
 """HungarianAligner — optimal one-to-one assignment (scipy).
 
 Owns its element-similarity logic and a ``Scorer`` type: a single
-metric/name/callable, or a per-field ``dict[str, Scorer]``.
+metric/name/callable, or a per-field ``dict[str, Scorer]``. ``key`` picks the
+field(s) compared — one, or several as a composite key — and ``scorer`` how.
 """
 
 from typing import Any
@@ -95,3 +96,84 @@ def test_per_field_scorer_dict() -> None:
         scorer={"name": "fuzzy", "amount": "numeric_closeness"}, threshold=0.7
     ).align(expected, actual)
     assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+
+@pytest.mark.parametrize(
+    ("expected", "actual", "matched", "missed", "spurious"),
+    [
+        pytest.param(
+            [{"sku": "A", "wh": "east"}, {"sku": "A", "wh": "west"}],
+            [{"sku": "A", "wh": "west"}, {"sku": "A", "wh": "east"}],
+            [(0, 1), (1, 0)],
+            [],
+            [],
+            id="shared-sku-split-by-warehouse",  # a lone sku key would collide these
+        ),
+        pytest.param(
+            [{"sku": "A", "wh": "east"}],
+            [{"sku": "A", "wh": "west"}],
+            [],
+            [0],
+            [0],
+            id="one-field-differs-no-match",  # mean 0.5 < threshold 0.8
+        ),
+    ],
+)
+def test_composite_key(
+    expected: list[Any],
+    actual: list[Any],
+    matched: list[tuple[int, int]],
+    missed: list[int],
+    spurious: list[int],
+) -> None:
+    r = HungarianAligner(key=["sku", "wh"]).align(expected, actual)
+    assert sorted(r.matched) == matched
+    assert r.missed == missed
+    assert r.spurious == spurious
+
+
+def test_composite_key_binds_scorer_per_key_field() -> None:
+    # "wh" has no entry → type default (exact); the fuzzy sku carries the pair,
+    # mean (0.9 + 1.0) / 2 clears 0.9, while a differing warehouse would not.
+    expected = [{"sku": "widget-a", "wh": "east"}]
+    actual = [{"sku": "widget-b", "wh": "east"}]
+    r = HungarianAligner(key=["sku", "wh"], scorer={"sku": "fuzzy"}, threshold=0.9)
+    assert r.align(expected, actual).matched == [(0, 0)]
+    assert r.align(expected, [{"sku": "widget-b", "wh": "west"}]).matched == []
+
+
+def test_composite_key_single_scorer_applies_to_each_field() -> None:
+    expected = [{"first": "Jonathan", "last": "Smith"}]
+    actual = [{"first": "John", "last": "Smyth"}]
+    r = HungarianAligner(key=["first", "last"], scorer="fuzzy", threshold=0.7).align(
+        expected, actual
+    )
+    assert r.matched == [(0, 0)]  # mean of the two fuzzy scores clears 0.7
+
+
+def test_composite_key_takes_nested_paths() -> None:
+    expected = [{"who": {"first": "Jonathan"}, "qty": 1}]
+    actual = [{"who": {"first": "John"}, "qty": 99}]
+    # qty is not a key field, so its mismatch cannot sink the pair
+    r = HungarianAligner(
+        key=["who.first"], scorer={"who.first": "fuzzy"}, threshold=0.6
+    ).align(expected, actual)
+    assert r.matched == [(0, 0)]
+
+
+def test_single_key_list_matches_string_key() -> None:
+    expected = [{"id": "acme"}, {"id": "globex"}]
+    actual = [{"id": "globex"}, {"id": "acme"}]
+    assert HungarianAligner(key=["id"], threshold=0.6).align(
+        expected, actual
+    ) == HungarianAligner(key="id", threshold=0.6).align(expected, actual)
+
+
+def test_empty_key_rejected() -> None:
+    with pytest.raises(ValueError, match="at least one field"):
+        HungarianAligner(key=[])
+
+
+def test_scorer_field_outside_key_rejected() -> None:
+    with pytest.raises(ValueError, match=r"\['skuu'\] that are not in key"):
+        HungarianAligner(key=["sku", "wh"], scorer={"sku": "fuzzy", "skuu": "fuzzy"})
