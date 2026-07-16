@@ -25,6 +25,7 @@ from structured_eval.metrics import (
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 from structured_eval.models import (
     ArrayFieldConfig,
+    ArrayStrategy,
     EvalConfig,
     EvalReport,
     ExtraKeysPolicy,
@@ -240,6 +241,56 @@ def test_nested_object_and_array(evaluate_one: Callable[..., EvalReport]) -> Non
     r = evaluate_one(doc, doc, cfg)
     assert r.field_scores["vendor.name"].score == 1.0
     assert "lines" in r.array_matches
+
+
+# ── arrays of primitives (#3) ────────────────────────────────────────────────
+#
+# TreeBuilder.node dispatches on the *value*, so an array element that is a
+# primitive becomes a ScalarNode and is scored like any other leaf — no wrapping
+# in an object required.
+
+
+@pytest.mark.parametrize(
+    ("actual", "expected", "scores"),
+    [
+        ([1, 2, 3], [1, 2, 9], [1.0, 1.0, 0.0]),
+        (["ai", "ml", "nlp"], ["ai", "ml", "cv"], [1.0, 1.0, 0.0]),
+        ([True, False, True], [True, True, True], [1.0, 0.0, 1.0]),
+    ],
+    ids=["numeric", "string", "boolean"],
+)
+def test_primitive_elements_scored_individually(
+    evaluate_one: Callable[..., EvalReport],
+    actual: list[Any],
+    expected: list[Any],
+    scores: list[float],
+) -> None:
+    # BY_INDEX (the default) pairs the i-th with the i-th, so every element is
+    # reachable at its own path rather than collapsing into one array verdict.
+    r = evaluate_one({"tags": actual}, {"tags": expected})
+    assert [r.field_scores[f"tags[{i}]"].score for i in range(len(actual))] == scores
+
+
+def test_primitive_array_matches_report_missed_and_spurious(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # Matching scalars by value (BY_KEY with no key) gives set semantics:
+    # ai + python pair up, ml (1) and nlp (3) are missed, llm (1) is spurious.
+    cfg = EvalConfig(fields={"tags": ArrayFieldConfig(strategy=ArrayStrategy.BY_KEY)})
+    r = evaluate_one(
+        {"tags": ["ai", "llm", "python"]}, {"tags": ["ai", "ml", "python", "nlp"]}, cfg
+    )
+
+    m = r.array_matches["tags"]
+    assert m.matched == [(0, 0), (2, 2)]
+    assert m.missed == [1, 3]
+    assert m.spurious == [1]
+    # Only matched pairs become element nodes — an unmatched element has no
+    # counterpart to score against, so array_matches is where it is reported.
+    assert sorted(p for p in r.field_scores if p.startswith("tags[")) == [
+        "tags[0]",
+        "tags[2]",
+    ]
 
 
 # ── AnyNodeMetric (cascades uniformly onto every node) ───────────────────────

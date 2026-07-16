@@ -19,6 +19,7 @@ from structured_eval.metrics import (
     ArrayPrecision,
     ArrayPRF1,
     ArrayRecall,
+    Numeric,
 )
 from structured_eval.models import (
     ArrayFieldConfig,
@@ -97,6 +98,28 @@ def test_cardinality(tree_factory: Callable[..., EvalNode]) -> None:
 def test_cardinality_empty_vacuous(tree_factory: Callable[..., EvalNode]) -> None:
     node = _array_node(tree_factory, [], [])
     assert ArrayCardinality().compute(node) == 1.0
+
+
+@pytest.mark.parametrize(
+    ("item_cfg", "accuracy"),
+    [
+        # Elements default to ExactMatch, like any scalar leaf: both are near
+        # misses, so neither counts.
+        (None, 0.0),
+        # A scalar `item` grades the elements instead: both land inside ±0.5.
+        (FieldConfig(metrics=[Numeric(tolerance=0.5)]), 1.0),
+    ],
+    ids=["default-exact", "graded-numeric"],
+)
+def test_scalar_item_config_grades_primitive_elements(
+    tree_factory: Callable[..., EvalNode],
+    item_cfg: FieldConfig | None,
+    accuracy: float,
+) -> None:
+    # `item` is a FieldConfig (not an ObjectFieldConfig) when the elements are
+    # primitives — that is what configures an array of scalars.
+    node = _array_node(tree_factory, [1.0, 2.0], [1.2, 2.1], item_cfg=item_cfg)
+    assert ArrayAccuracy().compute(node) == pytest.approx(accuracy)
 
 
 def test_by_key_alignment_reorders(tree_factory: Callable[..., EvalNode]) -> None:
