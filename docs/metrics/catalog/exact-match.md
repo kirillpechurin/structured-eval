@@ -16,7 +16,8 @@ reproduced verbatim (codes, enums, ids).
 
 `ExactMatch` is the **default scalar metric**: a scalar leaf you don't configure gets
 it automatically. It is also the default **key** comparison used by `by_key` array
-alignment (matching elements on a key field).
+alignment (matching elements on their key field, or on each field of a composite
+key).
 
 ## Parameters
 

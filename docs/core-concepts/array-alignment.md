@@ -47,7 +47,7 @@ Pick the strategy on the field's `ArrayFieldConfig`; tune it with `params`.
 | Strategy             | Pairs by                         | Use when                                     |
 |----------------------|----------------------------------|----------------------------------------------|
 | `by_index` (default) | position (i-th ↔ i-th)           | order is meaningful (steps, rankings)        |
-| `by_key`             | a key field, greedily best-first | order is *not* meaningful (sets, rows by id) |
+| `by_key`             | one or more key fields, greedily best-first | order is *not* meaningful (sets, rows by id) |
 | `hungarian`          | globally optimal one-to-one      | order-free + you want the best overall pairing |
 
 ### `by_index` — positional
@@ -82,6 +82,31 @@ report.array_matches["items"].matched   # [(0, 1), (1, 0)] — A↔A, B↔B desp
 ```
 
 `params` for `by_key`: `key`, `key_metric`, `threshold` (default `1.0`).
+
+`key` may also name **several fields** — a composite key, for records identified
+by a combination such as `(sku, warehouse)`. Each field is scored with
+`key_metric` and the element's key score is the mean over the fields, so with the
+defaults every field must match and elements sharing one field no longer collide:
+
+```python
+cfg = EvalConfig(fields={"items": ArrayFieldConfig(
+    strategy=ArrayStrategy.BY_KEY,
+    params={"key": ["sku", "warehouse"]},
+    metrics=[ArrayPRF1()],
+)})
+report = evaluate(
+    {"items": [{"sku": "A", "warehouse": "west", "qty": 2},
+               {"sku": "A", "warehouse": "east", "qty": 1}]},
+    {"items": [{"sku": "A", "warehouse": "east", "qty": 1},
+               {"sku": "A", "warehouse": "west", "qty": 2}]},
+    cfg,
+)
+report.array_matches["items"].matched   # [(0, 1), (1, 0)] — same sku, kept apart by warehouse
+```
+
+Because the fields are averaged, a soft `key_metric` lets a strong field carry a
+weaker one (an exact `sku` plus a fuzzy `name` scoring `0.6` means `0.8`). A
+one-field key (`["sku"]`) is the mean of one score — identical to `"sku"`.
 
 Pairing is **globally greedy**: every threshold-clearing pair is ranked by key
 score (highest first) and claimed one-to-one. So a *soft* key (a fuzzy/numeric
@@ -118,8 +143,9 @@ The element similarity is `scorer`:
   callable) — applied to the whole element;
 - a `dict[str, Scorer]` — per-field scorers for arrays of objects; the element
   score is the mean over the union of fields;
-- `None` — a type-aware default (graded numeric / `Fuzzy` / exact), objects scored
-  field-by-field.
+- `None` — a type-aware default: numbers are graded by closeness, everything else
+  (strings included) is exact; objects are scored field-by-field. Strings are not
+  graded by default — ask for it with `"fuzzy"`.
 
 ```python
 # pair invoice line items that are reordered AND fuzzily worded
@@ -142,17 +168,40 @@ report.array_matches["line_items"].matched   # [(0, 1), (1, 0)] — cable↔cabl
 
 `params` for `hungarian`: `scorer`, `threshold` (default `0.8`), `key`.
 
+`key` narrows what is compared: instead of the whole element, only the named
+field — or **several fields**, a composite key such as `["sku", "warehouse"]`.
+Field paths may be nested (`"who.first"`). `key` picks *what* is compared and
+`scorer` *how*: with a `key` set, a `dict` scorer binds a scorer per key field,
+a single scorer applies to each of them, and the element score is the mean over
+the key fields. Naming a field that isn't in `key` is a `ValueError` — it would
+otherwise be silently ignored:
+
+```python
+cfg = EvalConfig(fields={"items": ArrayFieldConfig(
+    strategy=ArrayStrategy.HUNGARIAN,
+    params={
+        "key": ["sku", "warehouse"],       # match on the pair, ignore qty
+        "scorer": {"sku": "fuzzy"},        # warehouse falls back to its type default
+        "threshold": 0.9,
+    },
+)})
+```
+
+A one-field key (`["sku"]`) scores exactly like `"sku"`.
+
 > The `scorer` here is the *alignment* similarity — it decides **who pairs with
 > whom**, not the final element scores. Grading the paired elements is a separate
 > step done by the array metric and the element's own metrics (see
 > [from alignment to a score](#from-alignment-to-a-score)). Configure both if you
 > want a soft pairing *and* graded credit.
 
-> `by_key` vs `hungarian`: both pair order-independently. `by_key` is a cheap,
-> scipy-free greedy approximation that matches on a single key; `hungarian` is the
-> optimal assignment over a full similarity (whole element or per-field), at the
-> cost of the scipy dependency and an O(n²) matrix. Reach for `hungarian` when one
-> key isn't enough to disambiguate and you want the globally best pairing.
+> `by_key` vs `hungarian`: both pair order-independently, and both take a
+> composite key. `by_key` is a cheap, scipy-free greedy approximation that scores
+> every key field with the same `key_metric`; `hungarian` is the optimal
+> assignment over a full similarity (whole element, or per-field with a scorer
+> per key field), at the cost of the scipy dependency and an O(n²) matrix. Reach
+> for `hungarian` when the key fields need different metrics, or when you want
+> the globally best pairing rather than a greedy one.
 
 ## From alignment to a score
 
