@@ -47,7 +47,7 @@ also back the pre-commit hooks.
 Layered, dependencies point **downward only** — never import upward:
 
 ```
-models ← metrics / alignment / formats / utils ← engine / reporting ← integrations / api
+models / llm ← metrics / alignment / formats / utils ← engine / reporting ← integrations / api
 ```
 
 Three engine phases (`engine/`): **parse → build tree & resolve each node's metric
@@ -83,8 +83,13 @@ list → compute every node's metrics post-order → build report**. The key ide
   across the whole registry.
 - **Data models are pydantic v2** — use `model_dump` / `model_validate`.
 - **Optional features are lazy-imported behind extras** (`yaml`, `fuzzy`, `jsonschema`,
-  `rules`, `diff`, `report`, `deepeval`, `langsmith`, `all`). Guard any new optional
-  import so the core stays installable without the extra.
+  `rules`, `diff`, `report`, `litellm`, `deepeval`, `langsmith`, `all`). Guard any new
+  optional import so the core stays installable without the extra.
+- **LLM access goes through `structured_eval.llm`, never a provider SDK.** The core
+  ships no provider dependency: features call `LlmClient.generate` /
+  `generate_with_schema` and take whatever `resolve_client` returns (a client, a
+  LangChain-style chat model, a callable, or a `"provider/model"` string routed to the
+  `litellm` extra). Do not import a provider package outside `llm/`.
 - **Tests mirror the source tree** one-to-one, one file per cohesive unit. Style:
   flat parametrized functions, no test classes, table-driven; `pytestmark` set once
   per file. New behaviour needs a test; coverage is gated in `pyproject.toml`.

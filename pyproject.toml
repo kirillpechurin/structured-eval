@@ -51,10 +51,13 @@ jsonschema = ["jsonschema>=4.20.0"]
 rules = ["jsonpath-ng>=1.6.0"]
 diff = ["deepdiff>=7.0.0"]
 align = ["scipy>=1.13.0"]
+litellm = ["litellm>=1.58.0"]
 deepeval = ["deepeval>=3.0.0"]
 langsmith = ["langsmith>=0.8.0"]
+# Every capability of structured-eval itself.
+# The host-framework adapters (deepeval / langsmith) are deliberately *not* here.
 all = [
-    "structured-eval[yaml,fuzzy,jsonschema,rules,diff,align]"
+    "structured-eval[yaml,fuzzy,jsonschema,rules,diff,align,litellm]"
 ]
 
 [dependency-groups]
@@ -65,14 +68,18 @@ dev = [
     "mypy>=1.10",
     "pre-commit>=4.6.0",
     "pyyaml>=6.0.1",
-    "rapidfuzz>=3.0",
+    "rapidfuzz>=3.0.0",
     "types-pyyaml>=6.0",
-    "jsonschema>=4.26.0",
-    "types-jsonschema>=4.26.0.20260518",
+    "jsonschema>=4.20.0",
+    "types-jsonschema>=4.20.0.20260518",
     "jsonpath-ng>=1.6",
-    "deepdiff>=9.1.0",
-    "scipy>=1.12",
-    "scipy-stubs>=1.12",
+    "deepdiff>=7.0.0",
+    "scipy>=1.13.0",
+    "scipy-stubs>=1.13.0",
+    "litellm>=1.58.0",
+    # Host-framework adapters, needed here so tests/integration/ runs instead of skipping.
+    "deepeval>=3.0.0",
+    "langsmith>=0.8.0",
 ]
 
 # ── Ruff ──────────────────────────────────────────────────────────────────────
@@ -137,7 +144,14 @@ warn_unreachable = true
 
 # Optional third-party deps without type stubs (lazy-imported behind extras).
 [[tool.mypy.overrides]]
-module = ["jsonpath_ng.*", "deepeval.*", "langsmith.*", "deepdiff.*", "rapidfuzz.*"]
+module = [
+    "jsonpath_ng.*",
+    "deepeval.*",
+    "langsmith.*",
+    "deepdiff.*",
+    "rapidfuzz.*",
+    "litellm.*",
+]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -161,7 +175,7 @@ addopts = "--import-mode=importlib"
 markers = [
     "unit: pure unit tests (single module, no engine)",
     "engine: end-to-end through the Evaluator",
-    "integration: host-framework adapters (deepeval/langsmith)",
+    "integration: real third-party libraries (deepeval/langsmith/litellm)",
     "golden: regression on dataset fixtures",
     "property: invariant / metamorphic tests over generated inputs",
 ]
