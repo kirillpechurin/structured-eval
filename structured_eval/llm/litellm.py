@@ -87,6 +87,8 @@ class LiteLlmClient(LlmClient):
         """
         try:
             return bool(self._litellm().supports_response_schema(model=self.model_name))
+        except ImportError:
+            raise  # a missing extra is an install problem, not a failed call
         except Exception:
             return False
 
