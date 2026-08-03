@@ -59,10 +59,12 @@ def test_generate_returns_the_completion_text(litellm_stub):
 
 
 def test_model_and_messages_are_passed_through(litellm_stub):
-    LiteLlmClient("anthropic/claude-opus-5").generate("judge this", system="be strict")
+    LiteLlmClient("qwen/qwen3-235b-a22b-2507").generate(
+        "judge this", system="be strict"
+    )
 
     call = litellm_stub.calls[0]
-    assert call["model"] == "anthropic/claude-opus-5"
+    assert call["model"] == "qwen/qwen3-235b-a22b-2507"
     assert call["messages"] == [
         {"role": "system", "content": "be strict"},
         {"role": "user", "content": "judge this"},
