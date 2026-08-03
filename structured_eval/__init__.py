@@ -7,7 +7,7 @@ down, imported explicitly from its subsystem:
   ``EvalConfig`` (+ the ``*FieldConfig`` family & policies), ``EvalReport`` /
   ``BatchEvalReport`` / ``ConsistencyReport``. Lower-level model pieces live in
   precise submodules (``models.nodes`` / ``models.result`` /
-  ``models.metric_result`` / ``models.context``).
+  ``models.metrics`` / ``models.context``).
 - ``structured_eval.metrics``  — every metric plus the base hierarchy
   (``Metric`` / ``FieldMetric`` / …), ``resolve_metric``, and the rule DSL
   (``Rule`` / ``RulePassRate``).

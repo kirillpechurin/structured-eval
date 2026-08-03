@@ -29,13 +29,17 @@ def flatten(obj: dict[str, Any] | list[Any], prefix: str = "") -> dict[str, Any]
                 result.update(flatten(value, path))
             else:
                 result[path] = value
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            path = f"{prefix}[{i}]"
-            if isinstance(item, (dict, list)) and item:
-                result.update(flatten(item, path))
-            else:
-                result[path] = item
+        return result
+
+    assert isinstance(obj, list), (
+        f"flatten expects a dict or a list, got {type(obj).__name__}"
+    )
+    for i, item in enumerate(obj):
+        path = f"{prefix}[{i}]"
+        if isinstance(item, (dict, list)) and item:
+            result.update(flatten(item, path))
+        else:
+            result[path] = item
     return result
 
 

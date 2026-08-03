@@ -20,6 +20,12 @@ class ObjectPrecision(ObjectMetric):
     field threshold (``1.0`` unless configured), so a field counts only when its
     score is a perfect match; ``mode="soft"`` drops the threshold and uses the
     field score fractionally.
+
+    ``threshold`` overrides that bar: a single float raises or lowers it for
+    every field at once, a dict — ``{"total": 0.99}`` — only for the fields it
+    names, leaving the rest on the threshold their config gave them. Fields are
+    named the way ``score_policy`` names them (the last path segment, so one
+    entry covers every element of an array).
     """
 
     name = "object_precision"
@@ -27,7 +33,7 @@ class ObjectPrecision(ObjectMetric):
     def __init__(
         self,
         score_policy: dict[str, Any] | None = None,
-        threshold: float | None = None,
+        threshold: float | dict[str, float] | None = None,
         mode: stats.GradingMode = stats.GradingMode.HARD,
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
         name: str | None = None,

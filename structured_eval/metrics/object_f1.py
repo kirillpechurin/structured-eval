@@ -23,7 +23,7 @@ class ObjectF1(ObjectMetric):
     def __init__(
         self,
         score_policy: dict[str, Any] | None = None,
-        threshold: float | None = None,
+        threshold: float | dict[str, float] | None = None,
         mode: stats.GradingMode = stats.GradingMode.HARD,
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
         name: str | None = None,

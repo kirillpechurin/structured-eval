@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from structured_eval.alignment.base import ArrayAligner, key_value, normalize_key
+from structured_eval.alignment.base import (
+    ArrayAligner,
+    key_value,
+    keyable,
+    normalize_key,
+)
 from structured_eval.metrics.base import BaseMetric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
@@ -93,6 +98,8 @@ class ByKeyAligner(ArrayAligner):
 
     def _key_score(self, e_key: list[Any], a_key: list[Any]) -> float:
         """Mean of the per-field key scores (a one-field key is that score)."""
+        if not (keyable(e_key) and keyable(a_key)):
+            return 0.0
         total = sum(
             self.scorer.scalar_on_values(a, e)
             for e, a in zip(e_key, a_key, strict=True)

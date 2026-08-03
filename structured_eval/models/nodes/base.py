@@ -1,20 +1,27 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from structured_eval.models.context import EvalContext  # noqa: TC001
-from structured_eval.models.metric_result import MetricResult  # noqa: TC001
+from structured_eval.models.metrics import MetricResult  # noqa: TC001
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-# Re-exported for back-compat: ``navigate`` / ``MISSING`` now live in
-# ``structured_eval.utils.paths`` (a lower layer with no model dependency).
-__all__ = ["MISSING", "EvalNode", "navigate"]
+__all__ = ["EvalNode", "NodeType"]
+
+
+class NodeType(StrEnum):
+    """The kind of tree node a ``FieldScore`` describes."""
+
+    SCALAR = "scalar"
+    OBJECT = "object"
+    ARRAY = "array"
 
 
 class EvalNode(BaseModel):

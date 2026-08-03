@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from structured_eval.models.nodes.array_node import ArrayMatchResult
 
@@ -27,6 +27,19 @@ def key_value(element: Any, key: str | None) -> Any:
         value = navigate(element, key)
         return None if value is MISSING else value
     return _MISSING_KEY
+
+
+def keyable(values: Iterable[Any]) -> bool:
+    """Could every part of this key be extracted from its element?
+
+    ``key_value`` answers the sentinel for an element that carries no fields at
+    all, and that is not something two elements can agree on: the sentinel is a
+    single object, so scoring two of them against each other reads as a perfect
+    match. Every such pair would then tie at 1.0 and be claimed in index order —
+    keyed alignment silently degenerating into alignment by position. An element
+    with no key matches nothing, so the aligners ask this before they score.
+    """
+    return all(value is not _MISSING_KEY for value in values)
 
 
 def normalize_key(key: str | Sequence[str] | None, owner: str) -> list[str] | None:

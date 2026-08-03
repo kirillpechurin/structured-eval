@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from structured_eval.metrics.invoker import MetricInvoker
-from structured_eval.models.metric_result import MetricResult
+from structured_eval.models.metrics import MetricResult
 
 if TYPE_CHECKING:
     from structured_eval.metrics.base import BaseMetric, MetricOutput
@@ -13,14 +13,22 @@ if TYPE_CHECKING:
 class MetricRunner:
     """Phase 2: compute each node's own metrics across the tree, in place.
 
-    Every node carries the metrics resolved for it by ``TreeBuilder``; this
-    phase walks the tree **post-order** (children before their parent), so an
-    aggregating parent reads its children's already-computed representative
-    scores — computation is uniform and fully recursive at any nesting depth.
+    Every node carries the metrics resolved for it by ``TreeBuilder``. They are
+    computed **post-order** — children before their parent — so an aggregating
+    parent reads its children's already-computed representative scores, and
+    computation stays uniform and fully recursive at any nesting depth.
+
     Within a node the ``key_metric`` runs *last*: it is the representative score
     and its logic may depend on the node's other metrics (the default
     ``MeanScore`` averages them). A metric returning ``None`` (e.g.
-    ``Faithfulness`` without a source) is skipped.
+    ``FieldFaithfulness`` without a source) is skipped.
+
+    Post-order plus "key_metric last" is not a style choice, it is the
+    dependency graph written down: an aggregating metric reads
+    ``child.representative``, which is the child's ``key_metric`` value, which
+    in turn summarises the child's own metrics. The chain alternates between the
+    two levels, so there is no cut that computes all the ordinary metrics first
+    and all the representatives after.
     """
 
     def run(self, root: EvalNode) -> None:
@@ -31,8 +39,8 @@ class MetricRunner:
             self._visit(child)
         key_metric = node.key_metric
         for metric in node.metrics:
-            if metric is key_metric:
-                continue
+            if key_metric is not None and metric.name == key_metric.name:
+                continue  # it is the representative; it runs last, just below
             self._apply(metric, node)
         if key_metric is not None:
             self._apply(key_metric, node)

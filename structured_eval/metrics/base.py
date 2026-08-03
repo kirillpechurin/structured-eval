@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from structured_eval.models.metric_result import MetricResult
+from structured_eval.models.metrics import MetricResult
 from structured_eval.models.nodes.array_node import ArrayNode
 from structured_eval.models.nodes.base import EvalNode
 from structured_eval.models.nodes.object_node import ObjectNode
@@ -12,6 +12,7 @@ from structured_eval.models.nodes.scalar import ScalarNode
 # What a metric's ``compute`` may return; ``MetricRunner._apply`` normalizes any
 # of these to a ``MetricResult``. A bare value / dict of sub-scores, optionally
 # paired with structured ``extra`` via a tuple, or a ready ``MetricResult``.
+# ``None`` means the metric opted out of scoring this node.
 MetricOutput = (
     float
     | dict[str, float]
@@ -21,7 +22,7 @@ MetricOutput = (
 )
 
 # Name → metric class. Populated automatically as BaseMetric subclasses are
-# declared; used by EvalConfig.from_yaml() to resolve string names (Stage 10).
+# declared; used by EvalConfig.from_yaml() to resolve string names.
 _METRIC_REGISTRY: dict[str, type] = {}
 
 
@@ -43,6 +44,11 @@ class BaseMetric(ABC):  # noqa: B024 — registry root; subclasses define the in
     Every metric defining its own ``__init__`` must accept ``name`` and forward
     it here via ``super().__init__(name=name)``; ``test_metric_contracts.py``
     enforces this across the registry.
+
+    A metric scores the node it was given and nothing else — it never writes a
+    result onto another node. A metric that grades a whole subtree reports one
+    value for the node it was attached to, and puts its per-field detail in
+    that value's ``extra``.
     """
 
     name: str = ""

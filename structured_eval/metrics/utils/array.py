@@ -19,13 +19,15 @@ if TYPE_CHECKING:
 
 
 def verdicts(node: ArrayNode, threshold: float) -> list[tuple[float, float, float]]:
-    """``(representative, threshold, weight=1.0)`` for each aligned item."""
-    return [(item.representative, threshold, 1.0) for item in node.items]
+    """``(representative, threshold, weight=1.0)`` for each aligned item.
+
+    ``node.matched``, not ``node.items``: an element with no expected
+    counterpart is a false positive, already counted as ``spurious`` by
+    ``missing_spurious`` — grading it here would count it twice.
+    """
+    return [(item.representative, threshold, 1.0) for item in node.matched]
 
 
 def missing_spurious(node: ArrayNode) -> tuple[int, int]:
-    """``(n_missed, n_spurious)`` from the array's alignment result."""
-    mr = node.match_result
-    if mr is None:
-        return 0, 0
-    return len(mr.missed), len(mr.spurious)
+    """``(n_missing, n_spurious)`` — the elements present on only one side."""
+    return len(node.missing), len(node.spurious)

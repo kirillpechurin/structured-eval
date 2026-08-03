@@ -4,7 +4,12 @@ import warnings
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from structured_eval.alignment.base import ArrayAligner, key_value, normalize_key
+from structured_eval.alignment.base import (
+    ArrayAligner,
+    key_value,
+    keyable,
+    normalize_key,
+)
 from structured_eval.metrics.base import FieldMetric, Metric, resolve_metric
 from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.invoker import MetricInvoker
@@ -128,11 +133,11 @@ class HungarianAligner(ArrayAligner):
             if isinstance(self.scorer, dict)
             else dict.fromkeys(self.key, self.scorer)
         )
-        return self._object_similarity(
-            {field: key_value(expected, field) for field in self.key},
-            {field: key_value(actual, field) for field in self.key},
-            scorers,
-        )
+        e_key = {field: key_value(expected, field) for field in self.key}
+        a_key = {field: key_value(actual, field) for field in self.key}
+        if not (keyable(e_key.values()) and keyable(a_key.values())):
+            return 0.0
+        return self._object_similarity(e_key, a_key, scorers)
 
     def _similarity(
         self,
