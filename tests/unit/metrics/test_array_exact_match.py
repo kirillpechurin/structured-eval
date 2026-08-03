@@ -20,6 +20,9 @@ pytestmark = pytest.mark.unit
         ([1, 2], [1, 2, 3], 0.0),  # length differs
         ([{"a": 1}], [{"a": 1}], 1.0),  # deep equality of nested objects
         ([{"a": 1}], [{"a": 2}], 0.0),  # nested value differs
+        ([{"a": 1}], [{"b": 1}], 0.0),  # nested objects disagree on their keys
+        ([[1, 2]], [[1, 2]], 1.0),  # arrays of arrays recurse
+        ([[1, 2]], [[2, 1]], 0.0),  # ... order-sensitively, all the way down
         ([1, 2], "1,2", 0.0),  # non-list side
         ([1], [1.0], 0.0),  # type-strict: int vs float
     ],
@@ -30,6 +33,9 @@ pytestmark = pytest.mark.unit
         "length",
         "nested-equal",
         "nested-diff",
+        "nested-keys",
+        "nested-array",
+        "nested-array-order",
         "non-list",
         "type-strict",
     ],

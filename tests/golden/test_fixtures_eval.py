@@ -101,6 +101,47 @@ def test_tool_call_nested() -> None:
     assert r.field_scores["arguments.unit"].score == 0.0
 
 
+# ── the document itself is an array ─────────────────────────────────────────
+
+
+def test_root_array_of_records() -> None:
+    # "Extract every line item" answers with a list, not an object wrapping one.
+    # The root's path is a label, so its elements spell themselves without it —
+    # `[0].sku`, the same way `flatten` writes them and `navigate` reads them.
+    actual = [
+        {"sku": "B-7", "qty": 5},
+        {"sku": "A-1", "qty": 99},
+        {"sku": "Z-9", "qty": 1},
+    ]
+    expected = [
+        {"sku": "A-1", "qty": 2},
+        {"sku": "B-7", "qty": 5},
+        {"sku": "C-3", "qty": 7},
+    ]
+    cfg = EvalConfig(
+        root=ArrayFieldConfig(
+            strategy=ArrayStrategy.BY_KEY,
+            params={"key": "sku"},
+            metrics=[ArrayF1()],
+        )
+    )
+    r = evaluate(actual, expected, config=cfg)
+
+    am = r.array_matches["$"]
+    assert sorted(am.matched) == [(0, 1), (1, 0)]  # A-1 and B-7, despite the order
+    assert am.missed == [2]  # C-3 never came back
+    assert am.spurious == [2]  # Z-9 was invented
+
+    # Elements resolve against their own counterpart, not whatever sits at the
+    # same index: A-1 matched element 1, whose qty is wrong.
+    assert r.field_scores["[1].sku"].score == 1.0
+    assert r.field_scores["[1].qty"].score == 0.0
+    assert r.field_scores["[0].qty"].score == 1.0
+
+    # one of the two matched elements is fully correct → tp=1, predicted=3, expected=3
+    assert r.metrics["array_f1"].representative() == pytest.approx(1 / 3)
+
+
 # ── deeply nested document ──────────────────────────────────────────────────
 
 

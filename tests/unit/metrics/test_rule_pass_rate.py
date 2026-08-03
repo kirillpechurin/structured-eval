@@ -4,6 +4,7 @@ One cohesive unit — comparisons, JSONPath arithmetic, ``in_``, custom rules,
 failure paths, and pass-rate aggregation.
 """
 
+import sys
 from typing import Any
 
 import pytest
@@ -112,8 +113,78 @@ def test_no_comparison_raises() -> None:
         Rule("$.total").evaluate(DOC)
 
 
-def test_name_reflects_comparison() -> None:
-    assert Rule("$.total").gt(0).name == "$.total gt 0"
+def test_a_path_on_the_right_that_is_missing_fails_gracefully() -> None:
+    # The rule is well-formed; the *document* does not carry what it refers to,
+    # so this is a failed rule rather than a crashed evaluation.
+    result = Rule("$.total").eq("$.nope").evaluate(DOC)
+    assert not result.passed
+    assert result.message
+
+
+def test_comparing_incomparable_types_fails_gracefully() -> None:
+    result = Rule("$.status").lt(1).evaluate(DOC)  # "paid" < 1
+    assert not result.passed
+    assert result.message
+
+
+@pytest.mark.parametrize(
+    ("rule", "name"),
+    [
+        (Rule("$.total").gt(0), "$.total gt 0"),
+        (Rule("$.total").eq("$.subtotal"), "$.total eq $.subtotal"),
+        (Rule("$.total"), "$.total"),
+        (Rule("$.total", name="totals add up").gt(0), "totals add up"),
+    ],
+    ids=["literal-rhs", "path-rhs", "no-comparison", "explicit-name"],
+)
+def test_a_rule_names_itself_after_what_it_checks(rule: Rule, name: str) -> None:
+    # The name is what shows up in the report, so it has to read as the claim
+    # being made — unless the caller supplied a better one.
+    assert rule.name == name
+
+
+@pytest.mark.parametrize(
+    ("expression", "message"),
+    [
+        ("$.total % 2", "Unsupported operator"),
+        ("$.total > 1", "Unsupported expression node"),
+    ],
+    ids=["operator", "node"],
+)
+def test_arithmetic_is_restricted_to_arithmetic(expression: str, message: str) -> None:
+    # The right-hand side is parsed, not `eval`-ed: only the four arithmetic
+    # operators are honoured, and anything else is refused rather than run.
+    # A malformed rule fails like any other, so one bad rule cannot take the
+    # whole evaluation down with it.
+    result = Rule("$.total").eq(expression).evaluate(DOC)
+    assert not result.passed
+    assert message in result.message
+
+
+def test_a_negative_literal_is_arithmetic_too() -> None:
+    assert _passed(Rule("$.total").eq("$.subtotal - -10"))
+
+
+def test_a_missing_extra_is_reported_as_a_failed_rule(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # jsonpath-ng is imported when a path is resolved, not at import time. The
+    # rule cannot run without it, and the install hint travels in the message
+    # rather than taking the whole evaluation down.
+    monkeypatch.setitem(sys.modules, "jsonpath_ng", None)
+
+    result = Rule("$.total").gt(0).evaluate(DOC)
+    assert not result.passed
+    assert "structured-eval[rules]" in result.message
+
+
+def test_an_operator_the_dsl_cannot_produce_is_refused() -> None:
+    # Unreachable through the fluent API — every comparison method sets a known
+    # operator — so this guards the invariant rather than a user mistake.
+    rule = Rule("$.total").eq(110.0)
+    rule._op = "approximately"
+    with pytest.raises(ValueError, match="Unknown operator"):
+        rule._compare(1, 1)
 
 
 # ── processor (pass-rate aggregation) ────────────────────────────────────────

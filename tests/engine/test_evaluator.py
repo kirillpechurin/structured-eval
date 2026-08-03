@@ -12,6 +12,8 @@ import pytest
 from pydantic import BaseModel
 
 from structured_eval.metrics import (
+    ArrayAccuracy,
+    ArrayF1,
     CoverageLeafScore,
     ExactMatch,
     FieldFaithfulness,
@@ -22,15 +24,19 @@ from structured_eval.metrics import (
     SchemaValidity,
     TokenF1,
 )
+from structured_eval.metrics.base import AnyNodeMetric, BaseMetric, GenericMetric
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 from structured_eval.models import (
     ArrayFieldConfig,
+    ArrayNode,
     ArrayStrategy,
     EvalConfig,
+    EvalNode,
     EvalReport,
     ExtraKeysPolicy,
     FieldConfig,
     ObjectFieldConfig,
+    ObjectNode,
     WarningType,
 )
 
@@ -234,8 +240,6 @@ def test_default_key_metric_is_mean_of_node_metrics(
 
 
 def test_nested_object_and_array(evaluate_one: Callable[..., EvalReport]) -> None:
-    from structured_eval.metrics import ArrayF1
-
     doc = {"vendor": {"name": "Acme"}, "lines": [1, 2, 3]}
     cfg = EvalConfig(metrics=[ObjectF1(), ArrayF1()])
     r = evaluate_one(doc, doc, cfg)
@@ -285,12 +289,35 @@ def test_primitive_array_matches_report_missed_and_spurious(
     assert m.matched == [(0, 0), (2, 2)]
     assert m.missed == [1, 3]
     assert m.spurious == [1]
-    # Only matched pairs become element nodes — an unmatched element has no
-    # counterpart to score against, so array_matches is where it is reported.
+    # The tree follows the document: every *actual* element is a node, matched
+    # or not, so `llm` can still be reported on. Alignment says which of them
+    # had a counterpart, not which of them exist. Expected-only elements (`ml`,
+    # `nlp`) stay unmaterialized — a node's path is an actual index, and there
+    # is none to give them; `array_matches` is where they are reported.
     assert sorted(p for p in r.field_scores if p.startswith("tags[")) == [
         "tags[0]",
+        "tags[1]",
         "tags[2]",
     ]
+    # The unmatched one points past the end of expected, so it reads as absent
+    # rather than picking up whichever element sits at the same index.
+    assert r.field_scores["tags[1]"].expected is None
+
+
+def test_a_document_that_is_an_array_resolves_its_elements(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # The root's path `"$"` is a label, not a segment: its elements spell
+    # themselves without it, exactly as an object's children do (`vendor`, never
+    # `$.vendor`) and as `flatten` writes them. Prefixing it would produce paths
+    # `navigate` cannot resolve, and every element would silently read as None.
+    doc = [{"sku": "A-1"}, {"sku": "X-3"}]
+    r = evaluate_one(doc, doc)
+
+    assert sorted(r.field_scores) == ["$", "[0]", "[0].sku", "[1]", "[1].sku"]
+    assert r.field_scores["[0]"].actual == {"sku": "A-1"}
+    assert r.field_scores["[1].sku"].actual == "X-3"
+    assert r.score == 1.0
 
 
 # ── AnyNodeMetric (cascades uniformly onto every node) ───────────────────────
@@ -299,9 +326,6 @@ def test_primitive_array_matches_report_missed_and_spurious(
 def test_any_node_metric_cascades_onto_every_node(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    from structured_eval.metrics.base import AnyNodeMetric
-    from structured_eval.models.nodes.base import EvalNode
-
     class ConstDepth(AnyNodeMetric):
         name = "const_depth"
 
@@ -321,9 +345,6 @@ def test_any_node_metric_cascades_onto_every_node(
 def test_any_node_metric_usable_as_explicit_key_metric(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    from structured_eval.metrics.base import AnyNodeMetric
-    from structured_eval.models.nodes.base import EvalNode
-
     class Half(AnyNodeMetric):
         name = "half"
 
@@ -335,6 +356,71 @@ def test_any_node_metric_usable_as_explicit_key_metric(
     )
     assert r.score_label == "half"
     assert r.score == 0.5
+
+
+# ── GenericMetric (one metric, a compute per node kind) ──────────────────────
+
+
+def test_generic_metric_lands_only_where_it_defines_a_compute(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # Unlike the typed metrics, a GenericMetric is not pinned to one node type:
+    # it is admitted onto exactly the kinds it implements a `compute_<kind>` for,
+    # and silently skipped on the rest.
+    class Shape(GenericMetric):
+        name = "shape"
+
+        def compute_object(self, node: ObjectNode) -> float:
+            return 0.25
+
+        def compute_array(self, node: ArrayNode) -> float:
+            return 0.75
+
+    actual = {"vendor": {"name": "Acme"}, "lines": [1, 2], "total": 100}
+    r = evaluate_one(actual, actual, EvalConfig(metrics=[Shape()]))
+
+    assert r.field_scores["$"].metrics["shape"] == 0.25
+    assert r.field_scores["vendor"].metrics["shape"] == 0.25
+    assert r.field_scores["lines"].metrics["shape"] == 0.75
+    # No compute_scalar → the leaves never see it.
+    assert "shape" not in r.field_scores["total"].metrics
+    assert "shape" not in r.field_scores["lines[0]"].metrics
+
+
+# ── a metric reporting several sub-scores ────────────────────────────────────
+
+
+def test_a_dict_result_writes_each_key_as_its_own_metric(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # A metric returning a mapping writes its keys directly — its own `name` is
+    # then only a registry handle, and none of the keys carry it.
+    class Split(AnyNodeMetric):
+        name = "split"
+
+        def compute(self, node: EvalNode) -> dict[str, float]:
+            return {"split_left": 0.25, "split_right": 0.75}
+
+    r = evaluate_one({"a": 1}, {"a": 1}, EvalConfig(metrics=[Split()]))
+
+    assert r.field_scores["a"].metrics["split_left"] == 0.25
+    assert r.field_scores["a"].metrics["split_right"] == 0.75
+    assert "split" not in r.field_scores["a"].metrics
+
+
+def test_extra_from_a_tuple_reaches_every_key_of_a_dict_result(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    class SplitWithDetail(AnyNodeMetric):
+        name = "split_detail"
+
+        def compute(self, node: EvalNode) -> tuple[dict[str, float], dict[str, Any]]:
+            return {"left": 0.0, "right": 1.0}, {"why": "because"}
+
+    r = evaluate_one({"a": 1}, {"a": 1}, EvalConfig(metrics=[SplitWithDetail()]))
+
+    assert r.field_scores["a"].metrics["left"].extra == {"why": "because"}
+    assert r.field_scores["a"].metrics["right"].extra == {"why": "because"}
 
 
 # ── per-node key_metric override on object / array (#49) ─────────────────────
@@ -374,8 +460,6 @@ def test_object_key_metric_override(evaluate_one: Callable[..., EvalReport]) -> 
 
 
 def test_array_key_metric_override(evaluate_one: Callable[..., EvalReport]) -> None:
-    from structured_eval.metrics import ArrayAccuracy, ArrayF1
-
     # lines: 2 correct, 1 wrong, 1 missing → array_f1 (0.571) ≠ array_accuracy (0.667).
     actual = {"lines": [1, 2, 3, 4]}
     expected = {"lines": [1, 2, 9]}
@@ -536,3 +620,29 @@ def test_global_key_metric_does_not_raise(
     # The global key_metric is distributable: applied where it fits, else ignored.
     r = evaluate_one(_DOC, _DOC, EvalConfig(key_metric=ObjectAccuracy()))
     assert isinstance(r, EvalReport)
+
+
+def test_a_metric_outside_the_hierarchy_fits_no_node(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # A direct BaseMetric subclass declares no node kind at all, so it is a
+    # registry entry and nothing more — there is no node it could score, and
+    # assigning it says so rather than passing silently.
+    class Rogue(BaseMetric):
+        name = "rogue"
+
+    config = EvalConfig(fields={"total": FieldConfig(metrics=[Rogue()])})
+    with pytest.raises(ValueError, match="cannot score"):
+        evaluate_one(_DOC, _DOC, config)
+
+
+def test_two_globals_sharing_a_name_raise(
+    evaluate_one: Callable[..., EvalReport],
+) -> None:
+    # A name is the key a result lands under, so the second would silently
+    # overwrite the first wherever the two land together. Across *layers* an
+    # equal name is an override (a field's own metric displaces the global);
+    # within one list it is only ambiguous.
+    config = EvalConfig(metrics=[TokenF1(name="same"), ExactMatch(name="same")])
+    with pytest.raises(ValueError, match="assigned twice"):
+        evaluate_one(_DOC, _DOC, config)

@@ -9,8 +9,10 @@ from typing import Any
 
 import pytest
 
+from structured_eval.metrics import MeanScore
 from structured_eval.models import EvalContext
-from structured_eval.models.nodes.base import MISSING, EvalNode, navigate
+from structured_eval.models.nodes.base import EvalNode
+from structured_eval.utils.paths import MISSING, navigate
 
 pytestmark = pytest.mark.unit
 
@@ -94,3 +96,41 @@ def test_leaves_are_only_scalars(tree_factory: Callable[..., EvalNode]) -> None:
 def test_root_is_not_a_leaf(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"a": 1}, {"a": 1})
     assert not root.is_leaf()
+
+
+# ── representative ───────────────────────────────────────────────────────────
+
+
+def test_representative_is_the_key_metrics_value(
+    tree_factory: Callable[..., EvalNode],
+) -> None:
+    root = tree_factory({"a": 1}, {"a": 1})
+    leaf = next(node for node in root.leaves() if node.path == "a")
+    assert leaf.representative == 1.0
+
+
+@pytest.mark.parametrize(
+    ("key_metric", "results", "message"),
+    [
+        (None, {}, "has no key_metric"),
+        (MeanScore(), {}, "has no computed value"),
+    ],
+    ids=["no-key-metric", "key-metric-never-ran"],
+)
+def test_representative_refuses_to_invent_a_score(
+    context_factory: Callable[..., EvalContext],
+    key_metric: Any,
+    results: dict[str, Any],
+    message: str,
+) -> None:
+    # A parent aggregating its children reads this; a fallback here would turn a
+    # missing computation into a silent zero and quietly move every score above
+    # it. The engine's job is to make sure this never has to raise.
+    node = EvalNode(
+        path="a",
+        context=context_factory({"a": 1}),
+        key_metric=key_metric,
+        metric_results=results,
+    )
+    with pytest.raises(ValueError, match=message):
+        _ = node.representative

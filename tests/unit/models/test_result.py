@@ -13,11 +13,14 @@ from structured_eval.models import (
     BatchEvalReport,
     ConsistencyReport,
     EvalReport,
+    EvalWarning,
     FieldScore,
     MetricCollection,
     MetricResult,
+    NodeType,
+    WarningType,
 )
-from structured_eval.models.result import NodeType
+from structured_eval.models.result import _percentile
 
 pytestmark = pytest.mark.unit
 
@@ -82,6 +85,36 @@ def test_failed_fields_skips_scoreless() -> None:
     assert EvalReport(field_scores={"x": fs}).failed_fields() == {}
 
 
+def test_a_field_without_a_threshold_must_be_perfect() -> None:
+    # No bar configured and none passed → the implicit bar is 1.0, the same
+    # default every node carries.
+    r = EvalReport(
+        field_scores={
+            p: FieldScore(path=p, node_type=NodeType.SCALAR, score=s, threshold=None)
+            for p, s in (("a", 1.0), ("b", 0.99))
+        }
+    )
+    assert list(r.failed_fields()) == ["b"]
+
+
+# ── warnings ─────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("message", "rendered"),
+    [
+        ("'extra' not in expected", "[EXTRA_KEY] 'extra' not in expected"),
+        ("", "[EXTRA_KEY] vendor.extra"),
+    ],
+    ids=["with-message", "bare"],
+)
+def test_a_warning_reads_as_a_line(message: str, rendered: str) -> None:
+    warning = EvalWarning(
+        type=WarningType.EXTRA_KEY, path="vendor.extra", message=message
+    )
+    assert str(warning) == rendered
+
+
 # ── assertions ───────────────────────────────────────────────────────────────
 
 
@@ -112,6 +145,14 @@ def test_assert_field() -> None:
         r.assert_field("zzz", 0.1)
 
 
+def test_assert_field_on_a_scoreless_field() -> None:
+    # An object node with no key metric applied has no number to assert on, and
+    # saying "it scored 0" would be a different claim entirely.
+    fs = FieldScore(path="vendor", node_type=NodeType.OBJECT, score=None)
+    with pytest.raises(AssertionError, match="has no score"):
+        EvalReport(field_scores={"vendor": fs}).assert_field("vendor", 0.5)
+
+
 def test_assert_metric() -> None:
     r = _report(metrics={"object_f1": 0.7})
     r.assert_metric("object_f1", 0.5)
@@ -130,6 +171,12 @@ def test_assert_schema_valid() -> None:
         EvalReport(metrics={"schema_validity": bad}).assert_schema_valid()
 
 
+def test_assert_schema_valid_without_the_metric_passes() -> None:
+    # Nobody asked for schema validation, so there is nothing to fail — as
+    # opposed to validation that ran and found nothing wrong.
+    EvalReport().assert_schema_valid()
+
+
 # ── diff ─────────────────────────────────────────────────────────────────────
 
 
@@ -143,6 +190,23 @@ def test_diff_metric_deltas() -> None:
 def test_diff_field_deltas() -> None:
     diff = _report(fields=[_fs("x", 1.0)]).diff_from(_report(fields=[_fs("x", 0.0)]))
     assert diff.field_deltas["x"]["score"] == pytest.approx(1.0)
+
+
+def test_diff_skips_a_field_the_other_run_does_not_have() -> None:
+    # The two documents disagree about which fields exist; there is no baseline
+    # to subtract, and inventing one would report a delta from nothing.
+    diff = _report(fields=[_fs("x", 1.0), _fs("new", 1.0)]).diff_from(
+        _report(fields=[_fs("x", 0.0)])
+    )
+    assert set(diff.field_deltas) == {"x"}
+
+
+def test_diff_of_two_scoreless_fields_is_no_entry_at_all() -> None:
+    # Neither the score nor any metric can be subtracted, so the field carries
+    # no delta rather than an empty one.
+    scoreless = FieldScore(path="v", node_type=NodeType.OBJECT, score=None, metrics={})
+    a = EvalReport(field_scores={"v": scoreless})
+    assert a.diff_from(a).field_deltas == {}
 
 
 def test_diff_metric_subset() -> None:
@@ -194,6 +258,40 @@ def test_batch_breakdown_skips_parse_errors() -> None:
     assert bd["a"]["mean"] == 1.0
 
 
+def test_batch_breakdown_skips_scoreless_fields() -> None:
+    scoreless = FieldScore(path="v", node_type=NodeType.OBJECT, score=None)
+    batch = BatchEvalReport(
+        per_sample=[
+            EvalReport(field_scores={"v": scoreless, "a": _fs("a", 1.0)}),
+        ]
+    )
+    assert set(batch.field_breakdown()) == {"a"}
+
+
+def test_batch_breakdown_defaults_the_bar_to_one() -> None:
+    # Same rule as `failed_fields`: no threshold anywhere means perfection.
+    unbarred = FieldScore(
+        path="a", node_type=NodeType.SCALAR, score=0.99, threshold=None
+    )
+    batch = BatchEvalReport(per_sample=[EvalReport(field_scores={"a": unbarred})])
+    assert batch.field_breakdown()["a"]["fail_rate"] == 1.0
+
+
+@pytest.mark.parametrize(
+    "report",
+    [
+        BatchEvalReport(per_sample=[]),
+        ConsistencyReport(per_run=[]),
+    ],
+    ids=["batch", "consistency"],
+)
+def test_aggregate_reports_print_a_summary(
+    report: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    report.print_summary()
+    assert capsys.readouterr().out.strip()
+
+
 def test_consistency_stable_vs_unstable() -> None:
     report = ConsistencyReport(
         field_variance={"a": 0.0, "b": 0.5},
@@ -210,6 +308,4 @@ def test_consistency_stable_vs_unstable() -> None:
     ids=["single", "median", "p95"],
 )
 def test_percentile_helper(values: Any, pct: Any, expected: Any) -> None:
-    from structured_eval.models.result import _percentile
-
     assert _percentile(values, pct) == pytest.approx(expected)

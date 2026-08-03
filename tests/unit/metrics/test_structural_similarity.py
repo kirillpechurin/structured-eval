@@ -25,8 +25,19 @@ CONFIG = EvalConfig(metrics=[StructuralSimilarity()])
         ({"a": {"x": 1}}, {"a": {"y": 1}}, 1 / 3),  # {a,a.x} vs {a,a.y} → ∩=1 ∪=3
         ({"a": 1}, {"b": 1}, 0.0),  # no shared path
         ({}, {}, 1.0),  # both empty → 1.0
+        ({"a": 1}, {}, 0.0),  # one side has no paths at all
+        ({}, {"a": 1}, 0.0),  # ... either side
     ],
-    ids=["same-shape", "partial", "nested-equal", "nested-diff", "disjoint", "empty"],
+    ids=[
+        "same-shape",
+        "partial",
+        "nested-equal",
+        "nested-diff",
+        "disjoint",
+        "empty",
+        "actual-only",
+        "expected-only",
+    ],
 )
 def test_structural_similarity(actual: Any, expected: Any, score: Any) -> None:
     root = build_tree(actual, expected, CONFIG)

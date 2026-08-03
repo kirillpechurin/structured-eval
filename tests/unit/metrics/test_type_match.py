@@ -21,8 +21,19 @@ pytestmark = pytest.mark.unit
         (None, None, 1.0),  # null matches null
         ([1], [2, 3], 1.0),  # both list (length irrelevant)
         ({"a": 1}, {}, 1.0),  # both dict
+        ({1, 2}, {3}, 1.0),  # no JSON type → the Python one, and it matches
+        ({1, 2}, [1, 2], 0.0),  # ... and a set is still not an array
     ],
-    ids=["int-int", "str-vs-int", "bool-vs-int", "null-null", "list-list", "dict-dict"],
+    ids=[
+        "int-int",
+        "str-vs-int",
+        "bool-vs-int",
+        "null-null",
+        "list-list",
+        "dict-dict",
+        "off-json-both",
+        "off-json-vs-list",
+    ],
 )
 def test_score(actual: Any, expected: Any, score: Any) -> None:
     assert TypeMatch().score(actual, expected) == score

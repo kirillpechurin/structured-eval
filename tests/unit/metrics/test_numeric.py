@@ -61,13 +61,32 @@ def test_lenient_parsing(actual: Any, expected: Any, score: Any) -> None:
     assert Numeric(tolerance=0).score(actual, expected) == score
 
 
-def test_explicit_bands_union() -> None:
-    # within the absolute band but not the relative one → still a match.
-    metric = Numeric(relative_tolerance=0.001, absolute_tolerance=5)
-    assert metric.score(103, 100) == 1.0  # |3| <= 5
-    assert metric.score(200, 100) == 0.0  # outside both
-
-
-def test_explicit_band_overrides_tolerance() -> None:
-    metric = Numeric(tolerance=0, relative_tolerance=0.1)
-    assert metric.score(109, 100) == 1.0
+@pytest.mark.parametrize(
+    ("metric", "actual", "expected", "score"),
+    [
+        (Numeric(relative_tolerance=0.001, absolute_tolerance=5), 103, 100, 1.0),
+        (Numeric(relative_tolerance=0.001, absolute_tolerance=5), 200, 100, 0.0),
+        (Numeric(relative_tolerance=0.1), 109, 100, 1.0),
+        (Numeric(absolute_tolerance=5), 103, 100, 1.0),
+        (Numeric(absolute_tolerance=1), 103, 100, 0.0),
+        (Numeric(tolerance=0, relative_tolerance=0.1), 109, 100, 1.0),
+        (Numeric(relative_tolerance=0.1), 1, 0, 0.0),
+        (Numeric(relative_tolerance=0.1, absolute_tolerance=2), 1, 0, 1.0),
+    ],
+    ids=[
+        # within the absolute band but not the relative one → still a match
+        "union-absolute-saves",
+        "union-outside-both",
+        "relative-only",
+        "absolute-only",
+        "absolute-only-outside",
+        # an explicit band wins over tolerance/mode, however strict those are
+        "overrides-tolerance",
+        # nothing is a relative distance from zero...
+        "zero-expected",
+        # ... but an absolute band still measures it
+        "zero-expected-absolute",
+    ],
+)
+def test_explicit_bands(metric: Any, actual: Any, expected: Any, score: Any) -> None:
+    assert metric.score(actual, expected) == score

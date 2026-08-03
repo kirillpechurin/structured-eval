@@ -6,6 +6,7 @@ both predicted and expected, ``missing`` keys are FN, ``spurious`` keys are FP
 """
 
 from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -16,6 +17,7 @@ from structured_eval.metrics import (
     ObjectPRF1,
     ObjectRecall,
     ObjectTypeValidity,
+    TokenF1,
 )
 from structured_eval.metrics.utils.calculate import GradingMode, WeightMode
 from structured_eval.models import EvalConfig, ExtraKeysPolicy, FieldConfig
@@ -80,8 +82,6 @@ def test_accuracy_missing_counts_zero(tree_factory: Callable[..., EvalNode]) -> 
 
 
 def test_soft_mode_fractional(tree_factory: Callable[..., EvalNode]) -> None:
-    from structured_eval.metrics import TokenF1
-
     cfg = EvalConfig(metrics=[TokenF1()])  # field metric cascades to every scalar
     root = tree_factory({"name": "the quick brown fox"}, {"name": "the quick fox"}, cfg)
     assert isinstance(root, ObjectNode)
@@ -89,6 +89,28 @@ def test_soft_mode_fractional(tree_factory: Callable[..., EvalNode]) -> None:
         root
     )
     assert 0.0 < soft < 1.0
+
+
+@pytest.mark.parametrize(
+    ("threshold", "score"),
+    [(None, 0.0), (0.8, 1.0), ({"name": 0.8}, 0.5), ({"other": 0.8}, 0.0)],
+    ids=["own-bar", "one-bar-for-all", "per-field", "names-nothing"],
+)
+def test_the_bar_a_field_has_to_clear_can_be_overridden(
+    tree_factory: Callable[..., EvalNode], threshold: Any, score: float
+) -> None:
+    # Both fields land on 0.8, so a single bar can only accept both or neither.
+    # Saying "this one field may be approximate" — the usual case, a free-text
+    # field next to one that must be exact — takes naming the field.
+    cfg = EvalConfig(metrics=[TokenF1()])
+    near_miss = "the quick brown fox"
+    root = tree_factory(
+        {"name": near_miss, "note": near_miss},
+        {"name": "the quick fox", "note": "the quick fox"},
+        cfg,
+    )
+    assert isinstance(root, ObjectNode)
+    assert ObjectF1(threshold=threshold).compute(root) == pytest.approx(score)
 
 
 def test_validity_type_check(tree_factory: Callable[..., EvalNode]) -> None:
@@ -128,8 +150,6 @@ def test_empty_object_vacuously_perfect(tree_factory: Callable[..., EvalNode]) -
 
 
 def _weighted_tree(tree_factory: Callable[..., EvalNode]) -> ObjectNode:
-    from structured_eval.models import FieldConfig
-
     # a correct, b wrong; b is 3× as important as a.
     cfg = EvalConfig(
         fields={"a": FieldConfig(weight=1.0), "b": FieldConfig(weight=3.0)}
