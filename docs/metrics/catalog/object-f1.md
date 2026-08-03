@@ -46,6 +46,16 @@ only when its score is a perfect `1.0`. Lower a field's `threshold`, or use
 `mode="soft"` (which adds each field's fractional score instead of gating), to give
 partial credit.
 
+`threshold` takes a single float — one bar for every field — or a dict naming only
+the fields to relax, which is what a free-text field next to an exact one needs:
+
+```python
+ObjectF1(threshold={"summary": 0.8})     # every other field still needs a perfect 1.0
+```
+
+Fields are named as `score_policy` names them (the last path segment), so one entry
+covers every element of an array.
+
 ## Example
 
 `name` is right, `experience_years` is wrong, and `title` is missing entirely:
