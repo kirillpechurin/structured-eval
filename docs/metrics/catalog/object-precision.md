@@ -34,6 +34,16 @@ Default `mode="hard"` with field threshold `1.0` (a field must score a perfect m
 count); `mode="soft"` counts fractional scores. An object that produced no fields is
 vacuously `1.0`.
 
+`threshold` takes a single float — one bar for every field — or a dict naming only
+the fields to relax, which is what a free-text field next to an exact one needs:
+
+```python
+ObjectPrecision(threshold={"summary": 0.8})     # every other field still needs a perfect 1.0
+```
+
+Fields are named as `score_policy` names them (the last path segment), so one entry
+covers every element of an object.
+
 ## Example
 
 `name` is right, `experience_years` is wrong — both were produced, so half are correct:

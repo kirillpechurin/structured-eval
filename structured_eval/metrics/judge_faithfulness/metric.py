@@ -35,80 +35,64 @@ DEFAULT_VERDICT_SCORES: dict[str, float] = {
 class JudgeFaithfulness(AnyNodeMetric):
     """Is each field beneath this node grounded in the sample's ``source``? (LLM.)
 
-        Attach it to any node — the document root, one nested object, an array, or a
-        single field — and it takes every leaf beneath that node, asks one LLM call
-        whether the source backs each value, and rules on each:
-        ``supported`` / ``not_stated`` / ``contradicted``, with a reason for the ones
-        that are not supported. Each verdict is scored through ``verdict_scores``,
-        and the node scores their mean, weighted by field ``weight``.
+    Attach it to any node — the document root, one nested object, an array, or a
+    single field — and it takes every leaf beneath that node, asks one LLM call
+    whether the source backs each value, and rules on each:
+    ``supported`` / ``not_stated`` / ``contradicted``, with a reason for the ones
+    that are not supported. Each verdict is scored through ``verdict_scores``,
+    and the node scores their mean, weighted by field ``weight``.
 
-    <<<<<<< HEAD
-        The score lands on the **judged node**, and the per-field verdicts ride
-        along in its ``extra``, keyed by the absolute path each one is about::
+    The score lands on the **judged node**, and the judge's full result rides
+    along in its ``extra`` as one ``JudgeVerdict`` — the node's own score, and
+    a verdict per field keyed by the absolute path it is about::
 
-            report.field_scores["line_items"].metrics["judge_faithfulness"]
-                .extra["judge_verdict"]["verdicts"]
-            # [{"path": "line_items[2].sku", "verdict": "not_stated", "reason": "no X-3"}]
+        report.field_scores["line_items"].metrics["judge_faithfulness"]
+            .extra["verdict"]["verdicts"]
+        # [{"path": "line_items[2].sku", "verdict": "not_stated", "reason": "no X-3"}]
 
-    =======
-        The score lands on the **judged node**, and the judge's full result rides
-        along in its ``extra`` as one ``JudgeVerdict`` — the node's own score, and
-        a verdict per field keyed by the absolute path it is about::
+        report.metrics["judge_faithfulness"].extra_values("verdict")
+        # one JudgeVerdict per judged node, wherever the judges were hung
 
-            report.field_scores["line_items"].metrics["judge_faithfulness"]
-                .extra["verdict"]["verdicts"]
-            # [{"path": "line_items[2].sku", "verdict": "not_stated", "reason": "no X-3"}]
+    A verdict does **not** become the score of the field it names: to grade
+    ``line_items[2].sku`` itself, hang a judge on that field. Where to hang the
+    judge is therefore a real choice — one call for a whole subtree, with the
+    detail as evidence, or one call per field, with the detail as a score.
 
-            report.metrics["judge_faithfulness"].extra_values("verdict")
-            # one JudgeVerdict per judged node, wherever the judges were hung
+    Why one call for the whole subtree: the fields are judged together, so a
+    value that only makes sense beside its neighbours is not ruled on in
+    isolation — and a wide object costs one call, not one per field. Attached to
+    a lone field it costs one call for that field, which is the point of hanging
+    it there: pay the model only where nothing cheaper can decide.
 
-    >>>>>>> origin/main
-        A verdict does **not** become the score of the field it names: to grade
-        ``line_items[2].sku`` itself, hang a judge on that field. Where to hang the
-        judge is therefore a real choice — one call for a whole subtree, with the
-        detail as evidence, or one call per field, with the detail as a score.
+    ``criteria`` says what "faithful" means. Either one rule for everything::
 
-        Why one call for the whole subtree: the fields are judged together, so a
-        value that only makes sense beside its neighbours is not ruled on in
-        isolation — and a wide object costs one call, not one per field. Attached to
-        a lone field it costs one call for that field, which is the point of hanging
-        it there: pay the model only where nothing cheaper can decide.
+        JudgeFaithfulness("the value must follow from the stated age")
 
-        ``criteria`` says what "faithful" means. Either one rule for everything::
+    or a rule per field, keyed by paths **relative to the judged node** — so the
+    same configuration works wherever it is hung, with ``[*]`` for array
+    elements::
 
-            JudgeFaithfulness("the value must follow from the stated age")
+        JudgeFaithfulness({"vendor": "...", "line_items[*].sku": "..."})
 
-        or a rule per field, keyed by paths **relative to the judged node** — so the
-        same configuration works wherever it is hung, with ``[*]`` for array
-        elements::
+    Fields with no entry fall back to a generic formulation. A mapping on a
+    single field is refused: there is nothing beneath a leaf for the keys to
+    address.
 
-            JudgeFaithfulness({"vendor": "...", "line_items[*].sku": "..."})
+    Only what the output actually produced is judged — the same rule the
+    reference faithfulness metrics follow, where the claims come from the
+    answer and the ground truth never enters. An explicit ``null`` **is** such
+    a claim ("the source gives no value here"), true (``supported``) or false
+    (``contradicted``) like any other; a field simply absent from the output
+    claims nothing and is left out. Missing it is a recall failure, which
+    ``Presence`` / ``CoverageLeafScore`` already measure — keeping the two
+    apart is what stops one number from meaning both.
 
-        Fields with no entry fall back to a generic formulation. A mapping on a
-        single field is refused: there is nothing beneath a leaf for the keys to
-        address.
-
-    <<<<<<< HEAD
-        A null value is judged, not skipped: it claims the source states nothing for
-        that field, which is true (``supported``) or false (``contradicted``) like
-        any other claim.
-    =======
-        Only what the output actually produced is judged — the same rule the
-        reference faithfulness metrics follow, where the claims come from the
-        answer and the ground truth never enters. An explicit ``null`` **is** such
-        a claim ("the source gives no value here"), true (``supported``) or false
-        (``contradicted``) like any other; a field simply absent from the output
-        claims nothing and is left out. Missing it is a recall failure, which
-        ``Presence`` / ``CoverageLeafScore`` already measure — keeping the two
-        apart is what stops one number from meaning both.
-    >>>>>>> origin/main
-
-        Costs money and time and is not deterministic — it runs only where it is
-        explicitly configured, never by default. Needs a grounding ``source``;
-        without one faithfulness is undefined and this raises rather than quietly
-        scoring nothing. The client comes from ``client=`` or, unset, from
-        ``STRUCTURED_EVAL_LLM_MODEL`` (see ``structured_eval.llm``); it is resolved
-        on first use, so building a config costs no credentials.
+    Costs money and time and is not deterministic — it runs only where it is
+    explicitly configured, never by default. Needs a grounding ``source``;
+    without one faithfulness is undefined and this raises rather than quietly
+    scoring nothing. The client comes from ``client=`` or, unset, from
+    ``STRUCTURED_EVAL_LLM_MODEL`` (see ``structured_eval.llm``); it is resolved
+    on first use, so building a config costs no credentials.
     """
 
     name = "judge_faithfulness"
@@ -239,29 +223,26 @@ class JudgeFaithfulness(AnyNodeMetric):
     ) -> MetricResult | None:
         """Turn the judge's answer into one score for the node it ran on.
 
-                The score is the mean of the verdicts, weighted by each field's
-                ``weight``, so a field the caller marked important pulls harder here
-                too. The verdicts themselves ride along in ``extra`` — that detail is
-                the whole reason to pay a model rather than compare strings.
+        The score is the mean of the verdicts, weighted by each field's
+        ``weight``, so a field the caller marked important pulls harder here
+        too. The verdicts themselves ride along in ``extra`` — that detail is
+        the whole reason to pay a model rather than compare strings.
 
-        <<<<<<< HEAD
-        =======
-                They travel as one whole ``JudgeVerdict`` rather than a bare list, so
-                the node's own verdict and the fields backing it stay one object;
-                ``MetricCollection.extra_values("verdict")`` then gathers one such
-                object per judged node across the tree.
+        They travel as one whole ``JudgeVerdict`` rather than a bare list, so
+        the node's own verdict and the fields backing it stay one object;
+        ``MetricCollection.extra_values("verdict")`` then gathers one such
+        object per judged node across the tree.
 
-        >>>>>>> origin/main
-                A field the judge said nothing about is absent from the mean rather
-                than counted as a zero — silence is missing evidence, not a failed
-                check — and a path it invented is dropped. Both keep a sloppy reply
-                from quietly inventing numbers. Answering about nothing at all yields
-                ``None``: the metric had nothing to say, exactly like any other metric
-                that opts out.
+        A field the judge said nothing about is absent from the mean rather
+        than counted as a zero — silence is missing evidence, not a failed
+        check — and a path it invented is dropped. Both keep a sloppy reply
+        from quietly inventing numbers. Answering about nothing at all yields
+        ``None``: the metric had nothing to say, exactly like any other metric
+        that opts out.
 
-                Verdicts are asked for by path relative to the judged node and reported
-                by the absolute one: the prompt speaks the language of the subtree, the
-                report speaks the language of the document.
+        Verdicts are asked for by path relative to the judged node and reported
+        by the absolute one: the prompt speaks the language of the subtree, the
+        report speaks the language of the document.
         """
         verdicts: list[FieldJudgeVerdict] = []
         ruled: set[str] = set()

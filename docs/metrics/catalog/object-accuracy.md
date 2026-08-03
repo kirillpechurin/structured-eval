@@ -39,6 +39,16 @@ The denominator is the **expected** side only (matched + missing), so adding an 
 field doesn't change the score. With uniform weights this is just the average field
 score, counting each missing field as 0.
 
+`threshold` takes a single float — one bar for every field — or a dict naming only
+the fields to relax, which is what a free-text field next to an exact one needs:
+
+```python
+ObjectAccuracy(threshold={"summary": 0.8})     # every other field still needs a perfect 1.0
+```
+
+Fields are named as `score_policy` names them (the last path segment), so one entry
+covers every element of an object.
+
 ## Example
 
 `name` is right, `experience_years` is wrong, `title` is missing:

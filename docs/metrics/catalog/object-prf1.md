@@ -27,6 +27,16 @@ It returns a **dict**, so the engine writes three keys into the report —
 `object_precision`, `object_recall`, `object_f1` — instead of one under the metric's own
 name.
 
+`threshold` takes a single float — one bar for every field — or a dict naming only
+the fields to relax, which is what a free-text field next to an exact one needs:
+
+```python
+ObjectPRF1(threshold={"summary": 0.8})     # every other field still needs a perfect 1.0
+```
+
+Fields are named as `score_policy` names them (the last path segment), so one entry
+covers every element of an object.
+
 ## Example
 
 ```python
