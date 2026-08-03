@@ -314,7 +314,7 @@ report = evaluate(
     expected=None,
     config=EvalConfig(fields={
         "instructor": ObjectFieldConfig(
-            metrics=[JudgeFaithfulness(client="anthropic/claude-opus-5")]
+            metrics=[JudgeFaithfulness(client="qwen/qwen3-235b-a22b-2507")]
         )
     }),
     source="Introduction to Python is run by Dr. Rivera, a teaching assistant.",

@@ -45,7 +45,7 @@ def test_dispatch_by_shape(spec, expected):
 
 
 def test_a_model_string_routes_to_litellm():
-    resolved = resolve_client("anthropic/claude-opus-5")
+    resolved = resolve_client("qwen/qwen3-235b-a22b-2507")
 
     assert isinstance(resolved, LiteLlmClient)
 
@@ -65,9 +65,9 @@ def test_unusable_specs_are_rejected(spec):
 
 
 def test_no_spec_falls_back_to_the_environment(monkeypatch):
-    monkeypatch.setenv(MODEL_ENV_VAR, "anthropic/claude-opus-5")
+    monkeypatch.setenv(MODEL_ENV_VAR, "qwen/qwen3-235b-a22b-2507")
 
-    assert resolve_client(None).model_name == "anthropic/claude-opus-5"
+    assert resolve_client(None).model_name == "qwen/qwen3-235b-a22b-2507"
 
 
 def test_default_client_reads_the_model_from_the_environment(monkeypatch):

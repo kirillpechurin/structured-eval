@@ -15,14 +15,14 @@ config.
 Each metric belongs to a **branch** of the hierarchy, and that branch decides which
 nodes it can run on:
 
-| Branch        | Runs on                                  | Examples                          |
-|---------------|------------------------------------------|-----------------------------------|
-| `field`       | scalar leaves (`ScalarNode`)             | `ExactMatch`, `TokenF1`, `Numeric`|
-| `object`      | objects (`ObjectNode`)                   | `ObjectF1`, `ObjectAccuracy`      |
-| `array`       | arrays (`ArrayNode`)                     | `ArrayF1`, `ArrayAccuracy`        |
-| `root`        | the root node only (`$`)                 | `SchemaValidity`, `RulePassRate`  |
-| `any-node`    | every node, one uniform computation      | `MeanScore`, `JudgeFaithfulness`  |
-| `generic`     | several node kinds (per-kind dispatch)   | *(custom — see below)*            |
+| Branch     | Runs on                                | Examples                           |
+|------------|----------------------------------------|------------------------------------|
+| `field`    | scalar leaves (`ScalarNode`)           | `ExactMatch`, `TokenF1`, `Numeric` |
+| `object`   | objects (`ObjectNode`)                 | `ObjectF1`, `ObjectAccuracy`       |
+| `array`    | arrays (`ArrayNode`)                   | `ArrayF1`, `ArrayAccuracy`         |
+| `root`     | the root node only (`$`)               | `SchemaValidity`, `RulePassRate`   |
+| `any-node` | every node, one uniform computation    | `MeanScore`                        |
+| `generic`  | several node kinds (per-kind dispatch) | *(custom — see below)*             |
 
 A metric in `EvalConfig(metrics=[...])` **cascades** to every node its branch fits;
 a metric in a node's own `FieldConfig`/`ObjectFieldConfig`/`ArrayFieldConfig` is
