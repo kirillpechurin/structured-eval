@@ -18,10 +18,13 @@ It's a **per-field** metric: every scalar leaf scores `1.0` if its value appears
 (`MeanScore` / [`OverallLeafScore`](overall-leaf-score.md)) gives you a document-level
 faithfulness number, and the hallucinated fields are simply the leaves that scored `0.0`.
 
-The current check is **L1: case-insensitive substring matching** — a value is grounded if
-its string form appears verbatim in the source. It's a cheap, deterministic floor; deeper
-semantic checks (token/embedding overlap, entailment, an LLM judge) are on the roadmap as
-separate metrics.
+The check is **L1: case-insensitive substring matching** — a value is grounded if its string
+form appears verbatim in the source. It's a cheap, deterministic floor: free, reproducible,
+and blind to anything a string comparison can't see. When you need paraphrase, contradiction
+in meaning, or plausible-but-absent values caught, reach for
+[`JudgeFaithfulness`](judge-faithfulness.md) — the same question asked of a model. Running
+this one first and paying the model only where it can't decide is the cheap way to combine
+them.
 
 ## Parameters
 
@@ -75,14 +78,15 @@ mc.mean()                                            # 0.6667 — 2 of 3 grounde
   paraphrases or different casing of long values may be missed (false negative). It's a
   baseline signal, not semantic verification.
 - **Null values are skipped** — a `null` leaf has nothing to ground, so it isn't counted.
-- **Array elements need `expected`** — in source-only mode (`expected=None`) list items
-  aren't aligned into nodes, so faithfulness doesn't reach them yet; scalars and
-  nested-object fields are checked normally. (Materializing list items without `expected` is
-  on the roadmap.)
+- **Array elements are checked too** — the tree follows the document, so list items get
+  nodes even in source-only mode (`expected=None`), which is the mode this metric exists for.
+  Fabrications hide in arrays, so this is the case that matters most.
 - **No checkable leaves** → the metric simply doesn't appear in `report.metrics`.
 
 ## See also
 
+- [`JudgeFaithfulness`](judge-faithfulness.md) — the same question asked of an LLM: catches
+  what a substring can't, at the price of money and reproducibility.
 - [`RulePassRate`](rule-pass-rate.md) — the other no-`expected` check: business logic.
 - [`OverallLeafScore`](overall-leaf-score.md) — roll the per-field scores into one headline.
 - [`Presence`](presence.md) — another value-on-actual field metric.

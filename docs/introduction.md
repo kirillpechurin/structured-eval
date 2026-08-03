@@ -60,3 +60,4 @@ sees it — right down to the field that broke.
 
 - **[Getting started](getting-started.md)** — install structured-eval and run your first evaluation.
 - **[Core concepts](core-concepts/evaluation-model.md)** — how the evaluation tree, metrics, and scores fit together.
+- **[LLM clients](core-concepts/llm-clients.md)** — pointing the LLM-backed metrics at a model.

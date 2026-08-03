@@ -8,7 +8,7 @@ import pytest
 
 from structured_eval.llm.callable import CallableClient
 from structured_eval.llm.chat_model import ChatModelClient
-from structured_eval.llm.factory import resolve_client
+from structured_eval.llm.factory import MODEL_ENV_VAR, default_client, resolve_client
 from structured_eval.llm.litellm import LiteLlmClient
 
 pytestmark = pytest.mark.unit
@@ -55,9 +55,41 @@ def test_the_model_string_is_kept_verbatim():
     assert resolve_client("openai/gpt-5.5").model_name == "openai/gpt-5.5"
 
 
-@pytest.mark.parametrize(
-    "spec", [42, None, {"model": "x"}], ids=["int", "none", "dict"]
-)
+@pytest.mark.parametrize("spec", [42, {"model": "x"}], ids=["int", "dict"])
 def test_unusable_specs_are_rejected(spec):
     with pytest.raises(TypeError, match="as an LLM client"):
         resolve_client(spec)
+
+
+# ── the zero-code path: nothing passed, everything from the environment ──────
+
+
+def test_no_spec_falls_back_to_the_environment(monkeypatch):
+    monkeypatch.setenv(MODEL_ENV_VAR, "anthropic/claude-opus-5")
+
+    assert resolve_client(None).model_name == "anthropic/claude-opus-5"
+
+
+def test_default_client_reads_the_model_from_the_environment(monkeypatch):
+    monkeypatch.setenv(MODEL_ENV_VAR, "openai/gpt-5.5")
+    resolved = default_client()
+
+    assert isinstance(resolved, LiteLlmClient)
+    assert resolved.model_name == "openai/gpt-5.5"
+
+
+@pytest.mark.parametrize("value", ["", "   "], ids=["empty", "blank"])
+def test_a_blank_model_is_treated_as_unset(monkeypatch, value):
+    monkeypatch.setenv(MODEL_ENV_VAR, value)
+
+    with pytest.raises(ValueError, match=MODEL_ENV_VAR):
+        default_client()
+
+
+def test_an_unset_model_is_a_configuration_error(monkeypatch):
+    # No silent fallback to some default model: the judge names what graded the
+    # data, or it refuses to run.
+    monkeypatch.delenv(MODEL_ENV_VAR, raising=False)
+
+    with pytest.raises(ValueError, match="no LLM client was given"):
+        resolve_client(None)

@@ -168,3 +168,4 @@ A couple of notes:
 - **[Core concepts](core-concepts/evaluation-model.md)** — how the evaluation tree,
   metrics, and scores fit together.
 - **[Metrics](metrics/index.md)** — the full catalog and how to write your own.
+- **[LLM clients](core-concepts/llm-clients.md)** — pointing the LLM-backed metrics at a model.

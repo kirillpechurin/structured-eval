@@ -174,11 +174,21 @@ def test_unexpected_response_shape_is_reported(litellm_stub):
         LiteLlmClient("openai/gpt-5.5").generate("judge")
 
 
-def test_missing_extra_reports_the_install_hint(monkeypatch):
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda client: client.generate("judge"),
+        lambda client: client.generate_with_schema("judge", Verdict),
+    ],
+    ids=["generate", "generate-with-schema"],
+)
+def test_missing_extra_reports_the_install_hint(monkeypatch, call):
+    # Routing to the prompt fallback also needs litellm, so a missing extra
+    # surfaces as an install problem there too rather than as "no native schema".
     monkeypatch.setitem(sys.modules, "litellm", None)
 
     with pytest.raises(ImportError, match=r"structured-eval\[litellm\]"):
-        LiteLlmClient("openai/gpt-5.5").generate("judge")
+        call(LiteLlmClient("openai/gpt-5.5"))
 
 
 def test_empty_model_is_rejected():

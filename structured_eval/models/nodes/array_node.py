@@ -26,7 +26,32 @@ class ArrayMatchResult(BaseModel):
 
 
 class ArrayNode(EvalNode):
-    """A list node. ``items`` are the per-element nodes after matching."""
+    """A list node.
+
+    ``items`` holds one node per **actual** element, in document order — the
+    tree follows the document, exactly as ``ObjectNode.children`` holds every
+    key from either side. Alignment does not decide which nodes exist: with no
+    expected list to align against (faithfulness / schema-only mode) there are
+    no pairs at all, and element-level metrics would have nothing to score.
+
+    ``matched`` is the subset of ``items`` paired with an expected element —
+    what the comparison metrics grade, mirroring ``ObjectNode.matched``.
+    ``missing`` / ``spurious`` are the indices present on only one side (FN /
+    FP), as ``ObjectNode`` holds the keys present on only one side.
+
+    ``missing`` indexes the **expected** list, ``spurious`` the actual one, and
+    the asymmetry is deliberate: a spurious element has a node (its actual
+    index is in ``items``), while an expected element with no counterpart stays
+    unmaterialized — a node's path is an *actual* index, so there is no honest
+    path to give it.
+
+    Metrics read these three, never ``match_result``: the alignment result is
+    what the report shows a user, not the tree's own vocabulary for who paired
+    up with whom.
+    """
 
     match_result: ArrayMatchResult | None = None
     items: list[EvalNode] = Field(default_factory=list)
+    matched: list[EvalNode] = Field(default_factory=list)
+    missing: list[int] = Field(default_factory=list)
+    spurious: list[int] = Field(default_factory=list)

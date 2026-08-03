@@ -7,19 +7,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from structured_eval.models.metric_result import (  # noqa: TC001
+from structured_eval.models.metrics import (  # noqa: TC001
     MetricCollection,
     MetricResult,
 )
 from structured_eval.models.nodes.array_node import ArrayMatchResult  # noqa: TC001
-
-
-class NodeType(StrEnum):
-    """The kind of tree node a ``FieldScore`` describes."""
-
-    SCALAR = "scalar"
-    OBJECT = "object"
-    ARRAY = "array"
+from structured_eval.models.nodes.base import NodeType  # noqa: TC001
 
 
 def _percentile(values: list[float], q: float) -> float:

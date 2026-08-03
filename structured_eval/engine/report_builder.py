@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from structured_eval.models.metric_result import MetricCollection
-from structured_eval.models.nodes.array_node import ArrayNode
-from structured_eval.models.nodes.object_node import ObjectNode
-from structured_eval.models.nodes.scalar import ScalarNode
-from structured_eval.models.result import EvalReport, EvalWarning, FieldScore, NodeType
+from structured_eval.models import (
+    ArrayNode,
+    EvalReport,
+    EvalWarning,
+    FieldScore,
+    MetricCollection,
+    NodeType,
+    ObjectNode,
+    ScalarNode,
+)
 
 if TYPE_CHECKING:
     from structured_eval.models.context import EvalContext

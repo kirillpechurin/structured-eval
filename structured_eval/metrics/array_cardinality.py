@@ -18,10 +18,10 @@ class ArrayCardinality(ArrayMetric):
     name = "array_cardinality"
 
     def compute(self, node: ArrayNode) -> float:
-        mr = node.match_result
-        if mr is None:
-            return 1.0
-        actual_count = len(mr.matched) + len(mr.spurious)
-        expected_count = len(mr.matched) + len(mr.missed)
+        # Counted from the paired-up breakdown rather than from the raw lists:
+        # a strategy matching by value can pair elements across positions, and
+        # what this metric is about is how many there were on each side.
+        actual_count = len(node.matched) + len(node.spurious)
+        expected_count = len(node.matched) + len(node.missing)
         hi = max(actual_count, expected_count)
         return 1.0 if hi == 0 else min(actual_count, expected_count) / hi
