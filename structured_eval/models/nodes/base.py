@@ -68,6 +68,19 @@ class EvalNode(BaseModel):
         return None if value is MISSING else value
 
     @property
+    def is_present(self) -> bool:
+        """Whether the actual document carries this node at all.
+
+        ``actual`` collapses "absent" and "present but null" into ``None``;
+        this keeps them apart, which is what ``MISSING`` exists for. The
+        difference matters wherever a value is read as a *claim the output
+        made*: ``{"city": null}`` asserts the source gives no city, while a
+        document with no ``city`` key asserts nothing — that node exists only
+        because ``expected`` has one.
+        """
+        return navigate(self.context.actual, self.path) is not MISSING
+
+    @property
     def representative(self) -> float:
         """The node's single representative score: its ``key_metric``'s value.
 

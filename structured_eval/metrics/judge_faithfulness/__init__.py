@@ -6,6 +6,8 @@ from structured_eval.metrics.judge_faithfulness.metric import (
 )
 from structured_eval.metrics.judge_faithfulness.prompt import (
     DEFAULT_CRITERION,
+)
+from structured_eval.metrics.judge_faithfulness.schemas import (
     JudgedField,
     JudgeReply,
     Verdict,

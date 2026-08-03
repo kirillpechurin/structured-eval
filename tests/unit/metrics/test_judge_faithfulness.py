@@ -79,7 +79,7 @@ def run(
 def verdicts(report: EvalReport, path: str = "$") -> dict[str, dict[str, str]]:
     """The judge's per-field verdicts at ``path``, keyed by the field they name."""
     summary = report.field_scores[path].metrics["judge_faithfulness"].extra
-    return {v["path"]: v for v in summary["judge_verdict"]["verdicts"]}
+    return {v["path"]: v for v in summary["verdict"]["verdicts"]}
 
 
 # ── the judged node's score ──────────────────────────────────────────────────
@@ -563,6 +563,108 @@ def test_a_null_value_reaches_the_prompt_as_null() -> None:
     client = FakeJudge([{"path": "vendor", "verdict": "supported"}])
     run(JudgeFaithfulness(client=client), actual={"vendor": None})
     assert "value: null" in client.prompts[0]
+
+
+def test_a_field_the_output_never_produced_is_not_judged() -> None:
+    # The claims come from the output, as in the reference faithfulness metrics
+    # — `zip` is a node only because `expected` has the key, and a field nobody
+    # emitted asserts nothing about the source. That gap is recall (`Presence`
+    # / `CoverageLeafScore`), and conflating the two would make one number mean
+    # both. An explicit null is the opposite case: it *is* a claim, so it stays.
+    client = FakeJudge([{"path": "vendor", "verdict": "supported"}])
+    report = evaluate(
+        {"vendor": "Acme Corp", "city": None},
+        {"vendor": "Acme Corp", "city": "Berlin", "zip": "10115"},
+        EvalConfig(root=ObjectFieldConfig(metrics=[JudgeFaithfulness(client=client)])),
+        source=SOURCE,
+    )
+    listed = [
+        line.removeprefix("- path: ")
+        for line in client.prompts[0].splitlines()
+        if line.startswith("- path: ")
+    ]
+    assert listed == ["vendor", "city"]
+    assert "zip" not in client.prompts[0]
+    assert report.field_scores["zip"].metrics.get("judge_faithfulness") is None
+
+
+def test_a_node_whose_fields_are_all_absent_is_not_worth_a_call() -> None:
+    # Nothing was emitted beneath it, so there is nothing to rule on — the same
+    # opt-out an empty object takes.
+    client = FakeJudge([])
+    report = evaluate(
+        {"vendor": {}},
+        {"vendor": {"name": "Acme Corp"}},
+        EvalConfig(
+            fields={
+                "vendor": ObjectFieldConfig(metrics=[JudgeFaithfulness(client=client)])
+            }
+        ),
+        source=SOURCE,
+    )
+    assert client.prompts == []
+    assert "judge_faithfulness" not in report.field_scores["vendor"].metrics
+
+
+# ── where the detail lands ───────────────────────────────────────────────────
+
+
+def test_the_detail_is_one_whole_verdict_per_judged_node() -> None:
+    # `extra_values("verdict")` gathers one JudgeVerdict per node a judge ran
+    # on, wherever the judges were hung — each keeping its own score together
+    # with the fields backing it.
+    report = evaluate(
+        {"vendor": {"city": "Paris"}, "period": {"month": "March"}},
+        None,
+        EvalConfig(
+            fields={
+                "vendor": ObjectFieldConfig(
+                    metrics=[
+                        JudgeFaithfulness(
+                            client=FakeJudge(
+                                [{"path": "city", "verdict": "not_stated"}]
+                            )
+                        )
+                    ]
+                ),
+                "period": ObjectFieldConfig(
+                    metrics=[
+                        JudgeFaithfulness(
+                            client=FakeJudge(
+                                [{"path": "month", "verdict": "contradicted"}]
+                            )
+                        )
+                    ]
+                ),
+            }
+        ),
+        source=SOURCE,
+    )
+    gathered = report.metrics["judge_faithfulness"].extra_values("verdict")
+    assert len(gathered) == 2  # one per judged node, not one per verdict
+    assert [
+        (v["path"], v["verdict"]) for summary in gathered for v in summary["verdicts"]
+    ] == [
+        ("period.month", "contradicted"),
+        ("vendor.city", "not_stated"),
+    ]
+    assert [summary["score"] for summary in gathered] == [0.0, 0.0]
+
+
+def test_the_detail_carries_the_judged_nodes_own_score() -> None:
+    # The score is the MetricResult *and* travels inside the summary, so a
+    # gathered verdict is readable on its own — it does not need the node it
+    # came from to say what it decided.
+    report = run(
+        judge(
+            [
+                {"path": "vendor", "verdict": "supported"},
+                {"path": "total", "verdict": "contradicted"},
+            ]
+        )
+    )
+    result = report.field_scores["$"].metrics["judge_faithfulness"]
+    assert result.extra["verdict"]["score"] == pytest.approx(float(result))
 
 
 # ── how a path is spelled on the wire ────────────────────────────────────────

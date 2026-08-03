@@ -65,6 +65,22 @@ def test_missing_actual_surfaces_as_none(
     assert EvalNode(path="b", context=ctx).actual is None
 
 
+@pytest.mark.parametrize(
+    ("path", "present"),
+    [("a", True), ("b", True), ("c", False)],
+    ids=["a-value", "an-explicit-null", "an-absent-key"],
+)
+def test_is_present_tells_an_explicit_null_from_an_absent_key(
+    context_factory: Callable[..., EvalContext], path: str, present: bool
+) -> None:
+    # `actual` collapses both to None; `is_present` is how a caller that reads a
+    # value as a claim the output made keeps them apart.
+    ctx = context_factory({"a": 1, "b": None}, {"a": 1, "b": 2, "c": 3})
+    node = EvalNode(path=path, context=ctx)
+    assert node.actual is None or path == "a"
+    assert node.is_present is present
+
+
 def test_expected_none_when_no_expected(
     context_factory: Callable[..., EvalContext],
 ) -> None:

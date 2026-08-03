@@ -298,22 +298,41 @@ Learn more about strategies in
 Level L5 lets you catch hallucinations by checking each value against a source.
 Note that `expected` is not required for the computation.
 
-Learn more — [field faithfulness](docs/metrics/catalog/field_faithfulness.md).
+Attach a judge to the part of the document worth paying for, and an LLM rules on every field
+beneath it in **one** call — `supported` / `contradicted` / `not_stated`, with a reason:
 
 ```python
 from structured_eval import evaluate
-from structured_eval.models import EvalConfig
-from structured_eval.metrics import FieldFaithfulness
+from structured_eval.models import EvalConfig, ObjectFieldConfig
+from structured_eval.metrics import JudgeFaithfulness
 
 report = evaluate(
-    actual={"title": "Introduction to Python", "duration_hours": 40},
+    actual={
+        "course": "Introduction to Python",
+        "instructor": {"name": "Dr. Rivera", "title": "professor"},
+    },
     expected=None,
-    config=EvalConfig(metrics=[FieldFaithfulness()]),
-    source="Course: Introduction to Python. Duration: 12 hours.",
+    config=EvalConfig(fields={
+        "instructor": ObjectFieldConfig(
+            metrics=[JudgeFaithfulness(client="anthropic/claude-opus-5")]
+        )
+    }),
+    source="Introduction to Python is run by Dr. Rivera, a teaching assistant.",
 )
 
-report.metrics["field_faithfulness"].by_path  # {'title': 1.0, 'duration_hours': 0.0 ← 40 ≠ 12}
+result = report.field_scores["instructor"].metrics["judge_faithfulness"]
+float(result)                                   # 0.5 — one of the two fields is grounded
+result.extra["verdict"]["verdicts"]
+# [{'path': 'instructor.name',  'verdict': 'supported',    'reason': ''},
+#  {'path': 'instructor.title', 'verdict': 'contradicted', 'reason': 'the source says
+#                                                           teaching assistant'}]
 ```
+
+`course` is never judged — only the subtree you attached the judge to costs money.
+
+Learn more — [judge faithfulness](docs/metrics/catalog/judge-faithfulness.md) and
+[LLM clients](docs/core-concepts/llm-clients.md). For a free, deterministic floor there is
+also [field faithfulness](docs/metrics/catalog/field_faithfulness.md), a substring check.
 
 ### Logical consistency of values
 

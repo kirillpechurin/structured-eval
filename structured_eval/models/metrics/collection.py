@@ -54,8 +54,17 @@ class MetricCollection(BaseModel):
         return [r.extra for r in self.values() if r.extra]
 
     def extra_values(self, key: str) -> list[Any]:
-        """Flatten a list-valued ``extra[key]`` across every node's detail."""
+        """Gather ``extra[key]`` across every node's detail.
+
+        A list is flattened into the result, anything else appended whole — so
+        a metric publishing one object per node (an LLM judge's verdict) and
+        one publishing many items per node (rule results) both read back as a
+        flat list.
+        """
         out: list[Any] = []
         for result in self.values():
-            out.extend(result.extra.get(key, []))
+            if isinstance(result.extra.get(key), dict):
+                out.append(result.extra[key])
+            else:
+                out.extend(result.extra.get(key, []))
         return out

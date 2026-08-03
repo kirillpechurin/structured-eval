@@ -8,19 +8,10 @@ scores.
 
 from __future__ import annotations
 
-import enum
 from typing import Any
 
-from pydantic import BaseModel, Field
-
+from structured_eval.metrics.judge_faithfulness.schemas import Verdict
 from structured_eval.metrics.utils.value import render_value
-
-
-class Verdict(enum.StrEnum):
-    SUPPORTED = "supported"
-    NOT_STATED = "not_stated"
-    CONTRADICTED = "contradicted"
-
 
 # Used for any field the caller wrote no criterion for. Deliberately bland: a
 # field-specific criterion is the judge's most valuable input, and this is the
@@ -48,30 +39,6 @@ offers none, "{Verdict.CONTRADICTED}" when the source plainly states one.
 Answer about every field listed, reusing its `path` exactly as given. Fill in \
 `reason` only when the verdict is not "{Verdict.SUPPORTED}"; leave it empty otherwise, \
 and keep it to one sentence naming the part of the source you relied on."""
-
-
-class JudgedField(BaseModel):
-    """One field as the judge rules on it, keyed by the path it was asked about.
-
-    Three fields identical to ``FieldJudgeVerdict``, and the duplication is
-    deliberate — they answer to opposite constraints. This one is the **wire**
-    model: ``verdict`` has to be a closed enum, because that is what keeps the
-    reply schema down to three words the model must choose between. The other
-    is the **report** model, shared by every judge, and its ``verdict`` has to
-    stay an open string — closing it would tie the family contract to
-    faithfulness' own vocabulary. Merging them means picking one of the two,
-    and both are load-bearing.
-    """
-
-    path: str
-    verdict: Verdict
-    reason: str = ""
-
-
-class JudgeReply(BaseModel):
-    """The judge's whole answer — one entry per field, in a single call."""
-
-    verdicts: list[JudgedField] = Field(default_factory=list)
 
 
 def build_prompt(source: str, fields: list[tuple[str, Any, str]]) -> str:
