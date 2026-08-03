@@ -28,7 +28,7 @@ def default_client() -> LlmClient:
 
     The point of the feature is that trying an LLM-backed metric costs a line in
     a ``.env`` file rather than a wrapper class — set
-    ``STRUCTURED_EVAL_LLM_MODEL=anthropic/claude-opus-5`` plus the provider's own
+    ``STRUCTURED_EVAL_LLM_MODEL=qwen/qwen3-235b-a22b-2507`` plus the provider's own
     key variable, and a judge metric builds its client itself.
 
     The ``.env`` file is *not* read here: a library quietly loading files from
