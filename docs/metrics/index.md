@@ -20,8 +20,8 @@ nodes it can run on:
 | `field`       | scalar leaves (`ScalarNode`)             | `ExactMatch`, `TokenF1`, `Numeric`|
 | `object`      | objects (`ObjectNode`)                   | `ObjectF1`, `ObjectAccuracy`      |
 | `array`       | arrays (`ArrayNode`)                     | `ArrayF1`, `ArrayAccuracy`        |
-| `root`        | the root node only (`$`)                 | `SchemaValidity`, `Faithfulness`  |
-| `any-node`    | every node, one uniform computation      | `MeanScore`                       |
+| `root`        | the root node only (`$`)                 | `SchemaValidity`, `RulePassRate`  |
+| `any-node`    | every node, one uniform computation      | `MeanScore`, `JudgeFaithfulness`  |
 | `generic`     | several node kinds (per-kind dispatch)   | *(custom — see below)*            |
 
 A metric in `EvalConfig(metrics=[...])` **cascades** to every node its branch fits;
@@ -121,6 +121,23 @@ It is computed **last**, so it averages the node's other already-computed metric
 [`CompositeScore`](catalog/composite-score.md) is the weighted variant: set it as a
 node's `key_metric` to blend its other metrics by explicit weights instead of a plain
 mean. See [representative score](../core-concepts/evaluation-model.md#the-representative-score-key_metric).
+
+## LLM-based metrics
+
+Metrics that ask a model instead of comparing values — the L5–L6 rungs, where no
+deterministic check can decide. They need an
+[LLM client](../core-concepts/llm-clients.md); everything else in this catalog is free
+and deterministic.
+
+| Class             | Key                   | Branch     | Needs               | Measures                                  |
+|-------------------|-----------------------|------------|---------------------|-------------------------------------------|
+| [`JudgeFaithfulness`](catalog/judge-faithfulness.md) | `judge_faithfulness` | any-node | a `source` + a client | is each field beneath this node grounded in the source? |
+
+These are the only metrics that cost money and wall time, and the only ones that are not
+reproducible. They **never** run by default: no node type falls back to one, and no
+`default_*_metrics` setting reaches them — a judge runs exactly where you attach it. Because
+`JudgeFaithfulness` is an any-node metric it *can* be cascaded via `EvalConfig(metrics=[...])`,
+which buys one model call per node in the document; attach it explicitly instead.
 
 ## What a metric returns
 
