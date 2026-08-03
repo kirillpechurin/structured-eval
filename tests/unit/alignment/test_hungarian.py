@@ -81,6 +81,38 @@ def test_dict_elements_mean_agreement() -> None:
     assert sorted(r.matched) == [(0, 1), (1, 0)]
 
 
+def test_two_empty_objects_agree_vacuously() -> None:
+    # No fields to disagree on — the mean over an empty set is 1.0, not 0.0.
+    assert HungarianAligner().align([{}], [{}]).matched == [(0, 0)]
+
+
+def test_a_per_field_scorer_over_plain_values_compares_them_whole() -> None:
+    # The scorer names fields, the elements have none; falling back to equality
+    # beats scoring every scalar 0.0 because it has no "name".
+    r = HungarianAligner(scorer={"name": "fuzzy"}).align(["a", "b"], ["b", "a"])
+    assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+
+def test_a_plain_callable_is_a_scorer_too() -> None:
+    # Similarity does not have to be a metric: any ``(actual, expected) -> float``
+    # is used as-is, no adapter and no registry lookup.
+    def same_initial(actual: Any, expected: Any) -> float:
+        return 1.0 if actual[0] == expected[0] else 0.0
+
+    r = HungarianAligner(scorer=same_initial).align(
+        ["apple", "banana"], ["b-fruit", "a-fruit"]
+    )
+    assert sorted(r.matched) == [(0, 1), (1, 0)]
+
+
+def test_a_large_matrix_is_warned_about() -> None:
+    # Scoring is quadratic in the two lengths, so past ~10k cells the caller is
+    # told why the alignment is taking as long as it is.
+    items = list(range(101))
+    with pytest.warns(UserWarning, match="101x101"):
+        HungarianAligner().align(items, items)
+
+
 def test_scorer_on_key_field() -> None:
     expected = [{"id": "acme"}, {"id": "globex"}]
     actual = [{"id": "globex"}, {"id": "acme"}]
@@ -167,6 +199,15 @@ def test_single_key_list_matches_string_key() -> None:
     assert HungarianAligner(key=["id"], threshold=0.6).align(
         expected, actual
     ) == HungarianAligner(key="id", threshold=0.6).align(expected, actual)
+
+
+def test_an_element_with_no_fields_has_no_key_and_pairs_with_nothing() -> None:
+    # Same rule as ByKeyAligner: an element that cannot be keyed matches
+    # nothing, rather than scoring a perfect similarity against another one.
+    r = HungarianAligner(key="sku").align([1, 2], [3, 4])
+    assert r.matched == []
+    assert r.missed == [0, 1]
+    assert r.spurious == [0, 1]
 
 
 def test_empty_key_rejected() -> None:

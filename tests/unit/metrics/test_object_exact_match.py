@@ -21,6 +21,7 @@ pytestmark = pytest.mark.unit
         ({"a": 1}, {"a": 1, "b": 2}, 0.0),  # missing key
         ({"a": {"x": [1, 2]}}, {"a": {"x": [1, 2]}}, 1.0),  # deep nested equal
         ({"a": {"x": [1, 2]}}, {"a": {"x": [2, 1]}}, 0.0),  # nested list order
+        ({"a": [1, 2]}, {"a": [1]}, 0.0),  # nested list length
         ({"a": 1}, [["a", 1]], 0.0),  # non-dict side
     ],
     ids=[
@@ -31,6 +32,7 @@ pytestmark = pytest.mark.unit
         "missing-key",
         "nested-equal",
         "nested-order",
+        "nested-length",
         "non-dict",
     ],
 )

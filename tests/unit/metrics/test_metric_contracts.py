@@ -15,6 +15,7 @@ from structured_eval.metrics.base import (
     FieldMetric,
     resolve_metric,
 )
+from structured_eval.metrics.exact import ExactMatch
 
 pytestmark = pytest.mark.unit
 
@@ -147,8 +148,6 @@ def test_name_resolution_survives_a_custom_name(name: Any, cls: Any) -> None:
 
 @pytest.mark.parametrize("bad", ["", None])
 def test_name_must_be_a_nonempty_string(bad: Any) -> None:
-    from structured_eval.metrics.exact import ExactMatch
-
     if bad is None:  # None means "no override" — the default path, not an error
         assert ExactMatch(name=bad).name == "exact_match"
     else:

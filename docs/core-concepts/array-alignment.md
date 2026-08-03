@@ -83,6 +83,11 @@ report.array_matches["items"].matched   # [(0, 1), (1, 0)] — A↔A, B↔B desp
 
 `params` for `by_key`: `key`, `key_metric`, `threshold` (default `1.0`).
 
+An element that carries no fields at all — a scalar where an object was expected —
+has no key to pair on, so it matches nothing and lands in `missed` / `spurious`.
+A key field that is simply *absent* is different: it reads as `null`, and two
+nulls agree, which is what a nullable key looks like.
+
 `key` may also name **several fields** — a composite key, for records identified
 by a combination such as `(sku, warehouse)`. Each field is scored with
 `key_metric` and the element's key score is the mean over the fields, so with the

@@ -33,6 +33,16 @@ Default `mode="hard"` with field threshold `1.0`; `mode="soft"` counts fractiona
 scores. With `mode="soft"` this is exactly what [`ObjectAccuracy`](object-accuracy.md)
 computes.
 
+`threshold` takes a single float — one bar for every field — or a dict naming only
+the fields to relax, which is what a free-text field next to an exact one needs:
+
+```python
+ObjectRecall(threshold={"summary": 0.8})     # every other field still needs a perfect 1.0
+```
+
+Fields are named as `score_policy` names them (the last path segment), so one entry
+covers every element of an object.
+
 ## Example
 
 `name` is right, `experience_years` is wrong, `title` is missing — one of three expected

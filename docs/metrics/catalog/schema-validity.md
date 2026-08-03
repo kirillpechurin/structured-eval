@@ -15,9 +15,15 @@ whether the *values* are correct. Use it as the L0–L3 gate before the value me
 in. It works in schema-only mode (`expected=None`), so you can check well-formedness even
 without a ground-truth answer.
 
-`schema` is either a **Pydantic model class** or a **JSON Schema dict** — the backend is
-chosen by type, and validation is delegated to Pydantic / `jsonschema` (the canonical
-validators), not a homegrown checker.
+`schema` is either a **Pydantic model class** or a **JSON Schema dict**. Both are checked
+the same way: a model is converted to its JSON Schema and validated with `jsonschema` (the
+canonical validator, not a homegrown checker), so the verdict depends on the schema rather
+than on how you expressed it.
+
+That makes it **stricter than `model_validate`**, which coerces: `"100"` for a `float`
+field is a type error here, not a valid `100.0`. Reporting a coerced value as valid would
+hide exactly the failure this metric exists to catch — see [`TypeMatch`](type-match.md) for
+the field-level version of the same question.
 
 ## Parameters
 
@@ -25,7 +31,7 @@ validators), not a homegrown checker.
 |----------|---------------------------------------------------------------------|
 | `schema` | a Pydantic `BaseModel` subclass **or** a JSON Schema `dict` (required) |
 
-The dict path needs the optional `jsonschema` extra (`pip install 'structured-eval[jsonschema]'`).
+Needs the optional `jsonschema` extra (`pip install 'structured-eval[jsonschema]'`).
 
 ## How it's computed
 
@@ -38,6 +44,9 @@ failures are grouped into schema_errors = {
     extra_fields,       # fields the schema forbids
 }
 ```
+
+Every entry names the field it is about, spelled the way `report.field_scores` spells
+it — `lines[0].sku`, not the enclosing object.
 
 ## Example
 

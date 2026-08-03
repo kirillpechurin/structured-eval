@@ -23,7 +23,7 @@ Each extra enables a specific capability, so you can install only what you need:
 |-------|---------|
 | `yaml` | parsing YAML inputs |
 | `fuzzy` | the `Fuzzy` / `Levenshtein` metrics (rapidfuzz) |
-| `jsonschema` | `SchemaValidity` against a JSON Schema |
+| `jsonschema` | the `SchemaValidity` metric (either schema form) |
 | `rules` | the `Rule` DSL / `RulePassRate` |
 | `diff` | the `structured_diff` utility (deepdiff) |
 | `align` | the `hungarian` array alignment strategy (scipy) |

@@ -133,6 +133,29 @@ def test_single_key_list_matches_string_key() -> None:
     ).align(expected, actual)
 
 
+def test_an_element_with_no_fields_has_no_key_and_pairs_with_nothing() -> None:
+    # Both sides are scalars, so neither can be keyed. Treating "no key" as a
+    # value both share would tie every pair at a perfect score and hand them out
+    # in index order — keyed alignment quietly turning into alignment by
+    # position, and a plausible number instead of a wrong one.
+    r = ByKeyAligner(key="sku").align(["alpha", "beta", "gamma"], ["gamma", "beta"])
+    assert r.matched == []
+    assert r.missed == [0, 1, 2]
+    assert r.spurious == [0, 1]
+
+
+def test_only_the_unkeyable_elements_drop_out() -> None:
+    keyed = {"sku": "A-1"}
+    r = ByKeyAligner(key="sku").align([keyed, "oops"], [keyed, "wat"])
+    assert r.matched == [(0, 0)]
+
+
+def test_a_key_field_absent_from_both_elements_still_pairs_them() -> None:
+    # Unlike an element with no fields at all, these two agree on a value: the
+    # key is null on both sides, which is what a nullable key looks like.
+    assert ByKeyAligner(key="sku").align([{"x": 1}], [{"y": 2}]).matched == [(0, 0)]
+
+
 def test_empty_key_rejected() -> None:
     with pytest.raises(ValueError, match="at least one field"):
         ByKeyAligner(key=[])

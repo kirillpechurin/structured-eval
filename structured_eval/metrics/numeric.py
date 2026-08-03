@@ -69,12 +69,14 @@ class Numeric(FieldMetric):
 
         # Explicit bands take precedence; match within either.
         if self.relative_tolerance is not None or self.absolute_tolerance is not None:
-            if self.relative_tolerance is not None:
-                if e == 0:
-                    if a == 0:
-                        return True
-                elif abs(a - e) / abs(e) <= self.relative_tolerance:
-                    return True
+            # Equality is already settled above, so an expected zero can never be
+            # matched relatively — only the absolute band can still save it.
+            if (
+                self.relative_tolerance is not None
+                and e != 0
+                and abs(a - e) / abs(e) <= self.relative_tolerance
+            ):
+                return True
             return (
                 self.absolute_tolerance is not None
                 and abs(a - e) <= self.absolute_tolerance

@@ -3,7 +3,7 @@
 import pytest
 
 from structured_eval import evaluate, evaluate_batch
-from structured_eval.metrics import ObjectF1
+from structured_eval.metrics import FieldFaithfulness, ObjectF1
 from structured_eval.models import BatchEvalReport, EvalConfig, EvalReport, Sample
 
 pytestmark = pytest.mark.engine
@@ -46,8 +46,6 @@ def test_bare_list_is_single_document() -> None:
 
 
 def test_source_kwarg_enables_faithfulness() -> None:
-    from structured_eval.metrics import FieldFaithfulness
-
     r = evaluate(
         {"vendor": "Globex"},
         None,

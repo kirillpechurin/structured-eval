@@ -1,4 +1,4 @@
-from structured_eval.alignment.base import ArrayAligner, key_value
+from structured_eval.alignment.base import ArrayAligner, key_value, keyable
 from structured_eval.alignment.by_index import ByIndexAligner
 from structured_eval.alignment.by_key import ByKeyAligner
 from structured_eval.alignment.factory import make_aligner
@@ -11,5 +11,6 @@ __all__ = [
     "HungarianAligner",
     "Scorer",
     "key_value",
+    "keyable",
     "make_aligner",
 ]
