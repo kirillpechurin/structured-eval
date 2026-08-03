@@ -54,9 +54,7 @@ def test_a_real_client_returns_verdicts_the_judge_can_score() -> None:
 
     result = report.field_scores["$"].metrics["judge_faithfulness"]
     assert float(result) == pytest.approx(0.5)  # supported 1.0 + contradicted 0.0
-    verdicts = {
-        v["path"]: v["verdict"] for v in result.extra["judge_verdict"]["verdicts"]
-    }
+    verdicts = {v["path"]: v["verdict"] for v in result.extra["verdict"]["verdicts"]}
     assert verdicts == {"vendor": "supported", "total": "contradicted"}
 
 
