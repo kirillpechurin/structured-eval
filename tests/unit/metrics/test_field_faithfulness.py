@@ -56,15 +56,14 @@ def test_nested_object_leaves_checked() -> None:
     assert "meta.status" in mc.by_path
 
 
-def test_array_items_need_expected() -> None:
-    # Known limitation: in schema-only mode (expected=None) array items are not
-    # aligned, so no item nodes exist and faithfulness can't reach them. With an
-    # expected list the items materialize and are checked.
-    # TODO: materialize actual elements without expected — roadmap.
-    without = evaluate(
-        {"tags": ["100.0", "ghost"]}, None, CFG, source="value 100.0 here"
-    )
-    assert "field_faithfulness" not in without.metrics  # no array item nodes
+def test_array_items_are_reached_without_an_expected_document() -> None:
+    # The tree follows the document, so every actual element is a node whether
+    # or not there is an expected list to align against. Faithfulness grades the
+    # value against the source and never needs a counterpart, so source-only
+    # mode reaches array elements exactly like an expected one does.
+    without = _faith({"tags": ["100.0", "ghost"]}, source="value 100.0 here")
+    assert _hallucinated(without) == ["tags[1]"]
+
     with_exp = evaluate(
         {"tags": ["100.0", "ghost"]},
         {"tags": ["100.0", "x"]},

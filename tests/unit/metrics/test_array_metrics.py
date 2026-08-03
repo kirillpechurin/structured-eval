@@ -2,9 +2,9 @@
 
 Arrays are aligned first (by_index or by_key); each aligned element is graded by
 its recursive ``element_score`` against ``threshold``. ``missed`` are FN,
-``spurious`` are FP. Arrays are tested as a nested ``items`` field (root-list
-input is a separate, roadmap concern), and the ArrayNode is pulled from the
-built tree via ``children``.
+``spurious`` are FP. Arrays are tested as a nested ``items`` field — a document
+that is itself a list is its own case, covered elsewhere — and the ArrayNode is
+pulled from the built tree via ``children``.
 """
 
 from collections.abc import Callable

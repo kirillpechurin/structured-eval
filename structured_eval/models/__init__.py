@@ -8,7 +8,8 @@ into individual submodules:
 - input: ``Sample``, ``EvalContext``;
 - the ``EvalNode`` tree: ``EvalNode`` / ``ScalarNode`` / ``ObjectNode`` /
   ``ArrayNode`` (+ ``ArrayMatchResult``);
-- metric values: ``MetricResult`` / ``MetricCollection``;
+- metric values: ``MetricResult`` / ``MetricCollection``, and what an LLM judge
+  reports: ``JudgeVerdict`` / ``FieldJudgeVerdict``;
 - reports & scores: ``EvalReport`` / ``BatchEvalReport`` / ``ConsistencyReport``,
   ``FieldScore`` / ``RuleResult`` / ``RegressionDiff`` / ``EvalWarning`` /
   ``WarningType`` / ``NodeType``.
@@ -23,11 +24,17 @@ from structured_eval.models.config import (
     ObjectFieldConfig,
 )
 from structured_eval.models.context import EvalContext
-from structured_eval.models.metric_result import MetricCollection, MetricResult
+from structured_eval.models.metrics import (
+    FieldJudgeVerdict,
+    JudgeVerdict,
+    MetricCollection,
+    MetricResult,
+)
 from structured_eval.models.nodes import (
     ArrayMatchResult,
     ArrayNode,
     EvalNode,
+    NodeType,
     ObjectNode,
     ScalarNode,
 )
@@ -37,7 +44,6 @@ from structured_eval.models.result import (
     EvalReport,
     EvalWarning,
     FieldScore,
-    NodeType,
     RegressionDiff,
     RuleResult,
     WarningType,
@@ -58,7 +64,9 @@ __all__ = [
     "EvalWarning",
     "ExtraKeysPolicy",
     "FieldConfig",
+    "FieldJudgeVerdict",
     "FieldScore",
+    "JudgeVerdict",
     "MetricCollection",
     "MetricResult",
     "NodeType",

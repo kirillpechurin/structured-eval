@@ -9,8 +9,10 @@ from typing import Any
 
 import pytest
 
+from structured_eval.metrics import MeanScore
 from structured_eval.models import EvalContext
-from structured_eval.models.nodes.base import MISSING, EvalNode, navigate
+from structured_eval.models.nodes.base import EvalNode
+from structured_eval.utils.paths import MISSING, navigate
 
 pytestmark = pytest.mark.unit
 
@@ -63,6 +65,22 @@ def test_missing_actual_surfaces_as_none(
     assert EvalNode(path="b", context=ctx).actual is None
 
 
+@pytest.mark.parametrize(
+    ("path", "present"),
+    [("a", True), ("b", True), ("c", False)],
+    ids=["a-value", "an-explicit-null", "an-absent-key"],
+)
+def test_is_present_tells_an_explicit_null_from_an_absent_key(
+    context_factory: Callable[..., EvalContext], path: str, present: bool
+) -> None:
+    # `actual` collapses both to None; `is_present` is how a caller that reads a
+    # value as a claim the output made keeps them apart.
+    ctx = context_factory({"a": 1, "b": None}, {"a": 1, "b": 2, "c": 3})
+    node = EvalNode(path=path, context=ctx)
+    assert node.actual is None or path == "a"
+    assert node.is_present is present
+
+
 def test_expected_none_when_no_expected(
     context_factory: Callable[..., EvalContext],
 ) -> None:
@@ -94,3 +112,41 @@ def test_leaves_are_only_scalars(tree_factory: Callable[..., EvalNode]) -> None:
 def test_root_is_not_a_leaf(tree_factory: Callable[..., EvalNode]) -> None:
     root = tree_factory({"a": 1}, {"a": 1})
     assert not root.is_leaf()
+
+
+# ── representative ───────────────────────────────────────────────────────────
+
+
+def test_representative_is_the_key_metrics_value(
+    tree_factory: Callable[..., EvalNode],
+) -> None:
+    root = tree_factory({"a": 1}, {"a": 1})
+    leaf = next(node for node in root.leaves() if node.path == "a")
+    assert leaf.representative == 1.0
+
+
+@pytest.mark.parametrize(
+    ("key_metric", "results", "message"),
+    [
+        (None, {}, "has no key_metric"),
+        (MeanScore(), {}, "has no computed value"),
+    ],
+    ids=["no-key-metric", "key-metric-never-ran"],
+)
+def test_representative_refuses_to_invent_a_score(
+    context_factory: Callable[..., EvalContext],
+    key_metric: Any,
+    results: dict[str, Any],
+    message: str,
+) -> None:
+    # A parent aggregating its children reads this; a fallback here would turn a
+    # missing computation into a silent zero and quietly move every score above
+    # it. The engine's job is to make sure this never has to raise.
+    node = EvalNode(
+        path="a",
+        context=context_factory({"a": 1}),
+        key_metric=key_metric,
+        metric_results=results,
+    )
+    with pytest.raises(ValueError, match=message):
+        _ = node.representative

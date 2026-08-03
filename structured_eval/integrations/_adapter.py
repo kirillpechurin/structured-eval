@@ -6,7 +6,7 @@ directly, without any host library installed.
 
 from __future__ import annotations
 
-from structured_eval.models.result import EvalReport, NodeType
+from structured_eval.models import EvalReport, NodeType
 
 _MAX_REASONS = 5
 

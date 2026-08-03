@@ -1,20 +1,27 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from structured_eval.models.context import EvalContext  # noqa: TC001
-from structured_eval.models.metric_result import MetricResult  # noqa: TC001
+from structured_eval.models.metrics import MetricResult  # noqa: TC001
 from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-# Re-exported for back-compat: ``navigate`` / ``MISSING`` now live in
-# ``structured_eval.utils.paths`` (a lower layer with no model dependency).
-__all__ = ["MISSING", "EvalNode", "navigate"]
+__all__ = ["EvalNode", "NodeType"]
+
+
+class NodeType(StrEnum):
+    """The kind of tree node a ``FieldScore`` describes."""
+
+    SCALAR = "scalar"
+    OBJECT = "object"
+    ARRAY = "array"
 
 
 class EvalNode(BaseModel):
@@ -59,6 +66,19 @@ class EvalNode(BaseModel):
             return None
         value = navigate(self.context.expected, self.expected_path or self.path)
         return None if value is MISSING else value
+
+    @property
+    def is_present(self) -> bool:
+        """Whether the actual document carries this node at all.
+
+        ``actual`` collapses "absent" and "present but null" into ``None``;
+        this keeps them apart, which is what ``MISSING`` exists for. The
+        difference matters wherever a value is read as a *claim the output
+        made*: ``{"city": null}`` asserts the source gives no city, while a
+        document with no ``city`` key asserts nothing — that node exists only
+        because ``expected`` has one.
+        """
+        return navigate(self.context.actual, self.path) is not MISSING
 
     @property
     def representative(self) -> float:

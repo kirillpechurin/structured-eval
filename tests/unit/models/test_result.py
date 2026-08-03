@@ -16,8 +16,8 @@ from structured_eval.models import (
     FieldScore,
     MetricCollection,
     MetricResult,
+    NodeType,
 )
-from structured_eval.models.result import NodeType
 
 pytestmark = pytest.mark.unit
 

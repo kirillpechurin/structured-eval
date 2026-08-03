@@ -29,13 +29,14 @@ from structured_eval.models.config import (
     weight_of,
 )
 from structured_eval.models.nodes.array_node import ArrayNode
-from structured_eval.models.nodes.base import MISSING, EvalNode, navigate
 from structured_eval.models.nodes.object_node import ObjectNode
 from structured_eval.models.nodes.scalar import ScalarNode
 from structured_eval.models.result import EvalWarning, WarningType
+from structured_eval.utils.paths import MISSING, navigate
 
 if TYPE_CHECKING:
     from structured_eval.models.context import EvalContext
+    from structured_eval.models.nodes.base import EvalNode
 
 # Metric a node falls back to when the user configured none of its type, so every
 # node always carries at least one metric for its key_metric (MeanScore) to mean.
@@ -250,11 +251,14 @@ class TreeBuilder:
         ):
             if spec is None:
                 continue
-            # Reuse an equally-named metric already on the node; else resolve fresh.
-            metric = next(
-                (m for m in metrics if isinstance(spec, str) and m.name == spec),
-                None,
-            ) or resolve_metric(spec)
+            # The name is read off the spec without resolving it: a per-instance
+            # override (``Numeric(0.001, name="strict")``) names nothing the
+            # registry knows, so resolving first would raise on a name that is
+            # perfectly valid here. The registry is reached only on a miss.
+            name = spec if isinstance(spec, str) else spec.name
+            metric = next((m for m in metrics if m.name == name), None) or (
+                resolve_metric(spec)
+            )
             if self._applies_to(metric, node_cls, is_root):
                 assert isinstance(metric, Metric)  # a key metric has compute()/score()
                 return metric
@@ -366,14 +370,26 @@ class TreeBuilder:
             aligner = make_aligner(strategy=ArrayStrategy.BY_INDEX, params=None)
             item_cfg = None
         result = aligner.align(e_list, a_list)
-        # TODO: with no expected list (faithfulness / schema-only mode) there are
-        # no matched pairs, so array elements get no nodes — value-on-actual
-        # metrics (FieldFaithfulness) can't reach them. Materialize actual
-        # elements directly in that mode. Roadmap.
+        # One node per actual element, in document order — alignment says which
+        # of them has a counterpart, not which of them exist. An unmatched
+        # element points one past the end of the expected list, a path that
+        # cannot resolve, so its `expected` reads as absent instead of silently
+        # picking up whichever element sits at the same index.
+        # The root's own path is a label, not a segment: its elements spell
+        # themselves without it (`[0]`, not `$[0]`), which is what `navigate`
+        # resolves and what `flatten` produces. Same rule as `_child`.
+        a_prefix = "" if apath in ("$", "") else apath
+        e_prefix = "" if epath in ("$", "") else epath
+        expected_of = {aidx: eidx for eidx, aidx in result.matched}
         items = [
-            self.node(f"{apath}[{aidx}]", f"{epath}[{eidx}]", item_cfg)
-            for eidx, aidx in result.matched
+            self.node(
+                f"{a_prefix}[{aidx}]",
+                f"{e_prefix}[{expected_of.get(aidx, len(e_list))}]",
+                item_cfg,
+            )
+            for aidx in range(len(a_list))
         ]
+        matched = [items[aidx] for _, aidx in result.matched]
         is_root = apath == "$"
         metrics = self._node_metrics(apath, ArrayNode, cfg, is_root)
         return ArrayNode(
@@ -386,6 +402,9 @@ class TreeBuilder:
             threshold=self._threshold(cfg),
             match_result=result,
             items=items,
+            matched=matched,
+            missing=result.missed,
+            spurious=result.spurious,
         )
 
     def _scalar(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> ScalarNode:

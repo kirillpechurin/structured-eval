@@ -25,6 +25,7 @@ from structured_eval.metrics.exact import ExactMatch
 from structured_eval.metrics.exponential_numeric_score import ExponentialNumericScore
 from structured_eval.metrics.field_faithfulness import FieldFaithfulness
 from structured_eval.metrics.fuzzy import Fuzzy
+from structured_eval.metrics.judge_faithfulness import JudgeFaithfulness
 from structured_eval.metrics.levenshtein import Levenshtein
 from structured_eval.metrics.mean_score import MeanScore
 from structured_eval.metrics.numeric import Numeric
@@ -71,6 +72,7 @@ __all__ = [
     "FieldMetric",
     "Fuzzy",
     "GenericMetric",
+    "JudgeFaithfulness",
     "Levenshtein",
     "MeanScore",
     "Metric",
