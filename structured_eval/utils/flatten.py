@@ -19,7 +19,7 @@ def flatten(obj: dict[str, Any] | list[Any], prefix: str = "") -> dict[str, Any]
 
     Example:
         >>> flatten({"invoice": {"id": "1", "items": [{"price": 100}]}})
-        {"invoice.id": "1", "invoice.items[0].price": 100}
+        {'invoice.id': '1', 'invoice.items[0].price': 100}
     """
     result: dict[str, Any] = {}
     if isinstance(obj, dict):
