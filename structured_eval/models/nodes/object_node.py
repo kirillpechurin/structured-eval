@@ -10,9 +10,11 @@ from structured_eval.models.nodes.base import EvalNode
 class ObjectNode(EvalNode):
     """A dict node.
 
-    ``matched`` holds child nodes present in both actual and expected.
-    ``missing`` / ``spurious`` hold keys present on only one side (FN / FP).
-    ``children`` maps every child key to its node for tree traversal.
+    Attributes:
+        matched: Child nodes present in both actual and expected.
+        missing: Keys present only in expected (FN).
+        spurious: Keys present only in actual (FP).
+        children: Every child key mapped to its node, for tree traversal.
     """
 
     matched: list[EvalNode] = Field(default_factory=list)

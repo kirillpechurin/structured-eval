@@ -10,12 +10,18 @@ from pydantic import BaseModel
 class Sample(BaseModel):
     """One document to evaluate.
 
-    Wrapping in ``Sample`` removes the ambiguity of a bare ``list``: a list
-    passed as ``actual`` is a single document whose root is an array, whereas
-    ``list[Sample]`` is a batch of documents.
+    Wrapping in `Sample` removes the ambiguity of a bare `list`: a list passed as
+    `actual` is a single document whose root is an array, whereas `list[Sample]`
+    is a batch of documents.
+
+    Attributes:
+        actual: The document under evaluation, parsed or as raw text.
+        expected: The reference document to score it against.
+        source: The original text a faithfulness metric grades the values against.
+        id: Identifier for this sample in a `BatchEvalReport`.
     """
 
     actual: dict[str, Any] | list[Any] | str
     expected: dict[str, Any] | list[Any] | str | None = None
-    source: str | None = None  # original text, for Faithfulness
-    id: str | None = None  # identifier in a BatchEvalReport
+    source: str | None = None
+    id: str | None = None

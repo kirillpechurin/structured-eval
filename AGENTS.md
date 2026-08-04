@@ -109,6 +109,13 @@ owes is decided by **import path and visibility**, not by taste:
 - **`Example:` uses doctest** (`>>>`) and is executed by `make doctest`, so an
   example cannot drift from the code. Non-deterministic ones (anything reaching an
   LLM) end in `# doctest: +SKIP`.
+- **A one-line docstring needs no `Returns:`** — Google lets you drop the section
+  when the summary already describes the return value, and ruff's
+  `ignore-one-line-docstrings` encodes exactly that. Say it in the summary and
+  stop; add the section only once the docstring has grown a body.
+- **Document a field once, on the class that declares it.** An `Attributes:`
+  entry per model field, and no trailing `# comment` restating it — subclasses
+  do not repeat what the base class already documented.
 - Tier A exempts pure pydantic models and `StrEnum`s from `Example:` — they owe an
   `Attributes:` section instead.
 - **Markdown, not reST**, inside docstrings: the reference is rendered by
@@ -127,6 +134,11 @@ owes is decided by **import path and visibility**, not by taste:
   function they describe — not in the module docstring, and not restated in two
   places. The one thing worth its length is a `Usage`/`Example` block, which
   Google's guide explicitly wants.
+- **Three lines is the ceiling for a paragraph.** Docstrings are read by people.
+  Past three lines, break the thought into a bullet list or cut it. Never write
+  a run-on of clauses strung together with semicolons, colons and dashes just to
+  fit an explanation into one block — that is the shape to refactor, not to
+  reflow.
 - Overridden `score` / `compute` carry their own docstring rather than inheriting
   the base one — each states what *this* metric does with the values.
 - Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in

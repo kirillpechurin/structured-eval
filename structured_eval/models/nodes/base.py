@@ -19,7 +19,13 @@ __all__ = ["EvalNode", "NodeType"]
 
 
 class NodeType(StrEnum):
-    """The kind of tree node a ``FieldScore`` describes."""
+    """The kind of tree node a `FieldScore` describes.
+
+    Attributes:
+        SCALAR: A leaf value.
+        OBJECT: A dict.
+        ARRAY: A list.
+    """
 
     SCALAR = "scalar"
     OBJECT = "object"
@@ -29,17 +35,24 @@ class NodeType(StrEnum):
 class EvalNode(BaseModel):
     """A node in the evaluation tree.
 
-    Holds its ``path`` and a shared reference to the ``EvalContext``; data is
-    never copied — ``actual``/``expected`` are resolved lazily by navigating the
-    context's documents. ``expected_path`` defaults to ``path``; it diverges
-    only for array items aligned out of order (``expected[1]`` ↔ ``actual[0]``),
-    so each side navigates its own index. ``metric_results`` accumulates each
-    requested metric's value at this node (filled by the engine in phase 2).
+    Data is never copied: a node holds its `path` and a shared reference to the
+    `EvalContext`, and resolves `actual` / `expected` lazily by navigating the
+    context's documents.
 
-    ``key_metric`` is the node's *representative* metric — the single score that
-    bubbles up to a parent's aggregation (and, at the root, to ``report.score``).
-    It is computed last (its logic may depend on the node's other metrics) and
-    defaults to ``MeanScore`` (the arithmetic mean of the node's own metrics).
+    Attributes:
+        path: This node's dot-and-bracket path in the actual document.
+        context: The sample data every node in the tree shares.
+        expected_path: Where to look on the expected side; defaults to `path`
+            and diverges only for array items aligned out of order
+            (`expected[1]` ↔ `actual[0]`), so each side navigates its own index.
+        weight: Relative importance in the parent's weighted aggregation.
+        metrics: The metrics resolved for this node.
+        key_metric: This node's *representative* metric — the single score that
+            bubbles up to a parent's aggregation, and at the root to
+            `report.score`. Computed last, since its logic may depend on the
+            node's other metrics; defaults to `MeanScore`.
+        threshold: The bar the representative score must clear to count as a TP.
+        metric_results: Each requested metric's value here, filled by phase 2.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -47,23 +60,21 @@ class EvalNode(BaseModel):
     path: str
     context: EvalContext
     expected_path: str | None = None
-    weight: float = 1.0  # relative importance for weighted aggregation (OverallLeafScore, object metrics)
-    metrics: list[Any] = Field(
-        default_factory=list
-    )  # list[BaseMetric] resolved for this node
-    key_metric: Any = (
-        None  # BaseMetric: this node's representative score (parents read it)
-    )
-    threshold: float = 1.0  # bar the representative score must clear to count as a TP
+    weight: float = 1.0
+    metrics: list[Any] = Field(default_factory=list)
+    key_metric: Any = None
+    threshold: float = 1.0
     metric_results: dict[str, MetricResult] = Field(default_factory=dict)
 
     @property
     def actual(self) -> Any:
+        """This node's value in the actual document; `None` when absent."""
         value = navigate(self.context.actual, self.path)
         return None if value is MISSING else value
 
     @property
     def expected(self) -> Any:
+        """This node's value in the expected document; `None` when absent."""
         if self.context.expected is None:
             return None
         value = navigate(self.context.expected, self.expected_path or self.path)
@@ -73,24 +84,24 @@ class EvalNode(BaseModel):
     def is_present(self) -> bool:
         """Whether the actual document carries this node at all.
 
-        ``actual`` collapses "absent" and "present but null" into ``None``;
-        this keeps them apart, which is what ``MISSING`` exists for. The
-        difference matters wherever a value is read as a *claim the output
-        made*: ``{"city": null}`` asserts the source gives no city, while a
-        document with no ``city`` key asserts nothing — that node exists only
-        because ``expected`` has one.
+        `actual` reports both cases as `None`; these are not the same claim:
+
+        - `{"city": null}` — present. The output says there is no city.
+        - `{}` — absent. The output says nothing, and the node exists only
+          because `expected` has one.
         """
         return navigate(self.context.actual, self.path) is not MISSING
 
     @property
     def representative(self) -> float:
-        """The node's single representative score: its ``key_metric``'s value.
+        """The node's single representative score: its `key_metric`'s value.
 
-        Every node always carries a ``key_metric`` (the engine defaults it to
-        ``MeanScore``) and at least one metric for it to summarise, so by the
-        time anyone reads this the value exists. A parent reads its already
-        computed children's representatives to aggregate (post-order); the root's
-        is ``report.score``. Missing is a programming error, not a fallback.
+        Parents aggregate their children's representatives post-order, so by the
+        time anyone reads this the value exists. The root's is `report.score`.
+
+        Raises:
+            ValueError: If the node has no `key_metric`, or its value was never
+                computed. Both are programming errors, not a fallback path.
         """
         km = self.key_metric
         if km is None:

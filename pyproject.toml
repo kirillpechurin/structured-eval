@@ -138,6 +138,12 @@ line-ending = "auto"
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.lint.pydoclint]
+# Google allows omitting `Returns:` when the summary already describes the
+# return value. A one-line docstring is exactly that case, and this codebase
+# leans on it heavily, so don't demand a section that would only restate it.
+ignore-one-line-docstrings = true
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "ARG",     # unused args common in fixtures/parametrize
@@ -166,7 +172,6 @@ convention = "google"
 "structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/llm/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/metrics/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/models/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/utils/**" = ["D102", "D103", "D105", "D107", "DOC"]
 # Tests are converted last, and only these codes apply to them (the rest are
