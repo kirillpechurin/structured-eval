@@ -1,3 +1,5 @@
+"""The `mean_score` metric — the default representative score of any node."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

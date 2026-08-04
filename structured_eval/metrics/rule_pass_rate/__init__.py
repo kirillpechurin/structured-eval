@@ -1,3 +1,5 @@
+"""The `rule_pass_rate` metric and the `Rule` DSL it evaluates."""
+
 from structured_eval.metrics.rule_pass_rate.dsl import Rule
 from structured_eval.metrics.rule_pass_rate.engine import RuleProcessor
 from structured_eval.metrics.rule_pass_rate.metric import RulePassRate

@@ -1,3 +1,5 @@
+"""`ScalarNode` — a leaf position in the evaluation tree."""
+
 from __future__ import annotations
 
 from structured_eval.models.nodes.base import EvalNode

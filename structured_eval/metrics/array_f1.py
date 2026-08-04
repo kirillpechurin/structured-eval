@@ -1,3 +1,5 @@
+"""The `array_f1` metric — harmonic mean of array precision and recall."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

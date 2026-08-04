@@ -1,3 +1,5 @@
+"""The `exponential_numeric_score` metric — similarity decaying with distance."""
+
 from __future__ import annotations
 
 import math

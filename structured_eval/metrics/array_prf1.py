@@ -1,3 +1,5 @@
+"""The `array_prf1` metric — array precision, recall and F1 from one pass."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,13 @@
+"""Metric base classes, the name registry, and the per-node-type hierarchy.
+
+`BaseMetric` is the registry root. `Metric` adds the interface every metric
+shares: `compute(node)` as the node-level entry point and `score(actual,
+expected)` as the value-level comparison array alignment reuses. The classes
+below it — `FieldMetric`, `ObjectMetric`, `ArrayMetric`, `RootMetric`,
+`AnyNodeMetric`, `GenericMetric` — declare which node type a metric applies to,
+which is what `TreeBuilder` cascades on.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

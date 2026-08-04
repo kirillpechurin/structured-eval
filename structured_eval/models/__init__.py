@@ -1,18 +1,14 @@
-"""structured_eval.models — the pydantic data layer.
+"""The pydantic data layer — configuration, input, tree nodes and reports.
 
 Single home for every user-facing data model, re-exported here so callers use
-one path — ``from structured_eval.models import <X>`` — rather than reaching
-into individual submodules:
+one path (`from structured_eval.models import ...`) rather than reaching into
+the individual submodules:
 
-- configuration: ``EvalConfig`` + the ``*FieldConfig`` family and policies;
-- input: ``Sample``, ``EvalContext``;
-- the ``EvalNode`` tree: ``EvalNode`` / ``ScalarNode`` / ``ObjectNode`` /
-  ``ArrayNode`` (+ ``ArrayMatchResult``);
-- metric values: ``MetricResult`` / ``MetricCollection``, and what an LLM judge
-  reports: ``JudgeVerdict`` / ``FieldJudgeVerdict``;
-- reports & scores: ``EvalReport`` / ``BatchEvalReport`` / ``ConsistencyReport``,
-  ``FieldScore`` / ``RuleResult`` / ``RegressionDiff`` / ``EvalWarning`` /
-  ``WarningType`` / ``NodeType``.
+- configuration — `EvalConfig` and the `*FieldConfig` family with their policies.
+- input — `Sample`, `EvalContext`.
+- tree nodes — `EvalNode`, `ScalarNode`, `ObjectNode`, `ArrayNode`.
+- metric values — `MetricResult`, `MetricCollection`, `JudgeVerdict`.
+- reports — `EvalReport`, `BatchEvalReport`, `ConsistencyReport`, `FieldScore`.
 """
 
 from structured_eval.models.config import (

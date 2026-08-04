@@ -33,7 +33,7 @@ DEFAULT_VERDICT_SCORES: dict[str, float] = {
 
 
 class JudgeFaithfulness(AnyNodeMetric):
-    """Is each field beneath this node grounded in the sample's ``source``? (LLM.)
+    """Is each field beneath this node grounded in the sample's ``source``?
 
     Attach it to any node — the document root, one nested object, an array, or a
     single field — and it takes every leaf beneath that node, asks one LLM call

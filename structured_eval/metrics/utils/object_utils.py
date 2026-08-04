@@ -1,19 +1,8 @@
 """Verdicts for object metrics: matched fields → ``(score, threshold, weight)``.
 
 A parent object does not re-compare its children; it reads each matched child's
-already-computed representative score (``node.representative``) and pairs it with
-the bar it must clear and the weight it carries. Those triples feed
-``calculate.prf_counts``.
-
-``score_policy`` (on ``ObjectF1`` / ``ObjectAccuracy`` / …) overrides the
-criterion for a named field — a metric instance or its registered name, run on
-that child via ``MetricInvoker`` (so it works for any child kind, not only
-scalars). ``thresholds`` may be a per-field dict or a single float.
-
-``weight_mode`` (see ``calculate.WeightMode``) decides each child's weight:
-``NONE`` → ``1.0`` (plain counts), ``PROPORTIONAL`` → the child's configured
-``weight``. Missing (FN) and spurious (FP) children are weighted the same way
-via ``missing_weight`` / ``spurious_weight``.
+already-computed representative score and pairs it with the bar it must clear
+and the weight it carries. Those triples feed ``calculate.prf_counts``.
 """
 
 from __future__ import annotations

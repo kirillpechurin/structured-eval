@@ -1,3 +1,5 @@
+"""The `levenshtein` metric — normalized edit-distance ratio."""
+
 from __future__ import annotations
 
 from structured_eval.metrics.fuzzy import Fuzzy, FuzzyMethod

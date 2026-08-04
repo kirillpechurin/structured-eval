@@ -1,3 +1,5 @@
+"""`ArrayNode` — a list position — and the alignment result it carries."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field

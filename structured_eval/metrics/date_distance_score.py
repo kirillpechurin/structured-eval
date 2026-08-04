@@ -1,3 +1,5 @@
+"""The `date_distance_score` metric — graded similarity for dates and datetimes."""
+
 from __future__ import annotations
 
 from datetime import date, datetime

@@ -1,3 +1,5 @@
+"""Phase 1 of the pipeline: building the node tree and resolving its metrics."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

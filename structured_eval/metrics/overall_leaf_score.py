@@ -1,3 +1,5 @@
+"""The `overall_leaf_score` metric — weighted mean of leaf scores document-wide."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

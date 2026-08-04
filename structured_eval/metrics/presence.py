@@ -1,3 +1,5 @@
+"""The `presence` metric — was the field populated at all?"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

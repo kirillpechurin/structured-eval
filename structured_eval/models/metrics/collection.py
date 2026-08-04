@@ -1,3 +1,5 @@
+"""`MetricCollection` — one named metric's values across the whole tree."""
+
 from __future__ import annotations
 
 from statistics import mean

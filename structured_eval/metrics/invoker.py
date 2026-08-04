@@ -1,18 +1,4 @@
-"""The single way to run a metric, whatever input is available.
-
-Every metric is invoked through ``MetricInvoker`` — never by calling ``compute``
-/ ``compute_<kind>`` / ``score`` directly. Two input modes:
-
-* ``on_node`` — a node is available: grade it. A ``Metric`` uses ``compute``; a
-  ``GenericMetric`` dispatches to the ``compute_<kind>`` for the node's type.
-* ``on_values`` — only raw ``actual`` / ``expected`` (array alignment, before any
-  node exists): compare them. A ``Metric`` uses ``score``; a ``GenericMetric``
-  dispatches to the ``score_<kind>`` for the kind inferred from the value's shape.
-
-Each mode has a ``scalar_*`` variant that narrows the result to a single
-``float`` (rejecting a dict of sub-scores) — that narrowing is the caller's
-contract, hence its own method.
-"""
+"""The single way to run a metric, whatever input is available."""
 
 from __future__ import annotations
 
@@ -50,7 +36,7 @@ def _kind_of(actual: Any, expected: Any) -> type:
 
 
 class MetricInvoker:
-    """Runs ``self.metric`` in either input mode; see module docstring."""
+    """Runs one metric, in whichever of the two input modes the caller has."""
 
     def __init__(self, metric: BaseMetric):
         self.metric = metric

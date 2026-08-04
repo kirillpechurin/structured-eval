@@ -1,3 +1,5 @@
+"""The `array_cardinality` metric — agreement on how many items there are."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

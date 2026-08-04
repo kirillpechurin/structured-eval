@@ -1,3 +1,5 @@
+"""The `regex_match` metric — equality after an optional regex rewrite."""
+
 from __future__ import annotations
 
 import re
@@ -8,7 +10,7 @@ from structured_eval.metrics.utils.null import both_null
 
 
 class RegexMatch(FieldMetric):
-    """String equality after an optional regex rewrite → 1.0, else 0.0.
+    r"""String equality after an optional regex rewrite → 1.0, else 0.0.
 
     A **string-only** metric: if either side is not a ``str`` the score is
     ``0.0`` (use ``Numeric`` for numbers, ``ExactMatch`` for verbatim
@@ -17,10 +19,10 @@ class RegexMatch(FieldMetric):
     ``strip``, then substitutes every match of ``pattern`` with ``repl``, and
     compares the results exactly.
 
-    The default ``pattern=r"\\s+", repl=" "`` (with ``lower``/``strip`` on)
+    The default ``pattern=r"\s+", repl=" "`` (with ``lower``/``strip`` on)
     collapses whitespace and ignores casing. Tune the rewrite, e.g.::
 
-        RegexMatch(pattern=r"[^\\w\\s]", repl="")  # drop punctuation
+        RegexMatch(pattern=r"[^\w\s]", repl="")  # drop punctuation
         RegexMatch(pattern=r"[-_]", repl=" ")       # dashes/underscores → spaces
         RegexMatch(lower=False)                      # case-sensitive
     """

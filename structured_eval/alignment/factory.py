@@ -1,3 +1,5 @@
+"""Construction of the aligner named by an array field's `strategy`."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

@@ -1,3 +1,5 @@
+"""Flattening a nested document into dot-and-bracket field paths."""
+
 from __future__ import annotations
 
 from typing import Any

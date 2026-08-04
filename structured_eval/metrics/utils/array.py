@@ -1,13 +1,7 @@
 """Verdicts for array metrics: aligned items → ``(score, threshold, weight)``.
 
-An aligned item is graded by its representative score against a single
-``threshold`` (hard) or contributes that score fractionally (soft) — mirroring
-how object fields are graded. ``missed`` items are FN, ``spurious`` items FP.
-The verdicts feed ``calculate.prf_counts``.
-
-Array elements share one ``item`` config, so they carry no individual weights:
-every item (and every missed/spurious slot) weighs ``1.0`` and array metrics are
-effectively count-based.
+The verdicts feed ``calculate.prf_counts``; ``missed`` items are FN, ``spurious``
+items FP.
 """
 
 from __future__ import annotations

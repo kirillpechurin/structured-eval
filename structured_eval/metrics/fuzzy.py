@@ -1,3 +1,5 @@
+"""The `fuzzy` metric — string similarity via RapidFuzz (the `fuzzy` extra)."""
+
 from __future__ import annotations
 
 import re

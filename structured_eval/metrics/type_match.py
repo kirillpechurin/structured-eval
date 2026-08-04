@@ -1,3 +1,5 @@
+"""The `type_match` metric — do actual and expected share a JSON type?"""
+
 from __future__ import annotations
 
 from typing import Any

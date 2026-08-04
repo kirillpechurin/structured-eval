@@ -1,3 +1,5 @@
+"""The `array_accuracy` metric — mean element score over aligned array items."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

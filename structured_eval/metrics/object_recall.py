@@ -1,3 +1,5 @@
+"""The `object_recall` metric — TP / (TP + FN) over an object's fields."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

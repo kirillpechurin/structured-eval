@@ -1,3 +1,5 @@
+"""Rendering of a field's value for reports and judge prompts."""
+
 import json
 from typing import Any
 

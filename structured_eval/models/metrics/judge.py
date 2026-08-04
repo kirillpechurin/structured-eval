@@ -1,3 +1,5 @@
+"""The verdict models an LLM-judge metric reports."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

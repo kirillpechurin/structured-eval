@@ -1,3 +1,5 @@
+"""Optimal one-to-one array alignment — the `hungarian` strategy."""
+
 from __future__ import annotations
 
 import warnings

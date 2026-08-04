@@ -1,3 +1,5 @@
+"""The `array_jaccard_similarity` metric — set overlap, blind to order and counts."""
+
 from __future__ import annotations
 
 import json

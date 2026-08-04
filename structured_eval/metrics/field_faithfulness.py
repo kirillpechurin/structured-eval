@@ -1,3 +1,5 @@
+"""The `field_faithfulness` metric — is a leaf value backed by the sample's source?"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -9,10 +11,11 @@ if TYPE_CHECKING:
 
 
 class FieldFaithfulness(FieldMetric):
-    """Is this leaf value grounded in the sample's ``source``? (L1 substring.)
+    """Is this leaf value grounded in the sample's ``source``?
 
-    A per-field faithfulness check, true to the framework's "comparison is a
-    metric" core: each scalar leaf scores ``1.0`` if its string form appears
+    A per-field faithfulness check at the L1 (verbatim substring) level, true to
+    the framework's "comparison is a metric" core: each scalar leaf scores
+    ``1.0`` if its string form appears
     (case-insensitively) verbatim in ``source``, else ``0.0`` (a hallucination).
     Cascade it via ``EvalConfig(metrics=[FieldFaithfulness()])`` and the engine
     does the rest — aggregation is just the usual leaf roll-up

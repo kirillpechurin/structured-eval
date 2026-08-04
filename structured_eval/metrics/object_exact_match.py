@@ -1,3 +1,5 @@
+"""The `object_exact_match` metric — strict deep equality for objects."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

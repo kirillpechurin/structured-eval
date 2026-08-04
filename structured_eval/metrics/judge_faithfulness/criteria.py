@@ -4,18 +4,6 @@ Kept apart from ``prompt`` (what the judge is asked) and ``metric`` (the
 bookkeeping) because this is its own question: the caller writes criteria
 against *the node being judged*, and the metric has to line those up with the
 leaves it actually found.
-
-Paths here are **relative to the judged node**, so one configuration works
-wherever the judge is hung — ``{"name": ...}`` grades ``vendor.name`` when the
-judge sits on ``vendor`` and ``name`` when it sits on the document root. A
-judge hung on a single field addresses it by its own name (``vendor.city`` →
-``city``): the judge has to see *what* it is grading, and a field's name is
-usually the only clue the model gets besides the value.
-
-``[*]`` stands for any array index, the wildcard the rest of the config uses:
-``"line_items[*].sku"`` grades the ``sku`` of every element. A literal index
-(``"tags[0]"``) also works and wins over a wildcard — for the rare case where
-one position genuinely differs from its neighbours.
 """
 
 from __future__ import annotations
@@ -48,9 +36,9 @@ def relative_path(root: str, path: str) -> str:
 
 
 def _pattern(key: str) -> re.Pattern[str] | None:
-    """Compile a ``[*]``-bearing key into a matcher; ``None`` for a literal key.
+    r"""Compile a ``[*]``-bearing key into a matcher; ``None`` for a literal key.
 
-    ``"line_items[*].sku"`` becomes ``^line_items\\[\\d+\\]\\.sku$``: the literal
+    ``"line_items[*].sku"`` becomes ``^line_items\[\d+\]\.sku$``: the literal
     parts are escaped — a path is full of characters a regex would otherwise
     read as syntax (``.``, ``[``, ``]``) — and each wildcard becomes "one array
     index".

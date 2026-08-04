@@ -1,3 +1,5 @@
+"""The `rule_pass_rate` metric — the fraction of rules a document satisfies."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

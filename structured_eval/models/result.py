@@ -1,3 +1,12 @@
+"""The report models an evaluation returns.
+
+`EvalReport` is the result for one document: `score` is the headline number,
+`field_scores` the per-path detail, `metrics` one named metric across the tree,
+and `warnings` whatever the engine flagged while building it. `BatchEvalReport`
+and `ConsistencyReport` are the aggregates `evaluate_batch` and
+`evaluate_consistency` return.
+"""
+
 from __future__ import annotations
 
 from enum import StrEnum

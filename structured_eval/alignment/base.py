@@ -1,3 +1,5 @@
+"""The `ArrayAligner` interface and the key helpers keyed strategies share."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

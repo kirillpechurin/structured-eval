@@ -1,3 +1,11 @@
+"""`EvalConfig` and the per-field configs that shape an evaluation.
+
+A config states which metrics apply where, how much each field weighs, how
+arrays are aligned, and what to do with keys the expected document never
+mentions. The field configs nest to mirror the document: `FieldConfig` for
+leaves, `ObjectFieldConfig` for dicts, `ArrayFieldConfig` for lists.
+"""
+
 from __future__ import annotations
 
 from enum import StrEnum

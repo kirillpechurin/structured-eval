@@ -1,3 +1,11 @@
+"""The `Rule` DSL — JSONPath-based constraints a document must satisfy.
+
+A rule pins a path in the document to a condition; `Rule.custom` wraps an
+arbitrary predicate instead. Paths embedded in an arithmetic expression are
+resolved before the expression is evaluated, and evaluation is restricted to a
+safe arithmetic subset. Full JSONPath support comes from the `rules` extra.
+"""
+
 from __future__ import annotations
 
 import ast

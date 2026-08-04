@@ -1,12 +1,8 @@
 """Utilities shared across metric implementations (metric-layer only).
 
-Clearly-scoped modules:
-
-* ``calculate`` — the precision / recall / F1 arithmetic (and the ``GradingMode``
-  hard/soft enum) used by every P/R/F1 metric, object and array alike.
-* ``object_utils`` — turning an object's matched fields into the
-  ``(score, threshold)`` pairs that ``calculate.prf_counts`` consumes.
-* ``array`` — the same for an array's aligned items, plus missing/spurious counts.
-* ``number`` — the lenient numeric parsing shared by the numeric field metrics.
-* ``null`` — the ``(None, None) → 1.0`` rule shared by the comparison field metrics.
+- `calculate` — the precision / recall / F1 arithmetic.
+- `object_utils` — an object's matched fields as verdicts for `calculate`.
+- `array` — the same for an array's aligned items.
+- `number` — the lenient numeric parsing the numeric field metrics share.
+- `null` — the `(None, None) → 1.0` rule the comparison field metrics share.
 """

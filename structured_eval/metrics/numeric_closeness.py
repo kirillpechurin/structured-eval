@@ -1,3 +1,5 @@
+"""The `numeric_closeness` metric — graded similarity rather than pass/fail."""
+
 from __future__ import annotations
 
 from typing import Any

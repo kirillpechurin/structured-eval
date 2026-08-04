@@ -1,3 +1,5 @@
+"""`EvalNode`, the base every tree node shares, and the `NodeType` tag."""
+
 from __future__ import annotations
 
 from enum import StrEnum

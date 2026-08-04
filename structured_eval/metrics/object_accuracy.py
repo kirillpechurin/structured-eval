@@ -1,3 +1,5 @@
+"""The `object_accuracy` metric — weighted soft mean of an object's field scores."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

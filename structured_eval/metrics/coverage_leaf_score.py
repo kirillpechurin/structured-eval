@@ -1,3 +1,5 @@
+"""The `coverage_leaf_score` metric — how much of the expected document is filled."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

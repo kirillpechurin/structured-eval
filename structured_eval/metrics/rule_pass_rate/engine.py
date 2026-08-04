@@ -1,3 +1,5 @@
+"""`RuleProcessor` — evaluation of a list of rules against one document."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

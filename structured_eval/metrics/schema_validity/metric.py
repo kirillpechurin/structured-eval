@@ -1,3 +1,5 @@
+"""The `schema_validity` metric — does the document validate against a schema?"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

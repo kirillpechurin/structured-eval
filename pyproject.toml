@@ -155,16 +155,20 @@ convention = "google"
 # Temporary. One line per layer; a layer's line is deleted by the PR that brings
 # that layer to the convention, so the remaining lines are the todo list. When
 # the last one goes, `D`/`DOC` are strict across the package.
-"structured_eval/*.py" = ["D", "DOC"]
-"structured_eval/alignment/**" = ["D", "DOC"]
-"structured_eval/engine/**" = ["D", "DOC"]
-"structured_eval/formats/**" = ["D", "DOC"]
-"structured_eval/integrations/**" = ["D", "DOC"]
-"structured_eval/llm/**" = ["D", "DOC"]
-"structured_eval/metrics/**" = ["D", "DOC"]
-"structured_eval/models/**" = ["D", "DOC"]
-"structured_eval/reporting/**" = ["D", "DOC"]
-"structured_eval/utils/**" = ["D", "DOC"]
+#
+# Module, package and class docstrings are done everywhere — what is left per
+# layer is the function/method level: D102 (public method), D103 (public
+# function), D105 (magic method), D107 (__init__) and the DOC section checks.
+"structured_eval/*.py" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/alignment/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/engine/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/formats/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/llm/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/metrics/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/models/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/utils/**" = ["D102", "D103", "D105", "D107", "DOC"]
 # Tests are converted last, and only these codes apply to them (the rest are
 # waived permanently in the "tests/**" block above).
 "tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]

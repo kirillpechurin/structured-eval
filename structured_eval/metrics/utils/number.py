@@ -1,13 +1,4 @@
-"""Lenient numeric parsing shared by the numeric field metrics.
-
-One parsing behavior for ``Numeric`` and ``NumericCloseness`` so a value is read
-the same way by both. Accepts int/float (rejecting ``bool``) and parses numeric
-strings: currency symbols, thousands separators and whitespace are stripped,
-accounting notation ``"(123)"`` is read as ``-123``, and scientific notation
-``"1e3"`` is supported. A ``"%"`` is only stripped, never interpreted
-(``"50%"`` → ``50``). US format is assumed (``,`` = thousands, ``.`` = decimal);
-anything that does not parse cleanly returns ``None``.
-"""
+"""Lenient numeric parsing shared by the numeric field metrics."""
 
 from __future__ import annotations
 

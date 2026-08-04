@@ -5,15 +5,6 @@ Each matched scalar field (or array item) is both a *predicted* and an
 add to expected (FN). So a present-but-wrong entry lowers both precision and
 recall. Nested object/array children are graded at their own node and are not
 counted here.
-
-A ``verdicts`` argument is a list of ``(score, threshold, weight)`` from
-``structured_eval.metrics.utils.verdicts``. Each entry contributes its
-``weight`` (``1.0`` by default → plain counts) rather than a flat 1: in
-``GradingMode.HARD`` an entry is a TP when ``score >= threshold`` (counts its
-weight); in ``GradingMode.SOFT`` it contributes ``weight * score`` (threshold
-ignored). ``missing_weight`` / ``spurious_weight`` are the summed weights of the
-FN / FP entries (counts when uniform). How those weights are derived is the
-caller's choice (see ``WeightMode``).
 """
 
 from __future__ import annotations

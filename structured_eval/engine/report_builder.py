@@ -1,3 +1,5 @@
+"""Phase 3 of the pipeline: flattening the computed tree into a report."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar

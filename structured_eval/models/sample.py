@@ -1,3 +1,5 @@
+"""`Sample` — one document to evaluate, with its reference and optional source."""
+
 from __future__ import annotations
 
 from typing import Any

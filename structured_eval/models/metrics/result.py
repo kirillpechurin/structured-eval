@@ -1,3 +1,5 @@
+"""`MetricResult` — a metric's value together with its structured detail."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

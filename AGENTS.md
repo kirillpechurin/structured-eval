@@ -114,6 +114,19 @@ owes is decided by **import path and visibility**, not by taste:
 - **Markdown, not reST**, inside docstrings: the reference is rendered by
   mkdocstrings. Cross-reference as `[Numeric][structured_eval.metrics.Numeric]`;
   write `` `code` ``, never ``` ``code`` ``` or `:class:`/`:func:` roles.
+- **Enumerate with a bullet list, explain with prose.** A package `__init__.py`
+  listing its exports or submodules is an enumeration — write it as a Markdown
+  `-` list, one line per entry, never flattened into a semicolon-joined
+  sentence. A docstring that explains how something works is prose.
+- **A summary line is one physical line of at most 80 characters** ending in
+  `.`, `?` or `!`. Nothing enforces the 80 (`E501` is off and the formatter
+  wraps at 88) — it is on you.
+- **Keep it short.** A module docstring is a summary plus at most one short
+  paragraph or list saying what is in the module and how it is used. Design
+  rationale, algorithm detail and per-argument behaviour belong on the class or
+  function they describe — not in the module docstring, and not restated in two
+  places. The one thing worth its length is a `Usage`/`Example` block, which
+  Google's guide explicitly wants.
 - Overridden `score` / `compute` carry their own docstring rather than inheriting
   the base one — each states what *this* metric does with the values.
 - Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in

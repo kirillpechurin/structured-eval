@@ -1,3 +1,5 @@
+"""The `numeric` metric — numeric equality within a tolerance band."""
+
 from __future__ import annotations
 
 from enum import StrEnum

@@ -1,9 +1,19 @@
+"""The reply schema the faithfulness judge is asked to fill in."""
+
 import enum
 
 from pydantic import BaseModel, Field
 
 
 class Verdict(enum.StrEnum):
+    """How the judge ruled on one field against the source.
+
+    Attributes:
+        SUPPORTED: The source backs the value.
+        NOT_STATED: The source neither backs nor contradicts it.
+        CONTRADICTED: The source says otherwise.
+    """
+
     SUPPORTED = "supported"
     NOT_STATED = "not_stated"
     CONTRADICTED = "contradicted"

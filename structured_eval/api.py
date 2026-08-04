@@ -1,3 +1,11 @@
+"""The three public entry points of the package.
+
+`evaluate` scores one document, `evaluate_batch` a list of samples, and
+`evaluate_consistency` measures how stable repeated runs of one prompt are. All
+three are thin wrappers over `Evaluator`: they normalise the call shape a caller
+used and delegate. Nothing else is exported from `structured_eval` itself.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

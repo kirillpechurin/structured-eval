@@ -1,3 +1,5 @@
+"""`EvalContext` — the single owner of one sample's data during evaluation."""
+
 from __future__ import annotations
 
 from typing import Any

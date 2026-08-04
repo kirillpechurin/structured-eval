@@ -1,3 +1,11 @@
+"""The metric catalog — every built-in metric, the base classes and the rule DSL.
+
+A metric compares one node's `(actual, expected)` and returns a score. Declaring
+a `BaseMetric` subclass with a `name` registers it under that key, which is what
+lets a config refer to a metric by string. Import metrics from here rather than
+from their individual modules.
+"""
+
 from structured_eval.metrics.array_accuracy import ArrayAccuracy
 from structured_eval.metrics.array_cardinality import ArrayCardinality
 from structured_eval.metrics.array_exact_match import ArrayExactMatch

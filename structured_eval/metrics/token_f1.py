@@ -1,3 +1,5 @@
+"""The `token_f1` metric — SQuAD-style token-overlap F1 for free text."""
+
 from __future__ import annotations
 
 import re

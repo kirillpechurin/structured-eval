@@ -1,3 +1,5 @@
+"""A readable field-level diff between an actual and an expected document."""
+
 from __future__ import annotations
 
 import re
@@ -8,6 +10,14 @@ from pydantic import BaseModel, Field
 
 
 class DiffType(StrEnum):
+    """Which side of the comparison a difference falls on.
+
+    Attributes:
+        ADDED: Present in actual, absent in expected.
+        REMOVED: Present in expected, absent in actual.
+        CHANGED: Present in both, but the values differ.
+    """
+
     ADDED = "added"  # present in actual, absent in expected
     REMOVED = "removed"  # present in expected, absent in actual
     CHANGED = "changed"  # present in both but value differs

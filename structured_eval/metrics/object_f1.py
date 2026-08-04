@@ -1,3 +1,5 @@
+"""The `object_f1` metric — harmonic mean of object precision and recall."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

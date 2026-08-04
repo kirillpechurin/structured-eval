@@ -1,3 +1,5 @@
+"""Validation of a document against a Pydantic model or a JSON Schema dict."""
+
 from __future__ import annotations
 
 import re

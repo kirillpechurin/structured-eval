@@ -1,3 +1,5 @@
+"""Phase 2 of the pipeline: computing every node's own metrics."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

@@ -1,3 +1,5 @@
+"""The `object_prf1` metric — object precision, recall and F1 from one pass."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

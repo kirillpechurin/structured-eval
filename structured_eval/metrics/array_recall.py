@@ -1,3 +1,5 @@
+"""The `array_recall` metric — TP / (TP + FN) over aligned array elements."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

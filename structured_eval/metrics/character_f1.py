@@ -1,3 +1,5 @@
+"""The `character_f1` metric — character-overlap F1 for short free text."""
+
 from __future__ import annotations
 
 import re

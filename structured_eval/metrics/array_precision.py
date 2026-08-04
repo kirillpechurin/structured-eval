@@ -1,3 +1,5 @@
+"""The `array_precision` metric — TP / (TP + FP) over aligned array elements."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

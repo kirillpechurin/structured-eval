@@ -1,3 +1,5 @@
+"""The `url_match` metric — URL equivalence after normalization."""
+
 from __future__ import annotations
 
 from typing import Any

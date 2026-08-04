@@ -1,18 +1,13 @@
 """Provider-neutral LLM access for LLM-backed features.
 
-The core package ships **no provider SDK**. What lives here is the seam:
+The core package ships no provider SDK; what lives here is the seam:
 
-- ``LlmClient`` — the interface. Implement ``generate`` and you have a client;
-  override ``generate_with_schema`` (or one of its three steps) when your
-  provider can constrain output.
-- ``resolve_client`` — turns whatever the user passed (a client, a chat model,
-  a callable, a ``"provider/model"`` string, or nothing at all) into an
-  ``LlmClient``; ``default_client`` is the "nothing at all" case, configured
-  from ``STRUCTURED_EVAL_LLM_MODEL``.
-- ``CallableClient`` / ``ChatModelClient`` — zero-dependency adapters over a
-  bare function and a LangChain-style chat model.
-- ``LiteLlmClient`` — the batteries-included option, behind the ``litellm``
-  extra; import it from ``structured_eval.llm.litellm``.
+- `LlmClient` — the interface: implement `generate` and you have a client.
+- `resolve_client` — turns whatever the caller passed into an `LlmClient`;
+  `default_client` is the "nothing at all" case.
+- `CallableClient` / `ChatModelClient` — adapters over a bare function and a
+  LangChain-style chat model.
+- `LiteLlmClient` — behind the `litellm` extra, in `structured_eval.llm.litellm`.
 """
 
 from structured_eval.llm.base import LlmClient

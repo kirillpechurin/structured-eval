@@ -1,3 +1,5 @@
+"""The `composite_score` metric — a weighted blend of a node's other metrics."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
