@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: format format-check lintcheck typecheck check test test-cov help
+.PHONY: format format-check lintcheck typecheck check test test-cov doctest help
 
 .PHONY: format
 format: ## Format code with ruff
@@ -24,9 +24,14 @@ check: ## Quick command to check code
 	make format-check
 	make typecheck
 
+.PHONY: doctest
+doctest: ## Run the doctests embedded in docstrings
+	uv run pytest --doctest-modules structured_eval
+
 .PHONY: test
 test: ## Run tests
 	uv run pytest
+	make doctest
 
 .PHONY: test-cov
 test-cov: ## Run tests with coverage (html, xml for Codecov, terminal)

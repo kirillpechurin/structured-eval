@@ -1,3 +1,5 @@
+"""The `schema_validity` metric and the validator behind it."""
+
 from structured_eval.metrics.schema_validity.metric import SchemaValidity
 from structured_eval.metrics.schema_validity.validator import (
     SchemaResult,

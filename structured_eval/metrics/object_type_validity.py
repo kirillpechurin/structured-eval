@@ -1,3 +1,5 @@
+"""The `object_type_validity` metric — how many present fields have the right type."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,21 +15,39 @@ if TYPE_CHECKING:
 class ObjectTypeValidity(ObjectMetric):
     """Fraction of present fields that are type-valid.
 
-    A structural sanity check independent of value correctness: of the fields
-    present in both, how many carry the right JSON type. ``TypeMatch`` covers
-    every JSON type, so this validates scalars (``"100"`` vs ``100``) *and*
-    containers (a ``list`` where an object was expected) alike — a basic
-    type check, not a deep one. An object with no present fields is vacuously
-    1.0.
+    A structural sanity check independent of whether the values are right: of
+    the fields present on both sides, how many carry the right JSON type.
+
+    A basic check, not a deep one.
+
+    An object with no field present on both sides scores 1.0: the metric only
+    asks whether what *is* there has the right type, and none of it is
+    mistyped. Whether those fields should have been there is completeness —
+    `ObjectRecall` and `CoverageLeafScore` measure that.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ObjectTypeValidity
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"a": 1, "b": "x"}, {"a": 1, "b": 2},
+        ...                   EvalConfig(metrics=[ObjectTypeValidity()]))
+        >>> float(report.metrics["object_type_validity"].representative())
+        0.5
     """
 
     name = "object_type_validity"
 
     def __init__(self, name: str | None = None) -> None:
+        """Build the metric.
+
+        Args:
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self._type_match = MetricInvoker(TypeMatch())
 
     def compute(self, node: ObjectNode) -> float:
+        """Fraction of present fields carrying the right JSON type."""
         present = node.matched
         if not present:
             return 1.0

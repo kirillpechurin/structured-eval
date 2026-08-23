@@ -1,3 +1,5 @@
+"""The `object_recall` metric — TP / (TP + FN) over an object's fields."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -13,8 +15,22 @@ if TYPE_CHECKING:
 class ObjectRecall(ObjectMetric):
     """TP / (TP + FN) over an object's fields (slot-filling recall).
 
-    Missing expected fields are FN. Match criterion and ``mode`` behave as for
-    ``ObjectPrecision`` (counts all child kinds via their representative).
+    Concepts:
+
+    - TP (True Positive) — a `matched` entry, present on both sides;
+    - FP (False Positive) — a `spurious` entry, produced but not expected;
+    - FN (False Negative) — a `missing` entry, expected but not produced.
+
+    Missing expected fields are FN; extra ones are not counted here.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ObjectRecall
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"a": 1, "b": 2}, {"a": 1, "b": 9, "c": 3},
+        ...                   EvalConfig(metrics=[ObjectRecall()]))
+        >>> round(float(report.metrics["object_recall"].representative()), 3)
+        0.333
     """
 
     name = "object_recall"
@@ -27,6 +43,23 @@ class ObjectRecall(ObjectMetric):
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
         name: str | None = None,
     ):
+        """Configure the match criterion and how verdicts are counted.
+
+        Args:
+            score_policy: Per-field metric override, keyed by field name.
+            threshold: The bar a field must clear; one float, or a per-field dict.
+            mode: How a field counts toward TP:
+
+                - `HARD` counts it only once it clears its threshold;
+                - `SOFT` counts its score fractionally, ignoring the threshold.
+
+            weight_mode: How much each field counts:
+
+                - `PROPORTIONAL` weighs it by its configured `weight`;
+                - `NONE` gives every field 1.0.
+
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.score_policy = score_policy
         self.threshold = threshold
@@ -34,6 +67,7 @@ class ObjectRecall(ObjectMetric):
         self.weight_mode = stats.WeightMode(weight_mode)
 
     def compute(self, node: ObjectNode) -> float:
+        """TP / (TP + FN) over this object's fields."""
         verdicts = obj.matched_verdicts(
             node, self.score_policy, self.threshold, self.weight_mode
         )

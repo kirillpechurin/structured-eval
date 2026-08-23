@@ -18,8 +18,9 @@ uv sync --extra all   # optional feature libs; the dev group is synced by defaul
 The `Makefile` wraps the common commands (run `make help` to list them):
 
 ```bash
-make test         # uv run pytest
+make test         # uv run pytest, then make doctest
 make test-cov     # pytest with coverage (html + xml + terminal)
+make doctest      # run the examples embedded in docstrings
 make lintcheck    # uv run ruff check
 make format-check # ruff format --check (no changes written)
 make typecheck    # uv run mypy --strict
@@ -103,3 +104,12 @@ These are the essentials a contributor needs; each is self-contained here.
   flat parametrized functions, no test classes, table-driven, with `pytestmark`
   set once per file. New behaviour needs a test; coverage is gated in
   `pyproject.toml`.
+
+- **Docstrings follow the Google style** and feed the generated API reference.
+  How much a docstring owes depends on import path and visibility — exported
+  symbols (anything in a subpackage's `__all__`) need full `Args:` / `Returns:` /
+  `Raises:` sections and a doctest `Example:`; internal helpers need less; a
+  private function needs only its summary line. Write Markdown inside docstrings,
+  not reST. `ruff` enforces this (`D` + pydoclint `DOC` rules) and `make doctest`
+  executes every example. The full rule table lives in
+  [AGENTS.md](AGENTS.md#docstrings--google-style).

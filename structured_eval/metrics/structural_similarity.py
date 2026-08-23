@@ -1,3 +1,5 @@
+"""The `structural_similarity` metric — Jaccard overlap of two documents' paths."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,22 +15,25 @@ if TYPE_CHECKING:
 class StructuralSimilarity(RootMetric):
     """Structural similarity of two documents — Jaccard over their paths.
 
-    Compares the *shape* of ``actual`` and ``expected``, ignoring values::
+    Jaccard overlap of the two documents' path sets, ignoring values — it
+    answers whether the model produced the right skeleton. A path is enumerated
+    for every dict key, list index and nested sub-path, containers and leaves
+    alike; see `extract_paths`.
 
-        |paths_actual ∩ paths_expected| / |paths_actual ∪ paths_expected|
-
-    where a path is enumerated for every dict key, list index and nested
-    sub-path (containers and leaves alike — see
-    :func:`~structured_eval.utils.flatten.extract_paths`). Returns ``1.0``
-    for identical structure (both empty → vacuously ``1.0``), ``0.0`` for no
-    shared path, and a value in ``(0, 1)`` otherwise. A complement to the
-    value-aware metrics: it answers "did the model produce the right skeleton"
-    regardless of whether the values are correct.
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import StructuralSimilarity
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"a": 1}, {"a": 1, "b": 2},
+        ...                   EvalConfig(metrics=[StructuralSimilarity()]))
+        >>> float(report.metrics["structural_similarity"].representative())
+        0.5
     """
 
     name = "structural_similarity"
 
     def compute(self, node: EvalNode) -> MetricOutput:
+        """Jaccard overlap of the two documents' path sets."""
         paths_a = extract_paths(node.context.actual)
         paths_e = extract_paths(node.context.expected)
 

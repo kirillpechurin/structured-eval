@@ -1,3 +1,5 @@
+"""The `numeric_closeness` metric — graded similarity rather than pass/fail."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,25 +10,34 @@ from structured_eval.metrics.utils.number import parse_number
 
 
 class NumericCloseness(FieldMetric):
-    """Graded numeric similarity in ``[0, 1]`` (not a pass/fail tolerance).
+    """Graded numeric similarity in `[0, 1]`, not a pass/fail tolerance.
 
-    ``1 - |actual - expected| / max(|actual|, |expected|)`` — the ratio of the
-    smaller magnitude to the larger (``min/max`` for same-sign values): equal
-    values score 1.0, opposite signs trend toward 0.0, and ``0/0`` is 1.0.
-    Unlike :class:`Numeric` (a hard 0/1 verdict against a tolerance), this yields
-    a continuous score, making it the default element scorer for numbers under
-    the Hungarian array aligner where a graded cost matrix matters.
+    `1 - |actual - expected| / max(|actual|, |expected|)`: equal values score
+    1.0, opposite signs trend toward 0.0, and `0/0` is 1.0. Being continuous
+    rather than a 0/1 verdict, it is the default element scorer for numbers
+    under the Hungarian aligner, where a graded cost matrix matters.
 
-    Values are parsed with the shared lenient numeric parser (same as
-    :class:`Numeric`), so numeric strings are graded too. The metric applies
-    **only to numbers**: if either side isn't numeric (``None``, a non-numeric
-    string, or a ``bool`` — ``True`` is not ``1``) the score is 0.0. Two
-    ``None``s are the exception — they agree (1.0; see ``metrics.utils.null``).
+    Numbers only — a non-numeric side scores 0.0, `bool` included. Two `None`s
+    are the exception and agree.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import NumericCloseness
+        >>> from structured_eval.models import EvalConfig
+        >>> NumericCloseness().score(95, 100)
+        0.95
+        >>> NumericCloseness().score(-5, 5)
+        0.0
+        >>> report = evaluate({"total": 95}, {"total": 100},
+        ...                   EvalConfig(metrics=[NumericCloseness()]))
+        >>> float(report.field_scores["total"].metrics["numeric_closeness"])
+        0.95
     """
 
     name = "numeric_closeness"
 
     def score(self, actual: Any, expected: Any) -> float:
+        """The smaller magnitude over the larger, in `[0, 1]`."""
         if both_null(actual, expected):
             return 1.0
         a = parse_number(actual)

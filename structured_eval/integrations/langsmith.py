@@ -8,11 +8,7 @@ Usage (requires ``structured-eval[langsmith]``)::
     evaluator = structured_evaluator(config=cfg, threshold=0.85)
     evaluate(target, data=dataset, evaluators=[evaluator])
 
-The returned callable follows LangSmith's ``(run, example) -> dict`` contract and
-emits a single feedback key with ``report.score`` plus a ``comment`` summarising
-failures. By default the actual output is read from ``run.outputs`` and the
-reference from ``example.outputs``; pass ``extract_actual``/``extract_expected``
-to point at a nested field or adapt a different object shape.
+The returned callable follows LangSmith's ``(run, example) -> dict`` contract.
 """
 
 from __future__ import annotations

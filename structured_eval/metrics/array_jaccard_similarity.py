@@ -1,3 +1,5 @@
+"""The `array_jaccard_similarity` metric — set overlap, blind to order and counts."""
+
 from __future__ import annotations
 
 import json
@@ -12,8 +14,12 @@ if TYPE_CHECKING:
 def _member(value: Any) -> Any:
     """A hashable, comparison-stable set key for one element.
 
-    Scalars are used as-is; an unhashable element (dict/list) is keyed by its
-    canonical JSON so set membership still works without a TypeError.
+    Args:
+        value: One array element.
+
+    Returns:
+        The value itself when hashable, else its canonical JSON, so that set
+        membership works without a `TypeError`.
     """
     if isinstance(value, (dict, list)):
         return json.dumps(value, sort_keys=True, default=str)
@@ -23,24 +29,39 @@ def _member(value: Any) -> Any:
 class ArrayJaccardSimilarity(ArrayMetric):
     """Set-overlap (Jaccard) similarity for arrays, order- and count-insensitive.
 
-    ``|A ∩ B| / |A ∪ B|`` over the two lists treated as **sets** (duplicates
+    `|A ∩ B| / |A ∪ B|` over the two lists treated as **sets** (duplicates
     collapse, order is ignored):
 
-    - ``1.0`` when the sets are identical (both empty → vacuously ``1.0``);
-    - ``0.0`` when there is no overlap (or exactly one side is empty);
-    - a value in ``(0, 1)`` otherwise.
+    - `1.0` when the sets are identical (both empty → vacuously `1.0`);
+    - `0.0` when there is no overlap (or exactly one side is empty);
+    - a value in `(0, 1)` otherwise.
 
     Built for arrays of scalars — tags, labels, categories. Membership is exact
-    equality (no partial credit); for value-aware element matching use the
-    aligned ``Array*`` P/R/F1 metrics instead.
+    equality, with no partial credit; for value-aware element matching use the
+    aligned `Array*` P/R/F1 metrics instead.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ArrayJaccardSimilarity
+        >>> from structured_eval.models import EvalConfig
+        >>> ArrayJaccardSimilarity().score([1, 2, 3], [2, 3, 4])
+        0.5
+        >>> ArrayJaccardSimilarity().score(["a", "b"], ["b", "a", "a"])
+        1.0
+        >>> report = evaluate({"tags": [1, 2, 3]}, {"tags": [2, 3, 4]},
+        ...                   EvalConfig(metrics=[ArrayJaccardSimilarity()]))
+        >>> float(report.metrics["array_jaccard_similarity"].representative())
+        0.5
     """
 
     name = "array_jaccard_similarity"
 
     def compute(self, node: ArrayNode) -> float:
+        """Set overlap between this node's two lists."""
         return self.score(node.actual, node.expected)
 
     def score(self, actual: Any, expected: Any) -> float:
+        """`|A ∩ B| / |A ∪ B|` over the two values read as sets."""
         a = self._to_set(actual)
         e = self._to_set(expected)
 

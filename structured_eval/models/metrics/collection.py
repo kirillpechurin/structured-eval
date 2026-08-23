@@ -1,3 +1,5 @@
+"""`MetricCollection` — one named metric's values across the whole tree."""
+
 from __future__ import annotations
 
 from statistics import mean
@@ -11,12 +13,11 @@ from structured_eval.models.metrics.result import MetricResult  # noqa: TC001
 
 
 class MetricCollection(BaseModel):
-    """A named metric's values across the tree (``report.metrics[name]``).
+    """A named metric's values across the tree (`report.metrics[name]`).
 
-    ``by_path`` maps every node path that produced this metric to its
-    ``MetricResult``. Numeric reductions (``mean``/``min``/``max``) summarise the
-    whole tree; ``root()`` is the document-level value (path ``"$"``) when the
-    metric ran at the root; ``extra`` is the list of non-empty detail payloads.
+    Attributes:
+        name: The metric's key, as the report exposes it.
+        by_path: Every node path that produced this metric, to its value.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -25,22 +26,26 @@ class MetricCollection(BaseModel):
     by_path: dict[str, MetricResult] = Field(default_factory=dict)
 
     def values(self) -> list[MetricResult]:
+        """Every value this metric produced, in path order."""
         return list(self.by_path.values())
 
     def mean(self) -> float:
+        """The arithmetic mean across the tree; `0.0` when there are no values."""
         vals = self.values()
         return mean(vals) if vals else 0.0
 
     def min(self) -> float:
+        """The lowest value across the tree; `0.0` when there are none."""
         vals = self.values()
         return min(vals) if vals else 0.0
 
     def max(self) -> float:
+        """The highest value across the tree; `0.0` when there are none."""
         vals = self.values()
         return max(vals) if vals else 0.0
 
     def root(self) -> MetricResult | None:
-        """The document-level value (path ``"$"``), or ``None`` if not at root."""
+        """The document-level value (path `"$"`), or `None` if not at root."""
         return self.by_path.get("$")
 
     def representative(self) -> float:
@@ -54,12 +59,15 @@ class MetricCollection(BaseModel):
         return [r.extra for r in self.values() if r.extra]
 
     def extra_values(self, key: str) -> list[Any]:
-        """Gather ``extra[key]`` across every node's detail.
+        """Gather `extra[key]` across every node's detail.
 
-        A list is flattened into the result, anything else appended whole — so
-        a metric publishing one object per node (an LLM judge's verdict) and
-        one publishing many items per node (rule results) both read back as a
-        flat list.
+        Args:
+            key: The `extra` key to collect.
+
+        Returns:
+            One flat list: a list value is flattened into it, anything else
+            appended whole. So one object per node (a judge's verdict) and many
+            items per node (rule results) both read back the same way.
         """
         out: list[Any] = []
         for result in self.values():

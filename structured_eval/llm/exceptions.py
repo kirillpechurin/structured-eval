@@ -1,3 +1,6 @@
+"""The error hierarchy of the LLM layer, rooted at `LlmError`."""
+
+
 class LlmError(RuntimeError):
     """Base for every error raised by this layer — catch this to catch all."""
 

@@ -1,3 +1,5 @@
+"""Validation of a document against a Pydantic model or a JSON Schema dict."""
+
 from __future__ import annotations
 
 import re
@@ -10,7 +12,15 @@ if TYPE_CHECKING:
 
 
 class SchemaResult(BaseModel):
-    """Outcome of validating actual against a schema."""
+    """Outcome of validating actual against a schema.
+
+    Attributes:
+        valid: Whether the document satisfied the schema.
+        type_errors: Fields whose value had the wrong type.
+        missing_required: Required fields the document omitted.
+        extra_fields: Fields the schema did not ask for.
+        total_fields: How many properties the schema declares.
+    """
 
     valid: bool
     type_errors: list[str] = []
@@ -21,6 +31,7 @@ class SchemaResult(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def type_error_rate(self) -> float | None:
+        """Share of declared fields with a type error; `None` if none declared."""
         if self.total_fields == 0:
             return None
         return len(self.type_errors) / self.total_fields
@@ -29,21 +40,30 @@ class SchemaResult(BaseModel):
 class SchemaValidator:
     """Validates a document against a Pydantic model class or JSON Schema dict.
 
-    Constructed with the ``schema`` once; ``validate(actual)`` returns a
-    ``SchemaResult`` describing type errors, missing required and extra fields.
-
-    Both forms are checked **the same way**: a model is converted to its JSON
-    Schema first, so the verdict depends on the schema, not on how it was
-    expressed. That makes validation stricter than ``model_validate``, which
-    coerces — ``"100"`` is a string here, not the number a ``float`` field would
-    have accepted. Reporting a coerced value as valid would hide exactly the
-    error this metric exists to catch.
+    A model is converted to its JSON Schema first, so both forms are checked
+    the same way. That makes validation stricter than `model_validate`, which
+    coerces: `"100"` stays a string here, and reporting it as valid would hide
+    exactly the error this metric exists to catch.
     """
 
     def __init__(self, schema: type[BaseModel] | dict[str, Any]):
+        """Bind the schema documents are checked against.
+
+        Args:
+            schema: A pydantic model class or a JSON Schema dict.
+        """
         self.schema = schema
 
     def validate(self, actual: Any) -> SchemaResult:
+        """Check one document against the schema.
+
+        Args:
+            actual: The document to validate.
+
+        Returns:
+            The verdict, with the type errors, missing required fields and
+            unasked-for fields it found.
+        """
         schema = self._json_schema()
         total = len(schema.get("properties", {}))
 
@@ -56,7 +76,7 @@ class SchemaValidator:
         extra_fields: list[str] = []
 
         for err in errors:
-            # ``required`` and ``additionalProperties`` fail the *object*, so the
+            # `required` and `additionalProperties` fail the *object*, so the
             # path locates the container and the offending key has to be named
             # separately; every other validator fails the value it points at.
             loc = self._path_of(err.absolute_path)
@@ -107,11 +127,16 @@ class SchemaValidator:
 
     @staticmethod
     def _path_of(segments: Iterable[Any]) -> str:
-        """A document path in this project's notation: ``lines[0].sku``.
+        """A document path in this project's notation, e.g. `lines[0].sku`.
 
-        jsonschema reports a location as a sequence of keys and indices; spelling
-        it the way ``flatten`` does keeps ``schema_errors`` comparable with
-        ``report.field_scores``.
+        Spelling it the way `flatten` does keeps `schema_errors` comparable
+        with `report.field_scores`.
+
+        Args:
+            segments: The location jsonschema reported, as keys and indices.
+
+        Returns:
+            The same location as a document path.
         """
         path = ""
         for segment in segments:
@@ -123,16 +148,22 @@ class SchemaValidator:
 
     @staticmethod
     def _child_path(parent: str, key: str) -> str:
-        """The path of ``key`` inside the object at ``parent`` (maybe the root)."""
+        """The path of `key` inside the object at `parent` (maybe the root)."""
         return f"{parent}.{key}" if parent else key
 
     @staticmethod
     def _unexpected(error: Any) -> list[str]:
-        """The keys ``additionalProperties`` rejected, in document order.
+        """The keys `additionalProperties` rejected, in document order.
 
-        jsonschema fails the object as a whole and names the offending keys only
-        inside its message, so they are recomputed from the schema that rejected
-        them — the report has to say *which* field was unasked for.
+        jsonschema fails the object as a whole and names the offending keys
+        only inside its message, so they are recomputed from the schema that
+        rejected them — the report has to say *which* field was unasked for.
+
+        Args:
+            error: The jsonschema error that failed the object.
+
+        Returns:
+            The rejected keys, in document order.
         """
         schema = error.schema
         allowed = set(schema.get("properties", {}))

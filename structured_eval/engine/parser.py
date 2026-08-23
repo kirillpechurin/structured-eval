@@ -1,3 +1,5 @@
+"""Coercion of raw sample input into Python values, without raising."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,9 +1,6 @@
 """What the judge is asked, and the shape it must answer in.
 
-Kept apart from the metric because these are the two things a reader tunes:
-the wording of the question and the vocabulary of the answer. The metric itself
-is then only bookkeeping — collect the fields, call once, map verdicts to
-scores.
+Contains the wording of the question and the vocabulary of the answer.
 """
 
 from __future__ import annotations
@@ -44,10 +41,16 @@ and keep it to one sentence naming the part of the source you relied on."""
 def build_prompt(source: str, fields: list[tuple[str, Any, str]]) -> str:
     """Assemble the single request covering every judged field.
 
-    ``fields`` is ``(path, value, criterion)`` per field. They travel in one
-    prompt on purpose: the judge sees them together, so a value that only makes
-    sense next to its neighbours is not ruled on in isolation, and a wide object
-    costs one call rather than one per field.
+    The fields travel in one prompt on purpose: the judge sees them together,
+    so a value that only makes sense next to its neighbours is not ruled on in
+    isolation, and a wide object costs one call rather than one per field.
+
+    Args:
+        source: The grounding text the judge rules against.
+        fields: One `(path, value, criterion)` per judged field.
+
+    Returns:
+        The assembled prompt.
     """
     listed = "\n".join(
         f"- path: {path}\n  value: {render_value(value)}\n  criterion: {criterion}"

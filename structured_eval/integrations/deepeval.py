@@ -9,10 +9,8 @@ Usage (requires ``structured-eval[deepeval]``)::
     metric = StructuredMetric(config=cfg, threshold=0.85)
     assert_test(LLMTestCase(input=..., actual_output=raw, expected_output=ref), [metric])
 
-``actual_output``/``expected_output`` may be JSON strings or already-parsed
-objects — ``evaluate`` handles both. ``report.score`` becomes ``metric.score``;
-failing fields are summarised into ``metric.reason``. Importing this module
-requires deepeval to be installed (the ``[deepeval]`` extra).
+``report.score`` becomes ``metric.score``; failing fields are summarised into
+``metric.reason``.
 """
 
 from __future__ import annotations

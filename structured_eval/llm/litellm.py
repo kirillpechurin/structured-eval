@@ -1,14 +1,6 @@
 """The batteries-included client: any provider LiteLLM speaks, one string.
 
-Behind the ``litellm`` extra. The point is a zero-code entry path that is still
-provider-neutral — ``LiteLlmClient("qwen/qwen3-235b-a22b-2507")``,
-``LiteLlmClient("openai/gpt-5.5")``, ``LiteLlmClient("ollama/llama3")`` — with
-credentials read from each provider's own environment variable, so switching
-providers is a string change and nothing else.
-
-Schema requests use the provider's native ``response_format`` when LiteLLM
-reports the model supports it, and fall back to the inherited prompt-and-parse
-path when it does not.
+Behind the ``litellm`` extra.
 """
 
 from __future__ import annotations

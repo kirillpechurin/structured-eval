@@ -1,3 +1,5 @@
+"""YAML parser — requires the `yaml` extra."""
+
 from typing import Any
 
 from structured_eval.formats.base import ParseError

@@ -1,3 +1,5 @@
+"""`Evaluator` — the orchestrator that runs the phases for one config."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

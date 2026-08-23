@@ -1,16 +1,7 @@
 """The provider-neutral seam every LLM-backed feature calls.
 
-``LlmClient`` is deliberately tiny and knows no provider: one abstract method,
-``generate(prompt) -> str``. Everything above it (judge metrics, LLM array
-alignment) talks to this and nothing else, so the core package stays free of
-provider SDKs.
-
-The second method, ``generate_with_schema``, is the flexible half. It has a
-**working default** built on ``generate``: the JSON Schema is appended to the
-prompt, and the reply is extracted and validated on our side. An implementation
-whose provider supports native structured outputs overrides it and gets a format
-*guarantee* instead of a request. Either way callers see the same contract — a
-validated model instance — so a ten-line wrapper is a complete client.
+``LlmClient`` knows no provider: judge metrics and LLM array alignment talk to
+it and nothing else, which is what keeps the core package free of provider SDKs.
 """
 
 from __future__ import annotations

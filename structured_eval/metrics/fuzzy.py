@@ -1,3 +1,5 @@
+"""The `fuzzy` metric — string similarity via RapidFuzz (the `fuzzy` extra)."""
+
 from __future__ import annotations
 
 import re
@@ -11,31 +13,43 @@ _IGNORE_WHITESPACE_REGEX = re.compile(r"\s+")
 
 
 class FuzzyMethod(StrEnum):
-    """RapidFuzz scorer used by :class:`Fuzzy`."""
+    """RapidFuzz scorer used by `Fuzzy`.
 
-    RATIO = "ratio"  # plain normalized Levenshtein ratio
-    PARTIAL_RATIO = "partial_ratio"  # best matching substring
-    TOKEN_SORT_RATIO = "token_sort_ratio"  # order-insensitive (default)
-    TOKEN_SET_RATIO = "token_set_ratio"  # set-based, ignores duplicate tokens
+    Attributes:
+        RATIO: Plain normalized Levenshtein ratio.
+        PARTIAL_RATIO: Best matching substring.
+        TOKEN_SORT_RATIO: Order-insensitive; sorts tokens first.
+        TOKEN_SET_RATIO: Set-based; ignores duplicate and extra tokens.
+    """
+
+    RATIO = "ratio"
+    PARTIAL_RATIO = "partial_ratio"
+    TOKEN_SORT_RATIO = "token_sort_ratio"
+    TOKEN_SET_RATIO = "token_set_ratio"
 
 
 class Fuzzy(FieldMetric):
-    """Fuzzy string similarity via RapidFuzz (optional dependency).
+    """Fuzzy string similarity via RapidFuzz, behind the `fuzzy` extra.
 
-    ``method`` selects the RapidFuzz scorer:
+    String-only: a non-`str` side scores 0.0, with no coercion. Two `None`s are
+    the exception and agree.
 
-    * ``ratio`` — plain normalized Levenshtein ratio;
-    * ``partial_ratio`` — best matching substring;
-    * ``token_sort_ratio`` (default) — order-insensitive, sorts tokens;
-    * ``token_set_ratio`` — set-based, ignores duplicate/extra tokens.
-
-    ``ignore_case`` lowercases and ``ignore_whitespace`` collapses each run of
-    whitespace to a single space and trims the ends before comparison; the two
-    are independent, so a case-insensitive but whitespace-sensitive comparison
-    (or the reverse) is expressible. Both default to ``True``.
-    String-only: if either side is not a ``str`` the score is 0.0 (no coercion),
-    consistent with the other text metrics — except two ``None``s, which agree
-    (1.0; see ``metrics.utils.null``).
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import Fuzzy
+        >>> from structured_eval.metrics.fuzzy import FuzzyMethod
+        >>> from structured_eval.models import EvalConfig
+        >>> Fuzzy().score("Acme  Corp", "acme corp")
+        1.0
+        >>> round(Fuzzy().score("Acme Corporation", "Acme Corp"), 3)
+        0.72
+        >>> partial = Fuzzy(method=FuzzyMethod.PARTIAL_RATIO)
+        >>> partial.score("Acme Corporation", "Acme Corp")   # best substring
+        1.0
+        >>> report = evaluate({"vendor": "acme  corp"}, {"vendor": "Acme Corp"},
+        ...                   EvalConfig(metrics=[Fuzzy()]))
+        >>> float(report.field_scores["vendor"].metrics["fuzzy"])
+        1.0
     """
 
     name = "fuzzy"
@@ -47,12 +61,24 @@ class Fuzzy(FieldMetric):
         ignore_whitespace: bool = True,
         name: str | None = None,
     ):
+        """Pick the scorer and the normalization applied before it.
+
+        Args:
+            method: Which RapidFuzz scorer to use.
+            ignore_case: Lowercase both sides first.
+            ignore_whitespace: Collapse runs of whitespace and trim the ends.
+            name: Per-instance report key.
+
+        The two normalizations are independent, so a case-insensitive but
+        whitespace-sensitive comparison is expressible, or the reverse.
+        """
         super().__init__(name=name)
         self.method = FuzzyMethod(method)
         self.ignore_case = ignore_case
         self.ignore_whitespace = ignore_whitespace
 
     def score(self, actual: Any, expected: Any) -> float:
+        """RapidFuzz's similarity for the two strings, rescaled to `[0, 1]`."""
         if both_null(actual, expected):
             return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):

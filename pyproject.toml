@@ -89,6 +89,12 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
+# Preview is on *only* to reach the three pydoclint rules below. Without
+# `explicit-preview-rules` it would also turn on every other preview rule in the
+# selected families — RUF069 alone fires 152 times on legitimate `score == 1.0`
+# comparisons. With it, only preview rules selected by exact code are enforced.
+preview = true
+explicit-preview-rules = true
 select = [
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
@@ -105,6 +111,10 @@ select = [
     "T20",    # flake8-print (no print() in library code)
     "PT",     # flake8-pytest-style
     "PERF",   # performance anti-patterns
+    "D",      # pydocstyle (Google convention, see [tool.ruff.lint.pydocstyle])
+    "DOC201", # pydoclint: docstring omits a documented return value
+    "DOC402", # pydoclint: generator docstring omits Yields
+    "DOC501", # pydoclint: docstring omits a raised exception
     "PLR1714",
     "PLW2901", # select only non-noisy Pylint rules
 ]
@@ -125,11 +135,47 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pydoclint]
+# Google allows omitting `Returns:` when the summary already describes the
+# return value. A one-line docstring is exactly that case, and this codebase
+# leans on it heavily, so don't demand a section that would only restate it.
+ignore-one-line-docstrings = true
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "ARG",     # unused args common in fixtures/parametrize
     "PLR2004", # magic numbers in test assertions are fine
+    # A test's name plus its `parametrize` ids are the documentation; Google's
+    # own guide says to omit trivial test docstrings. `D100`/`D104` stay on —
+    # every test module and package still states what unit it covers.
+    "D101",
+    "D102",
+    "D103",
+    "D107",
 ]
+
+# ── Docstring migration (Google style) ────────────────────────────────────────
+# Temporary. One line per layer; a layer's line is deleted by the PR that brings
+# that layer to the convention, so the remaining lines are the todo list. When
+# the last one goes, `D`/`DOC` are strict across the package.
+#
+# Module, package and class docstrings are done everywhere — what is left per
+# layer is the function/method level: D102 (public method), D103 (public
+# function), D105 (magic method), D107 (__init__) and the DOC section checks.
+"structured_eval/*.py" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/alignment/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/engine/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/formats/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/llm/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
+"structured_eval/utils/**" = ["D102", "D103", "D105", "D107", "DOC"]
+# Tests are converted last, and only these codes apply to them (the rest are
+# waived permanently in the "tests/**" block above).
+"tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]
 
 # ── Mypy ──────────────────────────────────────────────────────────────────────
 

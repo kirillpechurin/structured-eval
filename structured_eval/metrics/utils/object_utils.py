@@ -1,19 +1,14 @@
-"""Verdicts for object metrics: matched fields → ``(score, threshold, weight)``.
+"""Verdicts for object metrics: matched fields → `(score, threshold, weight)`.
+
+Concepts:
+
+- TP (True Positive) — a `matched` entry, present on both sides;
+- FP (False Positive) — a `spurious` entry, produced but not expected;
+- FN (False Negative) — a `missing` entry, expected but not produced.
 
 A parent object does not re-compare its children; it reads each matched child's
-already-computed representative score (``node.representative``) and pairs it with
-the bar it must clear and the weight it carries. Those triples feed
-``calculate.prf_counts``.
-
-``score_policy`` (on ``ObjectF1`` / ``ObjectAccuracy`` / …) overrides the
-criterion for a named field — a metric instance or its registered name, run on
-that child via ``MetricInvoker`` (so it works for any child kind, not only
-scalars). ``thresholds`` may be a per-field dict or a single float.
-
-``weight_mode`` (see ``calculate.WeightMode``) decides each child's weight:
-``NONE`` → ``1.0`` (plain counts), ``PROPORTIONAL`` → the child's configured
-``weight``. Missing (FN) and spurious (FP) children are weighted the same way
-via ``missing_weight`` / ``spurious_weight``.
+already-computed representative score and pairs it with the bar it must clear
+and the weight it carries. Those triples feed `calculate.prf_counts`.
 """
 
 from __future__ import annotations
@@ -30,7 +25,7 @@ if TYPE_CHECKING:
 
 
 def leaf_name(path: str) -> str:
-    """Last path segment without any trailing index, e.g. ``"a.b[0]"`` → ``"b"``."""
+    """Last path segment without any trailing index, e.g. `"a.b[0]"` → `"b"`."""
     return path.rsplit(".", 1)[-1].split("[", 1)[0]
 
 
@@ -54,11 +49,20 @@ def matched_verdicts(
     thresholds: float | dict[str, float] | None = None,
     weight_mode: WeightMode = WeightMode.PROPORTIONAL,
 ) -> list[tuple[float, float, float]]:
-    """``(score, threshold, weight)`` for each matched child of an object.
+    """`(score, threshold, weight)` for each matched child of an object.
 
-    Each child contributes its representative score (any node type — scalars and
-    nested objects/arrays alike). ``score_policy`` overrides the criterion for a
-    named child, re-scoring it with the policy metric (any node kind).
+    Each child contributes its representative score — scalars and nested
+    objects or arrays alike.
+
+    Args:
+        node: The object node whose matched children to grade.
+        score_policy: Per-child metric override, re-scoring that child with the
+            named metric whatever its kind.
+        thresholds: One bar for every child, or a per-child dict.
+        weight_mode: How each child's weight is derived.
+
+    Returns:
+        One verdict per matched child.
     """
     out: list[tuple[float, float, float]] = []
     for child in node.matched:

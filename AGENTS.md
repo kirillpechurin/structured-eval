@@ -24,7 +24,8 @@ faithfulness → L6 logic); the project's value is L4–L6.
 
 ```bash
 make check       # lintcheck + format-check + typecheck (must be green before a PR)
-make test        # uv run pytest
+make test        # uv run pytest, then make doctest
+make doctest     # pytest --doctest-modules structured_eval (examples in docstrings)
 make test-cov    # pytest with coverage (html + xml + terminal, gated at 90%)
 make lintcheck   # uv run ruff check
 make typecheck   # uv run mypy --strict
@@ -93,3 +94,60 @@ list → compute every node's metrics post-order → build report**. The key ide
 - **Tests mirror the source tree** one-to-one, one file per cohesive unit. Style:
   flat parametrized functions, no test classes, table-driven; `pytestmark` set once
   per file. New behaviour needs a test; coverage is gated in `pyproject.toml`.
+
+## Docstrings — Google style
+
+Docstrings are the source of the generated API reference, so how much a docstring
+owes is decided by **import path and visibility**, not by taste:
+
+| Tier | What | Owes |
+|------|------|------|
+| **A** | Named in some subpackage's `__all__`, plus that symbol's public methods and properties | summary + prose + `Args:` + `Returns:`/`Yields:` + `Raises:` + `Attributes:` (classes) + **`Example:`** |
+| **B** | Public but not exported (`engine/*`, `metrics/utils/*`, `rule_pass_rate/dsl.py`, …) | summary + the sections that apply, **no** `Example:` |
+| **C** | `_`-prefixed | one-line summary; sections only when the signature is not self-evident |
+
+- **`Example:` uses doctest** (`>>>`) and is executed by `make doctest`, so an
+  example cannot drift from the code. Non-deterministic ones (anything reaching an
+  LLM) end in `# doctest: +SKIP`.
+- **A one-line docstring needs no `Returns:`** — Google lets you drop the section
+  when the summary already describes the return value, and ruff's
+  `ignore-one-line-docstrings` encodes exactly that. Say it in the summary and
+  stop; add the section only once the docstring has grown a body.
+- **Document a field once, on the class that declares it.** An `Attributes:`
+  entry per model field, and no trailing `# comment` restating it — subclasses
+  do not repeat what the base class already documented.
+- Tier A exempts pure pydantic models and `StrEnum`s from `Example:` — they owe an
+  `Attributes:` section instead.
+- **Markdown, not reST**, inside docstrings: the reference is rendered by
+  mkdocstrings. Cross-reference as `[Numeric][structured_eval.metrics.Numeric]`;
+  write `` `code` ``, never ``` ``code`` ``` or `:class:`/`:func:` roles.
+- **Enumerate with a bullet list, explain with prose.** A package `__init__.py`
+  listing its exports or submodules is an enumeration — write it as a Markdown
+  `-` list, one line per entry, never flattened into a semicolon-joined
+  sentence. A docstring that explains how something works is prose.
+- **A summary line is one physical line of at most 80 characters** ending in
+  `.`, `?` or `!`. Nothing enforces the 80 (`E501` is off and the formatter
+  wraps at 88) — it is on you.
+- **Keep it short.** A module docstring is a summary plus at most one short
+  paragraph or list saying what is in the module and how it is used. Design
+  rationale, algorithm detail and per-argument behaviour belong on the class or
+  function they describe — not in the module docstring, and not restated in two
+  places. The one thing worth its length is a `Usage`/`Example` block, which
+  Google's guide explicitly wants.
+- **Four lines is the ceiling for a paragraph.** Docstrings are read by people.
+  Past four lines, break the thought into a bullet list or cut it. Never write
+  a run-on of clauses strung together with semicolons, colons and dashes just to
+  fit an explanation into one block — that is the shape to refactor, not to
+  reflow. The ceiling is not a target: a connected thought stays one paragraph
+  rather than being chopped into one-line fragments.
+- Overridden `score` / `compute` carry their own docstring rather than inheriting
+  the base one — each states what *this* metric does with the values.
+- Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in
+  `tests/`, `D101`/`D102`/`D103`/`D107` are not. A test's name and its
+  `parametrize` ids are its documentation; add a docstring only where they aren't
+  enough (fixtures, builders, golden/property tests).
+
+Enforced by `ruff` (`D` with `convention = "google"`, plus pydoclint
+`DOC201`/`DOC402`/`DOC501` checking sections against the signature). The
+`per-file-ignores` block named "Docstring migration" in `pyproject.toml` is the
+remaining todo list — one line per layer, deleted as that layer is converted.

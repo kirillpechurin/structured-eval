@@ -1,3 +1,5 @@
+"""The `url_match` metric — URL equivalence after normalization."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,27 +12,36 @@ from structured_eval.metrics.utils.null import both_null
 class UrlMatch(FieldMetric):
     """Equivalence match for URL fields after normalization.
 
-    Two URLs score ``1.0`` when they are equivalent once cosmetically different
-    but meaning-preserving components are normalized, and ``0.0`` otherwise.
+    Normalization applied to each side before comparing:
 
-    Normalization applied to each side:
+    - scheme and host lowercased, and a leading `www.` stripped unless
+      `ignore_www=False`;
+    - path percent-decoded, a trailing slash normalized away;
+    - query parameters percent-decoded and sorted, so their order is
+      irrelevant — or dropped entirely when `ignore_query=True`;
+    - fragment dropped when `ignore_fragment=True`, which is the default.
 
-    - **scheme** and **host** are lowercased;
-    - a leading ``www.`` on the host is stripped (unless ``ignore_www=False``);
-    - the **path** is percent-decoded and a trailing slash is normalized away;
-    - **query** parameters are percent-decoded and sorted, so parameter order
-      does not matter (dropped entirely when ``ignore_query=True``);
-    - the **fragment** is dropped when ``ignore_fragment=True`` (the default).
+    Both sides must parse to a URL with a scheme and a host; anything else
+    scores 0.0. Two `None`s are the exception and agree.
 
-    So ``https://Example.com`` and ``https://example.com/`` are equivalent, and
-    URLs differing only in query-parameter order match, while different paths or
-    hosts do not.
-
-    Both sides must be non-empty strings that parse to a URL with a scheme and a
-    host. Anything else — a non-string, an empty string, or a bare path with no
-    scheme/host — scores ``0.0``. Two ``None``s are the exception — no URL was
-    expected and none was given, so they agree (``1.0``; see
-    ``metrics.utils.null``).
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import UrlMatch
+        >>> from structured_eval.models import EvalConfig
+        >>> UrlMatch().score("https://Example.com/a/", "https://example.com/a")
+        1.0
+        >>> UrlMatch().score("https://example.com/a", "https://example.com/b")
+        0.0
+        >>> UrlMatch().score("https://example.com/a?x=1", "https://example.com/a")
+        0.0
+        >>> UrlMatch(ignore_query=True).score("https://example.com/a?x=1",
+        ...                                   "https://example.com/a")
+        1.0
+        >>> report = evaluate({"site": "https://WWW.Example.com/docs/"},
+        ...                   {"site": "https://example.com/docs"},
+        ...                   EvalConfig(metrics=[UrlMatch()]))
+        >>> float(report.field_scores["site"].metrics["url_match"])
+        1.0
     """
 
     name = "url_match"
@@ -43,6 +54,14 @@ class UrlMatch(FieldMetric):
         ignore_www: bool = True,
         name: str | None = None,
     ) -> None:
+        """Choose which URL components are treated as insignificant.
+
+        Args:
+            ignore_query: Drop the query string entirely.
+            ignore_fragment: Drop the `#fragment`.
+            ignore_www: Treat `www.host` and `host` as the same.
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.ignore_query = ignore_query
         self.ignore_fragment = ignore_fragment
@@ -80,6 +99,7 @@ class UrlMatch(FieldMetric):
         return (urlunsplit((scheme, netloc, path, query, fragment)),)
 
     def score(self, actual: Any, expected: Any) -> float:
+        """1.0 when both URLs normalize to the same form, else 0.0."""
         if both_null(actual, expected):
             return 1.0
         norm_actual = self._normalize(actual)

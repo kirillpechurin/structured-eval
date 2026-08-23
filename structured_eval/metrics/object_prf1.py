@@ -1,3 +1,5 @@
+"""The `object_prf1` metric — object precision, recall and F1 from one pass."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -13,9 +15,22 @@ if TYPE_CHECKING:
 class ObjectPRF1(ObjectMetric):
     """Precision, recall and F1 in one pass.
 
-    Returns a dict; the engine writes each key (``object_precision``,
-    ``object_recall``, ``object_f1``) into ``report.metrics`` directly. Match
-    criterion and ``mode`` behave as for ``ObjectPrecision``.
+    Returns a dict, so the engine writes:
+
+    - `object_precision`
+    - `object_recall`
+    - `object_f1`
+
+    into `report.metrics` directly rather than under this metric's own name.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ObjectPRF1
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"a": 1, "b": 2}, {"a": 1, "b": 9, "c": 3},
+        ...                   EvalConfig(metrics=[ObjectPRF1()]))
+        >>> round(float(report.metrics["object_f1"].representative()), 3)
+        0.4
     """
 
     name = "object_prf1"
@@ -28,6 +43,23 @@ class ObjectPRF1(ObjectMetric):
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
         name: str | None = None,
     ):
+        """Configure the match criterion and how verdicts are counted.
+
+        Args:
+            score_policy: Per-field metric override, keyed by field name.
+            threshold: The bar a field must clear; one float, or a per-field dict.
+            mode: How a field counts toward TP:
+
+                - `HARD` counts it only once it clears its threshold;
+                - `SOFT` counts its score fractionally, ignoring the threshold.
+
+            weight_mode: How much each field counts:
+
+                - `PROPORTIONAL` weighs it by its configured `weight`;
+                - `NONE` gives every field 1.0.
+
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.score_policy = score_policy
         self.threshold = threshold
@@ -35,6 +67,7 @@ class ObjectPRF1(ObjectMetric):
         self.weight_mode = stats.WeightMode(weight_mode)
 
     def compute(self, node: ObjectNode) -> dict[str, float]:
+        """Precision, recall and F1 for this object, in one dict."""
         verdicts = obj.matched_verdicts(
             node, self.score_policy, self.threshold, self.weight_mode
         )

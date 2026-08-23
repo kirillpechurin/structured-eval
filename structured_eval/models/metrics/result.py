@@ -1,3 +1,5 @@
+"""`MetricResult` — a metric's value together with its structured detail."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -9,16 +11,22 @@ if TYPE_CHECKING:
 
 
 class MetricResult(float):
-    """A metric value: a ``float`` everywhere, plus structured ``.extra``."""
+    """A metric value: a `float` everywhere, plus structured `.extra`.
+
+    Attributes:
+        extra: The metric's structured detail; empty when it published none.
+    """
 
     extra: dict[str, Any]
 
     def __new__(cls, value: float, extra: dict[str, Any] | None = None) -> MetricResult:
+        """Build the value, copying `extra` so the caller's dict stays its own."""
         obj = super().__new__(cls, value)
         obj.extra = dict(extra) if extra else {}
         return obj
 
     def __repr__(self) -> str:
+        """Show the number, and `extra` only when there is any."""
         num = float.__repr__(self)
         return (
             f"MetricResult({num}, extra={self.extra!r})"
@@ -48,6 +56,7 @@ class MetricResult(float):
     def __get_pydantic_core_schema__(
         cls, source: Any, handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
+        """The pydantic schema that round-trips the value and its `extra`."""
         return core_schema.no_info_plain_validator_function(
             cls._validate,
             serialization=core_schema.plain_serializer_function_ser_schema(

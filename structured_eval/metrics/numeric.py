@@ -1,3 +1,5 @@
+"""The `numeric` metric — numeric equality within a tolerance band."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -9,33 +11,40 @@ from structured_eval.metrics.utils.number import parse_number
 
 
 class NumericMode(StrEnum):
-    """Tolerance band for the single-band form of :class:`Numeric`."""
+    """Tolerance band for the single-band form of `Numeric`.
 
-    RELATIVE = "relative"  # |a - e| / |e|
-    ABSOLUTE = "absolute"  # |a - e|
+    Attributes:
+        RELATIVE: Measures `|a - e| / |e|`.
+        ABSOLUTE: Measures `|a - e|`.
+    """
+
+    RELATIVE = "relative"
+    ABSOLUTE = "absolute"
 
 
 class Numeric(FieldMetric):
     """Numeric equality within a tolerance band → 1.0, otherwise 0.0.
 
-    Values are parsed leniently: currency symbols and thousands separators are
-    stripped (``"$1,234.50"`` → ``1234.50``), accounting notation is honored
-    (``"(123)"`` → ``-123``), and scientific notation is supported
-    (``"1e3"`` → ``1000``). A percent sign is only stripped, **not** interpreted
-    (``"50%"`` → ``50``, not ``0.5``). US format is assumed (``,`` = thousands,
-    ``.`` = decimal); other shapes that don't parse cleanly yield 0.0.
+    Values are parsed leniently, so `"$1,234.50"`, `"(123)"` and `"1e3"` are all
+    read as numbers. Two `None`s agree; a one-sided `None` is 0.0.
 
-    Tolerance can be given two ways:
-
-    * ``tolerance`` + ``mode`` (``"relative"`` | ``"absolute"``) — the original
-      single-band form; ``relative`` measures ``|a - e| / |e|``, ``absolute``
-      measures ``|a - e|``. A tolerance of 0 means exact numeric equality.
-    * ``relative_tolerance`` and/or ``absolute_tolerance`` — explicit bands; a
-      value matches if it falls within *either* band. When either is supplied it
-      takes precedence over ``tolerance``/``mode``.
-
-    Two ``None``s agree (1.0; see ``metrics.utils.null``); a one-sided ``None``
-    is 0.0.
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import Numeric
+        >>> from structured_eval.models import EvalConfig
+        >>> Numeric(tolerance=0.01).score(100.5, 100)       # within ±1%
+        1.0
+        >>> Numeric(tolerance=0.01).score(110, 100)
+        0.0
+        >>> Numeric(absolute_tolerance=5).score(103, 100)   # within ±5 units
+        1.0
+        >>> Numeric().score("$1,234.50", 1234.5)
+        1.0
+        >>> report = evaluate({"total": "$1,234.50", "tax": 110},
+        ...                   {"total": 1234.5, "tax": 100},
+        ...                   EvalConfig(metrics=[Numeric(tolerance=0.01)]))
+        >>> float(report.metrics["numeric"].representative())
+        0.5
     """
 
     name = "numeric"
@@ -48,6 +57,18 @@ class Numeric(FieldMetric):
         absolute_tolerance: float | None = None,
         name: str | None = None,
     ):
+        """Set the tolerance band, in either of the two forms it accepts.
+
+        Args:
+            tolerance: Width of the single band; `0` means exact equality.
+            mode: Whether that band is relative or absolute.
+            relative_tolerance: Explicit relative band.
+            absolute_tolerance: Explicit absolute band.
+            name: Per-instance report key.
+
+        Either explicit band takes precedence over `tolerance`/`mode`, and a
+        value matches when it falls within *either* of them.
+        """
         super().__init__(name=name)
         self.tolerance = tolerance
         self.mode = NumericMode(mode)
@@ -55,6 +76,7 @@ class Numeric(FieldMetric):
         self.absolute_tolerance = absolute_tolerance
 
     def score(self, actual: Any, expected: Any) -> float:
+        """1.0 when the parsed values fall inside the tolerance band, else 0.0."""
         if both_null(actual, expected):
             return 1.0
         a = parse_number(actual)

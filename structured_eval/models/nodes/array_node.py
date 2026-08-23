@@ -1,3 +1,5 @@
+"""`ArrayNode` — a list position — and the alignment result it carries."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,12 +11,15 @@ from structured_eval.models.nodes.base import EvalNode
 class ArrayMatchResult(BaseModel):
     """Alignment of an actual array against an expected array.
 
-    A structural breakdown only: ``matched`` are ``(expected_idx, actual_idx)``
-    pairs, ``missed`` are expected indices with no actual counterpart (FN),
-    ``spurious`` are actual indices absent from expected (FP). For precision /
-    recall / F1 use the **value-aware** array metrics (``ArrayPrecision`` /
-    ``ArrayRecall`` / ``ArrayF1``), which grade each matched element rather than
-    just counting it.
+    A structural breakdown only. For precision / recall / F1 use the
+    **value-aware** array metrics (`ArrayPrecision` / `ArrayRecall` / `ArrayF1`),
+    which grade each matched element rather than just counting it.
+
+    Attributes:
+        strategy: The aligner that produced this result.
+        matched: `(expected_idx, actual_idx)` pairs.
+        missed: Expected indices with no actual counterpart (FN).
+        spurious: Actual indices absent from expected (FP).
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -28,26 +33,21 @@ class ArrayMatchResult(BaseModel):
 class ArrayNode(EvalNode):
     """A list node.
 
-    ``items`` holds one node per **actual** element, in document order — the
-    tree follows the document, exactly as ``ObjectNode.children`` holds every
-    key from either side. Alignment does not decide which nodes exist: with no
-    expected list to align against (faithfulness / schema-only mode) there are
-    no pairs at all, and element-level metrics would have nothing to score.
+    The tree follows the document, not the alignment: with no expected list to
+    align against there are simply no pairs. Two consequences:
 
-    ``matched`` is the subset of ``items`` paired with an expected element —
-    what the comparison metrics grade, mirroring ``ObjectNode.matched``.
-    ``missing`` / ``spurious`` are the indices present on only one side (FN /
-    FP), as ``ObjectNode`` holds the keys present on only one side.
+    - `missing` indexes the **expected** list, `spurious` the actual one. A
+      spurious element has a node; an expected element with no counterpart does
+      not, because a node's path is an actual index.
+    - Metrics read `matched` / `missing` / `spurious`, never `match_result`.
+      That one is for the report.
 
-    ``missing`` indexes the **expected** list, ``spurious`` the actual one, and
-    the asymmetry is deliberate: a spurious element has a node (its actual
-    index is in ``items``), while an expected element with no counterpart stays
-    unmaterialized — a node's path is an *actual* index, so there is no honest
-    path to give it.
-
-    Metrics read these three, never ``match_result``: the alignment result is
-    what the report shows a user, not the tree's own vocabulary for who paired
-    up with whom.
+    Attributes:
+        match_result: The aligner's structural result, for the report.
+        items: One node per **actual** element, in document order.
+        matched: The subset of `items` paired with an expected element.
+        missing: Expected indices with no actual counterpart (FN).
+        spurious: Actual indices absent from expected (FP).
     """
 
     match_result: ArrayMatchResult | None = None

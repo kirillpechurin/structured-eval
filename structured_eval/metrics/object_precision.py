@@ -1,3 +1,5 @@
+"""The `object_precision` metric — TP / (TP + FP) over an object's fields."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -13,13 +15,23 @@ if TYPE_CHECKING:
 class ObjectPrecision(ObjectMetric):
     """TP / (TP + FP) over an object's fields (slot-filling precision).
 
-    Each matched field is a TP when its ``representative`` clears its threshold
-    (any child kind — nested objects/arrays count via their representative);
-    extra fields are FP. The per-field score comes from ``score_policy`` →
-    the child's ``key_metric`` → ``ExactMatch``. Default ``mode=HARD`` with the
-    field threshold (``1.0`` unless configured), so a field counts only when its
-    score is a perfect match; ``mode="soft"`` drops the threshold and uses the
-    field score fractionally.
+    Concepts:
+
+    - TP (True Positive) — a `matched` entry, present on both sides;
+    - FP (False Positive) — a `spurious` entry, produced but not expected;
+    - FN (False Negative) — a `missing` entry, expected but not produced.
+
+    A matched field is a TP once its representative score clears its threshold,
+    whatever the child's kind; extra fields are FP.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ObjectPrecision
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"a": 1, "b": 2}, {"a": 1, "b": 9, "c": 3},
+        ...                   EvalConfig(metrics=[ObjectPrecision()]))
+        >>> round(float(report.metrics["object_precision"].representative()), 3)
+        0.5
     """
 
     name = "object_precision"
@@ -32,6 +44,23 @@ class ObjectPrecision(ObjectMetric):
         weight_mode: stats.WeightMode = stats.WeightMode.PROPORTIONAL,
         name: str | None = None,
     ):
+        """Configure the match criterion and how verdicts are counted.
+
+        Args:
+            score_policy: Per-field metric override, keyed by field name.
+            threshold: The bar a field must clear; one float, or a per-field dict.
+            mode: How a field counts toward TP:
+
+                - `HARD` counts it only once it clears its threshold;
+                - `SOFT` counts its score fractionally, ignoring the threshold.
+
+            weight_mode: How much each field counts:
+
+                - `PROPORTIONAL` weighs it by its configured `weight`;
+                - `NONE` gives every field 1.0.
+
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.score_policy = score_policy
         self.threshold = threshold
@@ -39,6 +68,7 @@ class ObjectPrecision(ObjectMetric):
         self.weight_mode = stats.WeightMode(weight_mode)
 
     def compute(self, node: ObjectNode) -> float:
+        """TP / (TP + FP) over this object's fields."""
         verdicts = obj.matched_verdicts(
             node, self.score_policy, self.threshold, self.weight_mode
         )

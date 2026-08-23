@@ -1,3 +1,5 @@
+"""The verdict models an LLM-judge metric reports."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -6,10 +8,13 @@ from pydantic import BaseModel, Field
 class FieldJudgeVerdict(BaseModel):
     """One judged field: which node, what the judge decided, and why.
 
-    ``path`` is the node's absolute path — the identity that makes a structured
-    judge worth more than a prose one. Free-text judges have to quote the claim
-    they graded; here every claim is already a node, so a verdict points at the
-    exact field it is about and the report can key on it.
+    Every claim is already a node, so a verdict points at the exact field it is
+    about and the report can key on it.
+
+    Attributes:
+        path: The judged node's absolute path.
+        verdict: What the judge decided for that field.
+        reason: Why, when the judge gave a reason.
     """
 
     path: str
@@ -20,10 +25,11 @@ class FieldJudgeVerdict(BaseModel):
 class JudgeVerdict(BaseModel):
     """A judge's full result for one node: its own score plus per-field detail.
 
-    ``score`` is the node-level number the metric reports for the judged node
-    itself; ``verdicts`` carries one entry per field it ruled on. ``reason``
-    explains the node-level verdict when a judge produces one — it is not a
-    concatenation of the per-field reasons.
+    Attributes:
+        score: The node-level number the metric reports for the judged node.
+        reason: Why, when the judge explains its node-level verdict — not a
+            concatenation of the per-field reasons.
+        verdicts: One entry per field the judge ruled on.
     """
 
     score: float

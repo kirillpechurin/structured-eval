@@ -1,3 +1,5 @@
+"""The `exponential_numeric_score` metric — similarity decaying with distance."""
+
 from __future__ import annotations
 
 import math
@@ -11,38 +13,51 @@ from structured_eval.metrics.utils.number import parse_number
 class ExponentialNumericScore(FieldMetric):
     """Exponentially decaying similarity for numeric fields.
 
-    The score is computed as::
+    `exp(-abs(actual - expected) / scale)`: 1.0 for an exact match, decaying
+    smoothly to values in `(0.0, 1.0]`. Unlike the ratio-based
+    `NumericCloseness`, the decay is on the **absolute** error, which makes it
+    unit-aware.
 
-        exp(-abs(actual - expected) / scale)
+    Numbers only — a non-numeric side scores 0.0, `bool` included. Two `None`s
+    are the exception and agree.
 
-    yielding:
-
-    - ``1.0`` for an exact match;
-    - a smooth exponential decay as the absolute error increases;
-    - values always in the range ``(0.0, 1.0]``.
-
-    The ``scale`` parameter controls how quickly the score decreases. Larger
-    values make the metric more tolerant to numeric differences. Unlike the
-    ratio-based :class:`NumericCloseness`, the decay is on the **absolute**
-    error, so it is scale-aware — pick ``scale`` to match the field's units.
-
-    Values are read with the same lenient parser as :class:`Numeric` /
-    :class:`NumericCloseness`, so numeric strings are graded too. The metric
-    applies **only to numbers**: if either side isn't numeric (``None``, a
-    non-numeric string, or a ``bool`` — ``True`` is not ``1``) the score is
-    ``0.0``. Two ``None``s are the exception — they agree (``1.0``; see
-    ``metrics.utils.null``).
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ExponentialNumericScore
+        >>> from structured_eval.models import EvalConfig
+        >>> ExponentialNumericScore(scale=10).score(100, 100)
+        1.0
+        >>> round(ExponentialNumericScore(scale=10).score(105, 100), 3)
+        0.607
+        >>> round(ExponentialNumericScore(scale=100).score(105, 100), 3)  # tolerant
+        0.951
+        >>> report = evaluate({"total": 105}, {"total": 100},
+        ...                   EvalConfig(metrics=[ExponentialNumericScore(scale=10)]))
+        >>> key = "exponential_numeric_score"
+        >>> round(float(report.field_scores["total"].metrics[key]), 3)
+        0.607
     """
 
     name = "exponential_numeric_score"
 
     def __init__(self, scale: float = 1.0, name: str | None = None) -> None:
+        """Set how fast the score decays with distance.
+
+        Args:
+            scale: The error at which the score falls to `1/e`; pick it to match
+                the field's units. Larger is more tolerant.
+            name: Per-instance report key.
+
+        Raises:
+            ValueError: If `scale` is not greater than 0.
+        """
         super().__init__(name=name)
         if scale <= 0:
             raise ValueError("scale must be greater than 0")
         self.scale = scale
 
     def score(self, actual: Any, expected: Any) -> float:
+        """Similarity decaying exponentially with the absolute error."""
         if both_null(actual, expected):
             return 1.0
         a = parse_number(actual)

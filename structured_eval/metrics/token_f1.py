@@ -1,3 +1,5 @@
+"""The `token_f1` metric — SQuAD-style token-overlap F1 for free text."""
+
 from __future__ import annotations
 
 import re
@@ -15,25 +17,30 @@ _IGNORE_ARTICLES_REGEX = re.compile(r"\b(a|an|the)\b", re.IGNORECASE)
 class TokenF1(FieldMetric):
     """SQuAD-style token-overlap F1 — a default for free-text fields.
 
-    On its defaults this reproduces the ``f1_score`` of the official SQuAD v1.1
-    evaluation script: both sides go through the reference ``normalize_answer``
-    (lowercase, drop punctuation, drop the articles ``a``/``an``/``the``, collapse
-    whitespace), then tokens are matched as a **multiset** (``Counter``) — a
-    repeated token only helps as often as it appears on both sides, so
-    ``"the the cat"`` vs ``"the cat"`` is 0.8, not 1.0. Precision and recall are
-    over the token *counts*; their harmonic mean is the score.
+    On its defaults this reproduces the `f1_score` of the official SQuAD v1.1
+    script: both sides are lowercased, stripped of punctuation and of the
+    articles a/an/the, and their whitespace collapsed. Tokens then match as a
+    multiset, so a repeated token helps only as often as both sides carry it.
 
-    Each normalization step can be turned off independently::
+    Two deliberate departures, because this scores fields rather than answers:
+    two empty strings score 1.0 where the script returns 0.0, and a non-`str`
+    side scores 0.0 with no coercion. Two `None`s agree.
 
-        TokenF1(ignore_case=False)         # "AB" vs "ab" scores below 1.0
-        TokenF1(ignore_punctuation=False)  # "fox." and "fox" are distinct tokens
-        TokenF1(ignore_articles=False)     # "the" counts as a token like any other
-
-    Two deliberate departures from the reference script, both because this scores
-    fields rather than question answers: two empty strings score 1.0 (the script
-    returns 0.0, an empty answer being a failed answer), and a value that is not a
-    ``str`` scores 0.0 with no coercion — except two ``None``s, which agree (1.0;
-    see ``metrics.utils.null``).
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import TokenF1
+        >>> from structured_eval.models import EvalConfig
+        >>> TokenF1().score("the quick brown fox", "a quick brown fox")
+        1.0
+        >>> round(TokenF1().score("quick brown fox", "the brown fox jumps"), 3)
+        0.667
+        >>> TokenF1(ignore_articles=False).score("the the cat", "the cat")
+        0.8
+        >>> report = evaluate({"summary": "quick brown fox"},
+        ...                   {"summary": "the brown fox jumps"},
+        ...                   EvalConfig(metrics=[TokenF1()]))
+        >>> round(float(report.field_scores["summary"].metrics["token_f1"]), 3)
+        0.667
     """
 
     name = "token_f1"
@@ -45,6 +52,15 @@ class TokenF1(FieldMetric):
         ignore_articles: bool = True,
         name: str | None = None,
     ):
+        """Choose which normalizations run before tokenizing.
+
+        Args:
+            ignore_case: Lowercase both sides.
+            ignore_punctuation: Drop the ASCII punctuation of
+                `string.punctuation`.
+            ignore_articles: Drop `a` / `an` / `the`, as the SQuAD script does.
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.ignore_case = ignore_case
         self.ignore_punctuation = ignore_punctuation
@@ -60,6 +76,7 @@ class TokenF1(FieldMetric):
         return value.split()
 
     def score(self, actual: Any, expected: Any) -> float:
+        """Harmonic mean of token precision and recall over the two strings."""
         if both_null(actual, expected):
             return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):

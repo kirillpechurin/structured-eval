@@ -1,9 +1,19 @@
+"""The reply schema the faithfulness judge is asked to fill in."""
+
 import enum
 
 from pydantic import BaseModel, Field
 
 
 class Verdict(enum.StrEnum):
+    """How the judge ruled on one field against the source.
+
+    Attributes:
+        SUPPORTED: The source backs the value.
+        NOT_STATED: The source neither backs nor contradicts it.
+        CONTRADICTED: The source says otherwise.
+    """
+
     SUPPORTED = "supported"
     NOT_STATED = "not_stated"
     CONTRADICTED = "contradicted"
@@ -12,14 +22,18 @@ class Verdict(enum.StrEnum):
 class JudgedField(BaseModel):
     """One field as the judge rules on it, keyed by the path it was asked about.
 
-    Three fields identical to ``FieldJudgeVerdict``, and the duplication is
-    deliberate — they answer to opposite constraints. This one is the **wire**
-    model: ``verdict`` has to be a closed enum, because that is what keeps the
-    reply schema down to three words the model must choose between. The other
-    is the **report** model, shared by every judge, and its ``verdict`` has to
-    stay an open string — closing it would tie the family contract to
-    faithfulness' own vocabulary. Merging them means picking one of the two,
-    and both are load-bearing.
+    Identical in shape to `FieldJudgeVerdict`, and the duplication is
+    deliberate — the two answer to opposite constraints:
+
+    - This is the **wire** model: `verdict` is a closed enum, which is what
+      keeps the reply schema down to three words the model chooses between.
+    - `FieldJudgeVerdict` is the **report** model shared by every judge, so its
+      `verdict` stays an open string.
+
+    Attributes:
+        path: The field the judge was asked about.
+        verdict: What it decided.
+        reason: Why, when the verdict is not `supported`.
     """
 
     path: str
