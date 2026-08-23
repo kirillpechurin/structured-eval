@@ -17,10 +17,24 @@ def make_aligner(
     strategy: ArrayStrategy = ArrayStrategy.BY_INDEX,
     params: dict[str, Any] | None = None,
 ) -> ArrayAligner:
-    """Build the aligner for an array config's ``strategy`` from its ``params``.
+    """Build the aligner for an array config's `strategy` from its `params`.
 
-    ``params`` keys match the chosen aligner's constructor arguments; an unknown
-    key surfaces as a ``TypeError`` from that constructor.
+    Args:
+        strategy: Which strategy to build.
+        params: That aligner's constructor arguments, by name. An unknown key
+            surfaces as a `TypeError` from the constructor itself.
+
+    Returns:
+        The aligner instance the strategy names.
+
+    Example:
+        >>> from structured_eval.alignment import make_aligner
+        >>> from structured_eval.models import ArrayStrategy
+        >>> type(make_aligner()).__name__
+        'ByIndexAligner'
+        >>> aligner = make_aligner(ArrayStrategy.BY_KEY, {"key": "sku"})
+        >>> aligner.align([{"sku": "A"}, {"sku": "B"}], [{"sku": "B"}]).matched
+        [(1, 0)]
     """
     params = params or {}
     if strategy == ArrayStrategy.BY_INDEX:

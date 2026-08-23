@@ -7,7 +7,8 @@ The core package ships no provider SDK; what lives here is the seam:
   `default_client` is the "nothing at all" case.
 - `CallableClient` / `ChatModelClient` — adapters over a bare function and a
   LangChain-style chat model.
-- `LiteLlmClient` — behind the `litellm` extra, in `structured_eval.llm.litellm`.
+- `LiteLlmClient` — every provider LiteLLM speaks, behind the `litellm` extra.
+  Importing it costs nothing: `litellm` itself is reached for at call time.
 """
 
 from structured_eval.llm.base import LlmClient
@@ -19,11 +20,13 @@ from structured_eval.llm.exceptions import (
     LlmResponseFormatError,
 )
 from structured_eval.llm.factory import MODEL_ENV_VAR, default_client, resolve_client
+from structured_eval.llm.litellm import LiteLlmClient
 
 __all__ = [
     "MODEL_ENV_VAR",
     "CallableClient",
     "ChatModelClient",
+    "LiteLlmClient",
     "LlmClient",
     "LlmError",
     "LlmInvocationError",

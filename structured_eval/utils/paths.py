@@ -1,8 +1,8 @@
 """Path navigation over nested dict/list documents.
 
 A pure utility (no model dependencies) shared by the node tree, the engine's
-tree builder, and array alignment. ``navigate`` walks a dot-and-bracket path;
-``MISSING`` is the sentinel for an unresolvable step (distinct from ``None`` so
+tree builder, and array alignment. `navigate` walks a dot-and-bracket path;
+`MISSING` is the sentinel for an unresolvable step (distinct from `None` so
 callers can tell "absent" from "present but null").
 """
 
@@ -23,13 +23,20 @@ MISSING = object()
 
 
 def navigate(obj: Any, path: str) -> Any:
-    """Walk ``obj`` along a dot-and-bracket ``path``.
+    """Walk `obj` along a dot-and-bracket `path`.
 
-    ``"$"`` returns the root unchanged. Dict keys use dot notation, list
-    indices use brackets: ``"roles[0].name"``. Returns ``MISSING`` when any
-    step cannot be resolved (missing key, out-of-range or non-integer index).
+    Dict keys use dot notation, list indices use brackets: `"roles[0].name"`.
 
-    Examples:
+    Args:
+        obj: The document to walk.
+        path: Path to resolve; `"$"` and `""` name the root itself.
+
+    Returns:
+        The value at `path`, or `MISSING` when a step cannot be resolved —
+        a missing key, an out-of-range index, a non-integer index, or a step
+        into a value of the wrong type.
+
+    Example:
         >>> navigate({"a": {"b": 1}}, "a.b")
         1
         >>> navigate({"items": [1, 2]}, "items[0]")

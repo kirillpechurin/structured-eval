@@ -32,31 +32,38 @@ Scorer = Metric[Any] | str | Callable[[Any, Any], float]
 class HungarianAligner(ArrayAligner):
     """Optimal one-to-one assignment via the Hungarian algorithm.
 
-    Builds a similarity matrix ``S[i,j] = score(expected[i], actual[j])`` and
-    solves ``min sum(1 - S)`` with ``scipy.optimize.linear_sum_assignment`` —
-    the globally optimal pairing regardless of order. A pair counts as matched
-    only when its similarity clears ``threshold`` (otherwise both sides are left
-    unmatched: a missed expected and a spurious actual).
+    Builds a similarity matrix `S[i,j] = score(expected[i], actual[j])` and
+    solves `min sum(1 - S)` with `scipy.optimize.linear_sum_assignment` — the
+    globally optimal pairing regardless of order. A pair counts as matched only
+    when its similarity clears `threshold`; otherwise both sides stay unmatched,
+    as a missed expected and a spurious actual.
 
-    ``scorer`` is the element similarity. Crucially our field metrics already
-    *are* scorers (``FieldMetric.score(actual, expected) -> float``), so no
-    adapter is needed — a metric, its registered name, or a plain callable is
-    used directly. It may be:
+    `scorer` is the element similarity. Our field metrics already *are* scorers
+    (`FieldMetric.score(actual, expected) -> float`), so no adapter is needed —
+    a metric, its registered name, or a plain callable is used directly:
 
-    * a single ``Scorer`` — applied to the whole element;
-    * a ``dict[str, Scorer]`` — per-field scorers for arrays of objects; the
-      element score is the mean over the union of fields (a field with no entry
-      falls back to its type default);
-    * ``None`` — type-aware default (graded numeric, exact for everything else),
+    - a single `Scorer` — applied to the whole element;
+    - a `dict[str, Scorer]` — per-field scorers for arrays of objects; the
+      element score is the mean over the union of fields, and a field with no
+      entry falls back to its type default;
+    - `None` — type-aware default (graded numeric, exact for everything else),
       with objects scored field-by-field.
 
-    ``key`` scores on named field(s) instead of the whole element: one field
-    path, or several — ``["sku", "warehouse"]`` — for records identified by a
-    combination. Paths may be nested (``"who.first"``). ``key`` picks *what* is
-    compared and ``scorer`` *how*: with ``key`` set, a ``dict`` scorer binds a
-    scorer per key field (naming a field outside ``key`` is an error), a single
-    scorer applies to each key field, and the element score is the mean over
-    the key fields. Requires the ``align`` extra (scipy).
+    `key` scores on named field(s) instead of the whole element: one field path,
+    or several — `["sku", "warehouse"]` — for records identified by a
+    combination. Paths may be nested, as in `"who.first"`.
+
+    So `key` picks *what* is compared and `scorer` *how*: with `key` set, a
+    `dict` scorer binds a scorer per key field (naming a field outside `key` is
+    an error), a single scorer applies to each key field, and the element score
+    is the mean over the key fields. Requires the `align` extra (scipy).
+
+    Example:
+        >>> from structured_eval.alignment import HungarianAligner
+        >>> expected = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 41}]
+        >>> actual = [{"name": "Bob", "age": 41}, {"name": "Alice", "age": 30}]
+        >>> HungarianAligner().align(expected, actual).matched
+        [(0, 1), (1, 0)]
     """
 
     def __init__(
@@ -65,6 +72,19 @@ class HungarianAligner(ArrayAligner):
         threshold: float = 0.8,
         key: str | Sequence[str] | None = None,
     ):
+        """Set the element similarity, the bar a pair must clear, and the key.
+
+        Args:
+            scorer: How two elements are compared — one scorer, a per-field
+                dict, or `None` for the type-aware default.
+            threshold: Similarity at which an optimal pair counts as matched.
+            key: Field path, or paths, to compare on instead of the whole
+                element.
+
+        Raises:
+            ValueError: If `key` names no field at all, or a `dict` `scorer`
+                names a field outside `key`.
+        """
         self.scorer = scorer
         self.threshold = threshold
         # One key or many, ``self.key`` is a list of field paths from here on
@@ -79,6 +99,22 @@ class HungarianAligner(ArrayAligner):
                 )
 
     def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
+        """Solve the assignment, then keep only the pairs clearing the bar.
+
+        Scoring the matrix is quadratic, so a warning is raised once it grows
+        past 10,000 cells.
+
+        Args:
+            expected: The expected list.
+            actual: The actual list.
+
+        Returns:
+            An `ArrayMatchResult`; with either side empty there are no pairs at
+            all, and every element of the other side is unmatched.
+
+        Raises:
+            ImportError: If scipy is not installed.
+        """
         if not expected or not actual:
             return ArrayMatchResult(
                 strategy=ArrayStrategy.HUNGARIAN,
@@ -179,9 +215,12 @@ class HungarianAligner(ArrayAligner):
     def _default_scorer(expected: Any, actual: Any) -> FieldMetric:
         """Type-aware default similarity metric for a pair of scalar values.
 
-        Number → graded :class:`NumericCloseness`; everything else, ``bool`` and
-        ``str`` included, → :class:`ExactMatch`. Strings are *not* graded by
-        default: pass ``scorer="fuzzy"`` to pair them by similarity.
+        Strings are *not* graded by default: pass `scorer="fuzzy"` to pair them
+        by similarity.
+
+        Returns:
+            `NumericCloseness` for two numbers, `ExactMatch` for everything
+            else — `bool` and `str` included.
         """
         if isinstance(expected, bool) or isinstance(actual, bool):
             return ExactMatch()
