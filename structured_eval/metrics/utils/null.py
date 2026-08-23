@@ -1,4 +1,4 @@
-"""The ``(None, None) → 1.0`` rule shared by the comparison field metrics."""
+"""The `(None, None) → 1.0` rule shared by the comparison field metrics."""
 
 from __future__ import annotations
 

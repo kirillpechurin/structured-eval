@@ -14,21 +14,39 @@ if TYPE_CHECKING:
 class RulePassRate(RootMetric):
     """Fraction of business rules that hold for the document.
 
-    ``rules`` is a list of ``Rule`` (DSL) or ``Rule.custom(...)`` objects, each
-    exposing ``evaluate(document) -> RuleResult``. Per-rule outcomes are returned
-    as the result's ``extra["rule_results"]`` (serialized ``RuleResult`` dicts) —
-    read via ``report.metrics["rule_pass_rate"].extra_values("rule_results")``. An
-    empty rule list scores 1.0 (vacuously true).
+    Per-rule outcomes ride on the result's `extra["rule_results"]`.
+    Read them back via
+    `report.metrics["rule_pass_rate"].extra_values("rule_results")`.
+
+    An empty rule list scores 1.0, vacuously.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import Rule, RulePassRate
+        >>> from structured_eval.models import EvalConfig
+        >>> rules = [Rule("$.total").gt(0), Rule("$.total").lt(100)]
+        >>> report = evaluate({"total": 250}, None,
+        ...                   EvalConfig(metrics=[RulePassRate(rules)]))
+        >>> float(report.metrics["rule_pass_rate"].representative())
+        0.5
     """
 
     name = "rule_pass_rate"
 
     def __init__(self, rules: list[Any], name: str | None = None):
+        """Bind the rules this metric checks.
+
+        Args:
+            rules: `Rule` or `Rule.custom(...)` objects, each exposing
+                `evaluate(document) -> RuleResult`.
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.rules = rules
         self.processor = RuleProcessor()
 
     def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:
+        """The share of rules that pass, plus every rule's own outcome."""
         document = node.actual
         results, pass_rate = self.processor.run(
             self.rules, document if isinstance(document, dict) else {}

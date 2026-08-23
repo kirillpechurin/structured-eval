@@ -14,21 +14,31 @@ class ArrayAccuracy(ArrayMetric):
     """Mean element score over the aligned items (soft).
 
     How good the matched elements are, regardless of how many were produced:
-    the mean of each matched item's representative score over (matched +
-    missed). Missed expected items count as 0.0; an empty/fully-missed array is
-    vacuously 1.0. The default array metric, and the array branch of the old
-    ``structural_score``.
+    the mean of each matched item's score over `matched` plus `missing`. The
+    default array metric.
 
-    Grades ``node.matched``, not ``node.items``: the latter also holds elements
-    with no expected counterpart, which have nothing to be accurate *against*
-    (``ArrayF1`` is the precision-aware metric that penalizes them). With no
-    expected list at all nothing is matched, and the array is vacuously 1.0
-    rather than uniformly wrong.
+    Grades `node.matched`, not `node.items` — an element with no expected
+    counterpart has nothing to be accurate *against*, and penalizing it is
+    `ArrayF1`'s job.
+
+    Nothing matched means nothing was expected, so there is nothing to be
+    inaccurate about and the array scores 1.0. Spurious elements do not pull it
+    down at all — that is `ArrayF1`'s job, not this metric's.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ArrayAccuracy
+        >>> from structured_eval.models import EvalConfig
+        >>> report = evaluate({"xs": [1, 2]}, {"xs": [1, 9, 3]},
+        ...                   EvalConfig(metrics=[ArrayAccuracy()]))
+        >>> round(float(report.metrics["array_accuracy"].representative()), 3)
+        0.333
     """
 
     name = "array_accuracy"
 
     def compute(self, node: ArrayNode) -> float:
+        """Mean score over this array's aligned elements."""
         denom = len(node.matched) + len(node.missing)
         if denom == 0:
             return 1.0

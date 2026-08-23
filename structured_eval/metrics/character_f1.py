@@ -17,23 +17,23 @@ _IGNORE_WHITESPACE_REGEX = re.compile(r"\s+")
 class CharacterF1(FieldMetric):
     """Character-overlap F1 for short free-text fields.
 
-    Characters are matched as a **multiset** (``Counter``), so repeated
-    characters contribute only as many times as they appear on both sides.
-    Precision and recall are computed over character counts, and their
-    harmonic mean is returned. String-only: if either side is not a ``str``
-    the score is ``0.0`` (no coercion) — except two ``None``s, which agree
-    (``1.0``; see ``metrics.utils.null``).
+    Characters are matched as a multiset, so a repeated character helps only as
+    often as it appears on both sides. Precision and recall run over the counts,
+    and the score is their harmonic mean. String-only: a non-`str` side scores
+    0.0, and two `None`s agree.
 
-    Normalization is applied to both sides before the comparison and each
-    step can be turned off independently::
-
-        CharacterF1(ignore_case=False)         # "AB" vs "ab" scores below 1.0
-        CharacterF1(ignore_punctuation=False)  # "," and "." count as characters
-        CharacterF1(ignore_whitespace=False)   # spaces count as characters
-
-    The defaults keep every normalization on. ``ignore_punctuation`` drops the
-    ASCII punctuation of ``string.punctuation`` — the same set :class:`TokenF1`
-    uses, so ``_`` is dropped and non-ASCII punctuation such as ``«»—`` is kept.
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import CharacterF1
+        >>> from structured_eval.models import EvalConfig
+        >>> round(CharacterF1().score("color", "colour"), 3)
+        0.909
+        >>> CharacterF1().score("Acme, Inc.", "acme inc")
+        1.0
+        >>> report = evaluate({"vendor": "Acme, Inc."}, {"vendor": "acme inc"},
+        ...                   EvalConfig(metrics=[CharacterF1()]))
+        >>> float(report.field_scores["vendor"].metrics["character_f1"])
+        1.0
     """
 
     name = "character_f1"
@@ -45,6 +45,16 @@ class CharacterF1(FieldMetric):
         ignore_punctuation: bool = True,
         name: str | None = None,
     ):
+        """Choose which normalizations run before the comparison.
+
+        Args:
+            ignore_case: Lowercase both sides.
+            ignore_whitespace: Drop whitespace entirely.
+            ignore_punctuation: Drop the ASCII punctuation of
+                `string.punctuation` — the same set `TokenF1` uses, so `_` goes
+                and non-ASCII punctuation such as `«»—` stays.
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.ignore_case = ignore_case
         self.ignore_whitespace = ignore_whitespace
@@ -60,6 +70,7 @@ class CharacterF1(FieldMetric):
         return list(value)
 
     def score(self, actual: Any, expected: Any) -> float:
+        """Harmonic mean of character precision and recall over the two strings."""
         if both_null(actual, expected):
             return 1.0
         if not (isinstance(actual, str) and isinstance(expected, str)):

@@ -1,9 +1,12 @@
 """The `Rule` DSL — JSONPath-based constraints a document must satisfy.
 
-A rule pins a path in the document to a condition; `Rule.custom` wraps an
-arbitrary predicate instead. Paths embedded in an arithmetic expression are
-resolved before the expression is evaluated, and evaluation is restricted to a
-safe arithmetic subset. Full JSONPath support comes from the `rules` extra.
+A rule pins a path in the document to a condition.
+`Rule.custom` wraps an arbitrary predicate.
+
+Paths embedded in an arithmetic expression are resolved before the
+expression is evaluated, and evaluation is restricted to a safe arithmetic subset.
+
+Full JSONPath support comes from the `rules` extra.
 """
 
 from __future__ import annotations
@@ -113,19 +116,30 @@ class _CustomRule:
 class Rule:
     """JSONPath-based document constraint.
 
-    Chain a comparison method to create a bound rule, then pass it to
-    EvalConfig.rules or call evaluate() directly.
+    A bare `Rule` is unbound; chaining a comparison returns the bound rule to
+    hand to `RulePassRate`. The right-hand side may itself be a path
+    expression, so a rule can relate two fields.
 
-    Examples::
-
-        Rule("$.status").eq("paid")
-        Rule("$.total").gte(0)
-        Rule("$.total").eq("$.subtotal + $.tax")
-        Rule("$.currency").in_(["USD", "EUR"])
-        Rule.custom(lambda doc: doc["amount"] > 0, name="positive_amount")
+    Example:
+        >>> from structured_eval.metrics import Rule
+        >>> Rule("$.status").eq("paid").evaluate({"status": "paid"}).passed
+        True
+        >>> Rule("$.total").eq("$.subtotal + $.tax").evaluate(
+        ...     {"total": 110, "subtotal": 100, "tax": 10}).passed
+        True
+        >>> Rule("$.currency").in_(["USD", "EUR"]).evaluate(
+        ...     {"currency": "GBP"}).passed
+        False
     """
 
     def __init__(self, path: str, *, name: str = "") -> None:
+        """Name the document path this rule constrains.
+
+        Args:
+            path: A JSONPath expression, e.g. `"$.total"`.
+            name: Human-readable name shown in reports; derived from the path
+                and operator when empty.
+        """
         self._path = path
         self._name = name
         self._op: str | None = None
@@ -140,21 +154,27 @@ class Rule:
         return r
 
     def eq(self, rhs: Any) -> Rule:
+        """Bind an equality comparison against `rhs`."""
         return self._bind("eq", rhs)
 
     def lt(self, rhs: Any) -> Rule:
+        """Bind a strict less-than comparison against `rhs`."""
         return self._bind("lt", rhs)
 
     def gt(self, rhs: Any) -> Rule:
+        """Bind a strict greater-than comparison against `rhs`."""
         return self._bind("gt", rhs)
 
     def lte(self, rhs: Any) -> Rule:
+        """Bind a less-than-or-equal comparison against `rhs`."""
         return self._bind("lte", rhs)
 
     def gte(self, rhs: Any) -> Rule:
+        """Bind a greater-than-or-equal comparison against `rhs`."""
         return self._bind("gte", rhs)
 
     def in_(self, collection: Any) -> Rule:
+        """Bind a membership test against `collection`."""
         return self._bind("in", collection)
 
     @classmethod
@@ -164,8 +184,11 @@ class Rule:
         """Wrap an arbitrary function as a rule.
 
         Args:
-            fn: Callable(document) -> bool. Receives the full document dict.
+            fn: Callable taking the full document dict and returning a bool.
             name: Human-readable name shown in reports.
+
+        Returns:
+            A rule that evaluates `fn`, usable anywhere a `Rule` is.
         """
         return _CustomRule(fn=fn, name=name)
 
@@ -173,6 +196,7 @@ class Rule:
 
     @property
     def name(self) -> str:
+        """The rule's report name; derived from path and operator if unset."""
         if self._name:
             return self._name
         if self._op is not None:
@@ -181,6 +205,18 @@ class Rule:
         return self._path
 
     def evaluate(self, document: dict[str, Any]) -> RuleResult:
+        """Check the rule against one document.
+
+        Args:
+            document: The document to check.
+
+        Returns:
+            A `RuleResult` carrying the rule's name, whether it passed, and a
+            message when it did not.
+
+        Raises:
+            ValueError: If no comparison was bound to the rule.
+        """
         if self._op is None:
             raise ValueError(
                 f"Rule {self._path!r} has no comparison — call .eq(), .lt(), etc."

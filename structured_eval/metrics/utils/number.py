@@ -12,7 +12,7 @@ _NON_NUMERIC = re.compile(r"[^0-9eE.+\-]")
 
 
 def parse_number(value: Any) -> float | None:
-    """Coerce ``value`` to a float, or ``None`` if it isn't cleanly numeric."""
+    """Coerce `value` to a float, or `None` if it isn't cleanly numeric."""
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):

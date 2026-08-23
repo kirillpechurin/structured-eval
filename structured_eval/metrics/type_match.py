@@ -27,11 +27,26 @@ def _json_type(value: Any) -> str:
 class TypeMatch(FieldMetric):
     """Right JSON type? 1.0 if actual and expected share a type, else 0.0.
 
-    Catches a common LLM error — emitting ``"100"`` (string) where ``100``
-    (number) is expected — independently of value correctness.
+    Catches a common LLM error — emitting `"100"` where `100` is expected —
+    independently of whether the value itself is right.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import TypeMatch
+        >>> from structured_eval.models import EvalConfig
+        >>> TypeMatch().score(100, 42)          # both numbers
+        1.0
+        >>> TypeMatch().score("100", 100)       # string vs number
+        0.0
+        >>> report = evaluate({"total": "100", "qty": 3},
+        ...                   {"total": 100, "qty": 7},
+        ...                   EvalConfig(metrics=[TypeMatch()]))
+        >>> float(report.metrics["type_match"].representative())
+        0.5
     """
 
     name = "type_match"
 
     def score(self, actual: Any, expected: Any) -> float:
+        """1.0 when both values map to the same JSON type, else 0.0."""
         return 1.0 if _json_type(actual) == _json_type(expected) else 0.0

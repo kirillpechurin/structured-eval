@@ -13,19 +13,33 @@ if TYPE_CHECKING:
 class ObjectExactMatch(ObjectMetric):
     """Strict deep equality for objects: identical dicts → 1.0, else 0.0.
 
-    Compares the raw ``actual`` / ``expected`` mappings recursively — same keys,
-    and every value deep-equal (nested dicts and lists included). No partial
-    credit and no coercion: the object as a whole is either right or wrong. For
-    field-level partial credit use the aggregating ``Object*`` metrics
-    (``ObjectAccuracy`` / ``ObjectF1`` …) instead.
+    Compares the two mappings recursively — same keys, every value deep-equal.
+    No partial credit and no coercion: the object as a whole is either right or
+    wrong. For field-level partial credit use the aggregating `Object*` metrics
+    instead.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import ObjectExactMatch
+        >>> from structured_eval.models import EvalConfig
+        >>> ObjectExactMatch().score({"a": 1, "b": [1, 2]}, {"a": 1, "b": [1, 2]})
+        1.0
+        >>> ObjectExactMatch().score({"a": 1}, {"a": "1"})     # no coercion
+        0.0
+        >>> report = evaluate({"a": 1}, {"a": "1"},
+        ...                   EvalConfig(metrics=[ObjectExactMatch()]))
+        >>> float(report.metrics["object_exact_match"].representative())
+        0.0
     """
 
     name = "object_exact_match"
 
     def compute(self, node: ObjectNode) -> float:
+        """1.0 when this node's two mappings are identical, else 0.0."""
         return self.score(node.actual, node.expected)
 
     def score(self, actual: Any, expected: Any) -> float:
+        """1.0 when the two mappings are deep-equal, else 0.0."""
         return 1.0 if self._object_equal(actual, expected) else 0.0
 
     def _object_equal(self, a: Any, b: Any) -> bool:

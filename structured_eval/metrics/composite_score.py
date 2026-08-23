@@ -13,25 +13,40 @@ if TYPE_CHECKING:
 class CompositeScore(AnyNodeMetric):
     """Weighted blend of other metrics already computed on the same node.
 
-    Given ``weights={metric_name: weight}``, the score is the weighted mean of
-    those metrics' values on the node::
+    The weighted mean of the named metrics' values on the node, clamped to
+    `[0, 1]`. Only the metrics named in `weights` contribute; a named metric
+    that is absent contributes 0.
 
-        score = Σ wᵢ · metric_resultsᵢ        (weights normalized to sum 1.0)
+    The referenced metrics must already be computed, so list them alongside
+    `CompositeScore` on the node. Best used as the node's `key_metric`, which
+    the engine runs last.
 
-    The referenced metrics must already be present in ``node.metric_results``,
-    so list them in the node's ``metrics`` (or as cascaded ``config.metrics``)
-    alongside ``CompositeScore``. As a representative it is best used as the
-    node's ``key_metric``, which the engine runs **last** — by then every other
-    metric on the node is computed.
-
-    Only the metrics named in ``weights`` contribute; any other metric on the
-    node is ignored, and a named metric that is absent contributes ``0``. The
-    result is clamped to ``[0, 1]`` (each input is expected in ``[0, 1]``).
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import CompositeScore, ExactMatch, TokenF1
+        >>> from structured_eval.models import EvalConfig, FieldConfig
+        >>> blend = CompositeScore({"exact_match": 1, "token_f1": 1})
+        >>> config = EvalConfig(
+        ...     metrics=[ExactMatch(), TokenF1()],
+        ...     fields={"a": FieldConfig(key_metric=blend)},
+        ... )
+        >>> report = evaluate({"a": "one two"}, {"a": "one three"}, config)
+        >>> float(report.field_scores["a"].metrics["composite_score"])
+        0.25
     """
 
     name = "composite_score"
 
     def __init__(self, weights: dict[str, float], name: str | None = None) -> None:
+        """Set the blend.
+
+        Args:
+            weights: Metric name to weight; normalized to sum to 1.0.
+            name: Per-instance report key.
+
+        Raises:
+            ValueError: If `weights` is empty or its values sum to 0 or less.
+        """
         super().__init__(name=name)
         if not weights:
             raise ValueError("CompositeScore requires at least one metric weight")
@@ -41,6 +56,7 @@ class CompositeScore(AnyNodeMetric):
         self.weights: dict[str, float] = {m: w / total for m, w in weights.items()}
 
     def compute(self, node: EvalNode) -> float:
+        """Weighted mean of the named metrics already on this node."""
         total = sum(
             weight * float(node.metric_results[name])
             for name, weight in self.weights.items()

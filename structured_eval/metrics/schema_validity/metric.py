@@ -14,11 +14,24 @@ if TYPE_CHECKING:
 
 
 class SchemaValidity(RootMetric):
-    """Does the actual document validate against ``schema``? 1.0 / 0.0.
+    """Does the actual document validate against `schema`? 1.0 or 0.0.
 
-    ``schema`` is a Pydantic model class or a JSON Schema dict. Validation
-    errors are returned as the result's ``extra["schema_errors"]`` — read via
-    ``report.metrics["schema_validity"].extra_values("schema_errors")``.
+    Validation errors ride on the result's `extra["schema_errors"]`.
+    Read them back via
+    `report.metrics["schema_validity"].extra_values("schema_errors")`.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.metrics import SchemaValidity
+        >>> from structured_eval.models import EvalConfig
+        >>> schema = {"type": "object", "required": ["total"]}
+        >>> config = EvalConfig(metrics=[SchemaValidity(schema)])
+        >>> float(evaluate({"total": 10}, None, config)
+        ...       .metrics["schema_validity"].representative())
+        1.0
+        >>> float(evaluate({"other": 10}, None, config)
+        ...       .metrics["schema_validity"].representative())
+        0.0
     """
 
     name = "schema_validity"
@@ -26,10 +39,17 @@ class SchemaValidity(RootMetric):
     def __init__(
         self, schema: type[BaseModel] | dict[str, Any], name: str | None = None
     ):
+        """Bind the schema documents are checked against.
+
+        Args:
+            schema: A pydantic model class or a JSON Schema dict.
+            name: Per-instance report key.
+        """
         super().__init__(name=name)
         self.validator = SchemaValidator(schema)
 
     def compute(self, node: EvalNode) -> tuple[float, dict[str, Any]]:
+        """1.0 when the document validates, else 0.0, plus the errors found."""
         result = self.validator.validate(node.actual)
         return (1.0 if result.valid else 0.0), {
             "schema_errors": {

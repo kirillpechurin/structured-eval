@@ -11,14 +11,25 @@ if TYPE_CHECKING:
 class RuleProcessor:
     """Evaluates a list of business rules against a document.
 
-    Each rule must expose ``evaluate(document) -> RuleResult`` (satisfied by both
-    ``Rule`` and the result of ``Rule.custom()``). ``run`` returns the per-rule
-    results and the pass rate (1.0 when there are no rules).
+    Each rule must expose `evaluate(document) -> RuleResult`,
+    satisfied by both `Rule` and the result of `Rule.custom()`.
+
+    `run` returns the per-rule results and the pass rate
+    (1.0 when there are no rules).
     """
 
     def run(
         self, rules: list[Any], document: dict[str, Any]
     ) -> tuple[list[RuleResult], float]:
+        """Evaluate every rule against the document.
+
+        Args:
+            rules: The rules to run, in order.
+            document: The document to check them against.
+
+        Returns:
+            The per-rule results and the pass rate, 1.0 when there are no rules.
+        """
         results: list[RuleResult] = [rule.evaluate(document) for rule in rules]
         if not results:
             return results, 1.0

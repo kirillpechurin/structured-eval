@@ -134,11 +134,12 @@ owes is decided by **import path and visibility**, not by taste:
   function they describe — not in the module docstring, and not restated in two
   places. The one thing worth its length is a `Usage`/`Example` block, which
   Google's guide explicitly wants.
-- **Three lines is the ceiling for a paragraph.** Docstrings are read by people.
-  Past three lines, break the thought into a bullet list or cut it. Never write
+- **Four lines is the ceiling for a paragraph.** Docstrings are read by people.
+  Past four lines, break the thought into a bullet list or cut it. Never write
   a run-on of clauses strung together with semicolons, colons and dashes just to
   fit an explanation into one block — that is the shape to refactor, not to
-  reflow.
+  reflow. The ceiling is not a target: a connected thought stays one paragraph
+  rather than being chopped into one-line fragments.
 - Overridden `score` / `compute` carry their own docstring rather than inheriting
   the base one — each states what *this* metric does with the values.
 - Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in

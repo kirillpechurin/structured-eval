@@ -171,7 +171,6 @@ ignore-one-line-docstrings = true
 "structured_eval/formats/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/llm/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/metrics/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/utils/**" = ["D102", "D103", "D105", "D107", "DOC"]
 # Tests are converted last, and only these codes apply to them (the rest are

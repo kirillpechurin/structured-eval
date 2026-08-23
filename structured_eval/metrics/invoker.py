@@ -26,7 +26,7 @@ GENERIC_SCORE_METHOD: dict[type, str] = {
 
 
 def _kind_of(actual: Any, expected: Any) -> type:
-    """The node class a raw value pair would build (mirrors ``TreeBuilder``)."""
+    """The node class a raw value pair would build (mirrors `TreeBuilder`)."""
     ref = expected if expected is not None else actual
     if isinstance(ref, dict):
         return ObjectNode
@@ -39,9 +39,15 @@ class MetricInvoker:
     """Runs one metric, in whichever of the two input modes the caller has."""
 
     def __init__(self, metric: BaseMetric):
+        """Bind the metric this invoker runs.
+
+        Args:
+            metric: The metric to invoke.
+        """
         self.metric = metric
 
     def on_node(self, node: EvalNode) -> MetricOutput:
+        """Grade a node, dispatching by kind for a `GenericMetric`."""
         metric = self.metric
         if isinstance(metric, GenericMetric):
             return self._dispatch_generic(GENERIC_NODE_METHOD.get(type(node)), node)
@@ -49,6 +55,7 @@ class MetricInvoker:
         return metric.compute(node)
 
     def on_values(self, actual: Any, expected: Any) -> MetricOutput:
+        """Compare two raw values, before any node exists."""
         metric = self.metric
         if isinstance(metric, GenericMetric):
             method = GENERIC_SCORE_METHOD.get(_kind_of(actual, expected))
@@ -57,9 +64,11 @@ class MetricInvoker:
         return metric.score(actual, expected)
 
     def scalar_on_node(self, node: EvalNode) -> float:
+        """`on_node`, narrowed to a single `float`."""
         return self._scalar(self.on_node(node), node.path)
 
     def scalar_on_values(self, actual: Any, expected: Any) -> float:
+        """`on_values`, narrowed to a single `float`."""
         return self._scalar(self.on_values(actual, expected), "<values>")
 
     def _dispatch_generic(self, method: str | None, *args: Any) -> MetricOutput:
