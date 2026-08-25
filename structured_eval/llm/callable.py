@@ -1,4 +1,4 @@
-"""The smallest client there is: a function that already *is* ``generate``."""
+"""The smallest client there is: a function that already *is* `generate`."""
 
 from __future__ import annotations
 

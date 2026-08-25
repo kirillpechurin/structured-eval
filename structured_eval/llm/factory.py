@@ -1,10 +1,7 @@
 """The one place that turns a user-supplied spec into an `LlmClient`.
 
-Kept apart from the clients for the same reason `alignment/factory` is kept
-apart from the aligners: dispatch is its own job. It also keeps them free of
-any reference to the litellm-backed client, which lives behind an extra.
-Importing `LiteLlmClient` here costs nothing — that module only reaches for
-`litellm` at call time.
+Every LLM-backed feature calls `resolve_client`, so none of them re-implements
+the dispatch. `default_client` is the case where the caller named nothing.
 """
 
 from __future__ import annotations
@@ -28,16 +25,15 @@ def default_client() -> LlmClient:
 
     The point of the feature is that trying an LLM-backed metric costs a line in
     a `.env` file rather than a wrapper class — set
-    `STRUCTURED_EVAL_LLM_MODEL=qwen/qwen3-235b-a22b-2507` plus the provider's
-    own key variable, and a judge metric builds its client itself.
+    `STRUCTURED_EVAL_LLM_MODEL=openai/gpt-4o` plus the provider's own key
+    variable, and a judge metric builds its client itself.
 
     The `.env` file is *not* read here: a library loading files from the working
     directory on its own would be a surprise, so calling `load_dotenv()` — or
     exporting the variables — stays the caller's decision.
 
-    An unset variable is a configuration error rather than a fallback to some
-    default model. Nobody should discover which model graded their data by
-    reading a bill.
+    An unset variable is a configuration error, not a fallback to some default
+    model.
 
     Returns:
         A `LiteLlmClient` for the model the environment names.
@@ -65,9 +61,12 @@ def default_client() -> LlmClient:
 def resolve_client(spec: LlmClient | str | Any | None) -> LlmClient:
     """Coerce a user-supplied spec to an `LlmClient`.
 
-    Every LLM-backed feature goes through this, so none re-implements the
-    dispatch. Note the string form names a **model**, not a registered class —
-    unlike `resolve_metric("numeric")`, whose strings are registry keys.
+    Note the string form names a **model**, not a registered class — unlike
+    `resolve_metric("numeric")`, whose strings are registry keys.
+
+    Dispatch lives apart from the clients so that none of them has to know
+    about `LiteLlmClient`, which sits behind an extra. Importing it here costs
+    nothing: that module reaches for `litellm` only at call time.
 
     Args:
         spec: An `LlmClient`, a `"provider/model"` string (routed to

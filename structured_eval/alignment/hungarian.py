@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 _LARGE_MATRIX_WARN = 10_000  # rows*cols beyond which we warn (quadratic scoring cost)
 
-# A per-element similarity: a Metric instance (every Metric has ``score``), its
-# registered name, or a plain ``(actual, expected) -> float`` callable.
+# A per-element similarity: a Metric instance (every Metric has `score`), its
+# registered name, or a plain `(actual, expected) -> float` callable.
 Scorer = Metric[Any] | str | Callable[[Any, Any], float]
 
 
@@ -34,9 +34,11 @@ class HungarianAligner(ArrayAligner):
 
     Builds a similarity matrix `S[i,j] = score(expected[i], actual[j])` and
     solves `min sum(1 - S)` with `scipy.optimize.linear_sum_assignment` — the
-    globally optimal pairing regardless of order. A pair counts as matched only
-    when its similarity clears `threshold`; otherwise both sides stay unmatched,
-    as a missed expected and a spurious actual.
+    globally optimal pairing regardless of order.
+
+    A pair counts as matched only when its similarity clears `threshold`;
+    otherwise both sides stay unmatched, as a missed expected and a spurious
+    actual.
 
     `scorer` is the element similarity. Our field metrics already *are* scorers
     (`FieldMetric.score(actual, expected) -> float`), so no adapter is needed —
@@ -56,7 +58,9 @@ class HungarianAligner(ArrayAligner):
     So `key` picks *what* is compared and `scorer` *how*: with `key` set, a
     `dict` scorer binds a scorer per key field (naming a field outside `key` is
     an error), a single scorer applies to each key field, and the element score
-    is the mean over the key fields. Requires the `align` extra (scipy).
+    is the mean over the key fields.
+
+    Requires the `align` extra (scipy).
 
     Example:
         >>> from structured_eval.alignment import HungarianAligner
@@ -87,8 +91,8 @@ class HungarianAligner(ArrayAligner):
         """
         self.scorer = scorer
         self.threshold = threshold
-        # One key or many, ``self.key`` is a list of field paths from here on
-        # (``None`` keeps its meaning: score on the whole element).
+        # One key or many, `self.key` is a list of field paths from here on
+        # (`None` keeps its meaning: score on the whole element).
         self.key = normalize_key(key, self.__class__.__name__)
         if self.key is not None and isinstance(scorer, dict):
             unknown = [field for field in scorer if field not in self.key]
@@ -164,7 +168,7 @@ class HungarianAligner(ArrayAligner):
     def _score(self, expected: Any, actual: Any) -> float:
         if self.key is None:
             return self._similarity(expected, actual, self.scorer)
-        # ``key`` picks the fields to compare on, ``scorer`` says how: a dict
+        # `key` picks the fields to compare on, `scorer` says how: a dict
         # binds a scorer per key field, a single scorer applies to each of them.
         scorers = (
             self.scorer

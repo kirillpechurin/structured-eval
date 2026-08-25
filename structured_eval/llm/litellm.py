@@ -1,6 +1,6 @@
 """The batteries-included client: any provider LiteLLM speaks, one string.
 
-Behind the ``litellm`` extra.
+Behind the `litellm` extra.
 """
 
 from __future__ import annotations

@@ -1,10 +1,9 @@
 """Adapter for a LangChain-style chat model — duck-typed, no dependency.
 
-Nothing here is imported from LangChain: the adapter only calls ``.invoke()``
-and, when present, ``.with_structured_output()``. So a model the user has
-already configured — proxy, retries, callbacks, tracing and all — becomes a
-client without adding a package, and every provider LangChain supports comes
-along with it.
+Nothing here is imported from LangChain: the adapter only calls `.invoke()`
+and, when present, `.with_structured_output()`. A model the user has already
+configured — proxy, retries, callbacks, tracing and all — becomes a client
+without adding a package.
 """
 
 from __future__ import annotations
@@ -21,12 +20,14 @@ if TYPE_CHECKING:
 class ChatModelClient(LlmClient):
     """Wraps a chat model — anything with `.invoke()`.
 
-    Over wrapping the same model in a `CallableClient` this adds the things a
-    naive `lambda p: model.invoke(p).content` gets wrong: `system` becomes a
-    real message turn instead of prompt text, replies arriving as content blocks
-    are flattened, and schema requests go through `.with_structured_output()` so
-    the provider's native structured outputs are used instead of the inherited
-    prompt-and-parse fallback.
+    Over wrapping the same model in a `CallableClient` this adds the three
+    things a naive `lambda p: model.invoke(p).content` gets wrong:
+
+    - `system` becomes a real message turn instead of prompt text;
+    - a reply arriving as content blocks is flattened to text;
+    - a schema request goes through `.with_structured_output()`, so the
+      provider's native structured outputs are used instead of the
+      prompt-and-parse fallback inherited from `LlmClient`.
 
     Example:
         >>> from langchain_openai import ChatOpenAI  # doctest: +SKIP

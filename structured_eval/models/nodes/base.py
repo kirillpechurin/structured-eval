@@ -114,7 +114,7 @@ class EvalNode(BaseModel):
         return float(value)
 
     # ── traversal ──────────────────────────────────────────────────────────
-    # Children are discovered by duck-typing (``children`` on objects, ``items``
+    # Children are discovered by duck-typing (`children` on objects, `items`
     # on arrays) so the base node need not import its own subclasses.
 
     def children_nodes(self) -> Iterator[EvalNode]:
