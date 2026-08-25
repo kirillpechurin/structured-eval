@@ -166,13 +166,9 @@ ignore-one-line-docstrings = true
 # layer is the function/method level: D102 (public method), D103 (public
 # function), D105 (magic method), D107 (__init__) and the DOC section checks.
 "structured_eval/*.py" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/alignment/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/engine/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/formats/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/llm/**" = ["D102", "D103", "D105", "D107", "DOC"]
 "structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/utils/**" = ["D102", "D103", "D105", "D107", "DOC"]
 # Tests are converted last, and only these codes apply to them (the rest are
 # waived permanently in the "tests/**" block above).
 "tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]

@@ -135,7 +135,7 @@ AnyFieldConfig = FieldConfig | ObjectFieldConfig | ArrayFieldConfig
 
 
 def weight_of(cfg: AnyFieldConfig | None) -> float:
-    """The aggregation weight a field config contributes (``1.0`` when absent)."""
+    """The aggregation weight a field config contributes (`1.0` when absent)."""
     return cfg.weight if cfg is not None else DEFAULT_FIELD_WEIGHT
 
 

@@ -23,26 +23,34 @@ if TYPE_CHECKING:
 class ByKeyAligner(ArrayAligner):
     """Pairs items whose keys match, greedily best-first (generalized matching).
 
-    Extracts a key from each element (the ``key`` field, or the whole element
-    when ``key`` is None), compares keys with ``key_metric`` (default
-    ``ExactMatch``) and pairs them when the score clears ``threshold``. This
-    subsumes value- and similarity-based matching (technical_details_v3 §5).
+    Extracts a key from each element — the `key` field, or the whole element
+    when `key` is `None` — compares keys with `key_metric` and pairs them when
+    the score clears `threshold`. Matching by value and matching by similarity
+    are both this strategy, differing only in the metric.
 
-    ``key`` may also name **several fields** — a composite key such as
-    ``["sku", "warehouse"]``. Each field is scored with ``key_metric`` and the
-    element's key score is the mean over the fields, so with the default
-    ``ExactMatch`` and ``threshold=1.0`` every field must match; a soft
-    ``key_metric`` lets a strong field carry a weaker one. A one-field key is
-    the mean of one score, i.e. identical to passing that field as a string.
+    A composite `key` such as `["sku", "warehouse"]` scores each field with
+    `key_metric` and takes their mean, so with the default `ExactMatch` and
+    `threshold=1.0` every field must match, while a soft `key_metric` lets a
+    strong field carry a weaker one.
 
-    Pairing is **globally greedy**: every candidate pair whose key score clears
-    the threshold is ranked by score (highest first) and claimed one-to-one,
-    skipping pairs whose either side is already taken. So a *soft* key picks the
-    strongest available partner rather than the first one found, and the result
-    does not depend on element order. With an exact key (all passing scores tie
-    at 1.0) this reduces to the original first-match behaviour. It is a cheap,
-    scipy-free approximation of the optimal assignment that ``HungarianAligner``
-    computes.
+    Pairing is **globally greedy**: every candidate pair clearing the threshold
+    is ranked by score, highest first, and claimed one-to-one. A soft key
+    therefore picks the strongest available partner rather than the first one
+    found, and the outcome does not depend on element order.
+
+    With an exact key every passing score ties at 1.0, and this reduces to
+    first-match. It is the cheap, scipy-free approximation of the optimal
+    assignment `HungarianAligner` computes.
+
+    Example:
+        >>> from structured_eval.alignment import ByKeyAligner
+        >>> expected = [{"sku": "A-1", "qty": 2}, {"sku": "B-2", "qty": 5}]
+        >>> actual = [{"sku": "B-2", "qty": 5}, {"sku": "C-3", "qty": 1}]
+        >>> result = ByKeyAligner(key="sku").align(expected, actual)
+        >>> result.matched          # B-2 pairs across the reordering
+        [(1, 0)]
+        >>> result.missed, result.spurious
+        ([0], [1])
     """
 
     def __init__(
@@ -51,12 +59,33 @@ class ByKeyAligner(ArrayAligner):
         key_metric: str | BaseMetric | None = None,
         threshold: float = 1.0,
     ):
+        """Set what the key is, how it is compared, and how close counts.
+
+        Args:
+            key: Field path to key on, several of them for a composite key, or
+                `None` to key on the whole element.
+            key_metric: Metric comparing two keys, by instance or registered
+                name. Defaults to `ExactMatch`.
+            threshold: Key score at which a pair may be claimed.
+
+        Raises:
+            ValueError: If `key` is a sequence that names no field at all.
+        """
         self.key = normalize_key(key, self.__class__.__name__)
         metric = ExactMatch() if key_metric is None else resolve_metric(key_metric)
         self.scorer = MetricInvoker(metric)
         self.threshold = threshold
 
     def align(self, expected: list[Any], actual: list[Any]) -> ArrayMatchResult:
+        """Claim the best-scoring key pairs one-to-one, best first.
+
+        Args:
+            expected: The expected list.
+            actual: The actual list.
+
+        Returns:
+            An `ArrayMatchResult` whose pairs are reported in expected order.
+        """
         # Score every (expected, actual) pair on its key; keep those clearing
         # the threshold. Generated in (ei, ai) order so a stable sort breaks
         # score ties by that order (→ exact-key matches reproduce first-match).

@@ -18,27 +18,35 @@ class DiffType(StrEnum):
         CHANGED: Present in both, but the values differ.
     """
 
-    ADDED = "added"  # present in actual, absent in expected
-    REMOVED = "removed"  # present in expected, absent in actual
-    CHANGED = "changed"  # present in both but value differs
+    ADDED = "added"
+    REMOVED = "removed"
+    CHANGED = "changed"
 
 
 class DiffEntry(BaseModel):
-    """Single difference between actual and expected at one field path."""
+    """Single difference between actual and expected at one field path.
 
-    path: str = Field(description="Dot/bracket path to the differing field.")
-    diff_type: DiffType = Field(
-        description="Type of difference: added, removed, or changed."
-    )
-    actual: Any = Field(description="Value in actual (None for removed entries).")
-    expected: Any = Field(description="Value in expected (None for added entries).")
+    Attributes:
+        path: Dot-and-bracket path to the differing field.
+        diff_type: Which side of the comparison the difference falls on.
+        actual: Value in actual; `None` for a removed entry.
+        expected: Value in expected; `None` for an added entry.
+    """
+
+    path: str
+    diff_type: DiffType
+    actual: Any
+    expected: Any
 
 
 class StructuredDiff(BaseModel):
     """Human-readable field-level diff between actual and expected documents.
 
-    Produced by structured_diff(). Use .added, .removed, .changed for
-    filtered views, or .is_equal to check whether the documents match.
+    What `structured_diff` returns. `added` / `removed` / `changed` are filtered
+    views of the same entries, and `is_equal` says whether there are any.
+
+    Attributes:
+        entries: One entry per differing field path, ordered by path.
     """
 
     entries: list[DiffEntry] = Field(default_factory=list)
@@ -70,18 +78,31 @@ def structured_diff(
 ) -> StructuredDiff:
     """Compute a readable field-level diff between actual and expected.
 
-    Uses DeepDiff to detect changes at every nesting level and converts
-    the result into DiffEntry objects with ADDED / REMOVED / CHANGED types.
+    Uses DeepDiff to detect changes at every nesting level and converts the
+    result into `DiffEntry` objects with dot-and-bracket paths. Requires the
+    `diff` extra.
 
     Args:
         actual: LLM output document.
         expected: Ground truth document.
 
     Returns:
-        StructuredDiff with one DiffEntry per differing field path.
+        A `StructuredDiff` with one entry per differing field path, sorted by
+        path.
 
     Raises:
         ImportError: If deepdiff is not installed.
+
+    Example:
+        >>> from structured_eval.utils import structured_diff
+        >>> diff = structured_diff({"total": 120, "tax": 20},
+        ...                        {"total": 100, "currency": "EUR"})
+        >>> [(e.path, e.diff_type.value) for e in diff.entries]
+        [('currency', 'removed'), ('tax', 'added'), ('total', 'changed')]
+        >>> diff.changed[0].actual, diff.changed[0].expected
+        (120, 100)
+        >>> diff.is_equal
+        False
     """
     try:
         from deepdiff import DeepDiff
@@ -160,10 +181,7 @@ def structured_diff(
 
 
 def _to_readable_path(deepdiff_path: str) -> str:
-    """Convert DeepDiff path notation to dot/bracket notation.
-
-    root['a']['b'][0] → a.b[0]
-    """
+    """Convert a DeepDiff path to dot/bracket form: `root['a'][0]` → `a[0]`."""
     path = deepdiff_path[4:]  # strip leading "root"
     path = re.sub(r"\['([^']+)'\]", r".\1", path)
     return path.lstrip(".")

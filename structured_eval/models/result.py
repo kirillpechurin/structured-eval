@@ -210,7 +210,7 @@ class EvalReport(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> EvalReport:
-        """Reconstruct a report from a dict produced by ``to_dict``."""
+        """Reconstruct a report from a dict produced by `to_dict`."""
         return cls.model_validate(data)
 
     @classmethod
@@ -268,7 +268,7 @@ class EvalReport(BaseModel):
             )
 
     def assert_score(self, min_score: float) -> None:
-        """Fail if the key-metric score is below ``min_score``."""
+        """Fail if the key-metric score is below `min_score`."""
         self.assert_no_parse_errors()
         if self.score is None:
             raise AssertionError(
@@ -279,7 +279,7 @@ class EvalReport(BaseModel):
             raise AssertionError(f"{label} {self.score:.4g} < required {min_score:.4g}")
 
     def assert_field(self, path: str, min_score: float) -> None:
-        """Fail if the field at ``path`` scores below ``min_score``."""
+        """Fail if the field at `path` scores below `min_score`."""
         fs = self.field_scores.get(path)
         if fs is None:
             raise AssertionError(f"no field at path {path!r}")

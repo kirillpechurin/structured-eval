@@ -15,6 +15,18 @@ class MetricResult(float):
 
     Attributes:
         extra: The metric's structured detail; empty when it published none.
+
+    Example:
+        >>> from structured_eval.models import MetricResult
+        >>> score = MetricResult(0.75, extra={"tp": 3, "fp": 1, "fn": 0})
+        >>> score < 1.0  # a plain float wherever a number is wanted
+        True
+        >>> round(score * 4)
+        3
+        >>> score.extra["fp"]
+        1
+        >>> MetricResult(1.0)  # no detail published, no `extra` shown
+        MetricResult(1.0)
     """
 
     extra: dict[str, Any]
@@ -35,7 +47,7 @@ class MetricResult(float):
         )
 
     # ── pydantic (round-trips extra: serialized as a bare float when empty,
-    #    else as ``{"value": ..., "extra": ...}``; both forms re-validate) ──
+    #    else as `{"value": ..., "extra": ...}`; both forms re-validate) ──
     @classmethod
     def _validate(cls, value: Any) -> MetricResult:
         if isinstance(value, cls):

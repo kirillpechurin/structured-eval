@@ -1,6 +1,6 @@
 """The batteries-included client: any provider LiteLLM speaks, one string.
 
-Behind the ``litellm`` extra.
+Behind the `litellm` extra.
 """
 
 from __future__ import annotations
@@ -20,12 +20,20 @@ _INSTALL_HINT = (
 
 
 class LiteLlmClient(LlmClient):
-    """Calls ``litellm.completion`` for a ``"provider/model"`` identifier.
+    """Calls `litellm.completion` for a `"provider/model"` identifier.
 
-    ``temperature`` / ``max_tokens`` / ``timeout`` are passed through only when
-    set, so each provider's own defaults apply otherwise; any further keyword is
-    forwarded to ``litellm.completion`` untouched (``api_base`` for a local
-    endpoint, ``num_retries``, and so on).
+    `temperature` / `max_tokens` / `timeout` are passed through only when set,
+    so each provider's own defaults apply otherwise; any further keyword is
+    forwarded to `litellm.completion` untouched — `api_base` for a local
+    endpoint, `num_retries`, and so on.
+
+    Example:
+        >>> from structured_eval.llm import LiteLlmClient
+        >>> client = LiteLlmClient("openai/gpt-4o", temperature=0.0, timeout=30)
+        >>> client.model_name
+        'openai/gpt-4o'
+        >>> client.generate("Is the summary faithful?")  # doctest: +SKIP
+        'Yes — the total and the date both appear in the source.'
     """
 
     def __init__(
@@ -37,6 +45,18 @@ class LiteLlmClient(LlmClient):
         timeout: float | None = None,
         **params: Any,
     ) -> None:
+        """Pin the model and the call parameters every request carries.
+
+        Args:
+            model: A `"provider/model"` identifier litellm recognises.
+            temperature: Sampling temperature, when set.
+            max_tokens: Cap on the reply length, when set.
+            timeout: Per-call timeout in seconds, when set.
+            **params: Any further `litellm.completion` keyword.
+
+        Raises:
+            ValueError: If `model` is empty.
+        """
         if not model:
             raise ValueError("model must be a non-empty 'provider/model' string")
         self.model_name = model
@@ -49,11 +69,43 @@ class LiteLlmClient(LlmClient):
         self._params.update(params)
 
     def generate(self, prompt: str, *, system: str | None = None) -> str:
+        """Complete `prompt` through litellm and return the reply text.
+
+        Args:
+            prompt: The user turn.
+            system: The system turn, sent as its own message when set.
+
+        Returns:
+            The completion's text content.
+
+        Raises:
+            ImportError: If litellm is not installed.
+            LlmInvocationError: If the call failed, or the response carries no
+                usable content.
+        """
         return self._content(self._call(self._messages(prompt, system)))
 
     def generate_with_schema[T: BaseModel](
         self, prompt: str, schema: type[T], *, system: str | None = None
     ) -> T:
+        """Constrain the reply to `schema` when the model supports it.
+
+        Models that cannot constrain generation fall back to the inherited
+        prompt-and-parse path.
+
+        Args:
+            prompt: The user turn.
+            schema: The model the reply must validate against.
+            system: The system turn, sent as its own message when set.
+
+        Returns:
+            An instance of `schema`.
+
+        Raises:
+            ImportError: If litellm is not installed.
+            LlmInvocationError: If the call failed.
+            LlmResponseFormatError: If the reply does not match `schema`.
+        """
         if not self._supports_schema():
             return super().generate_with_schema(prompt, schema, system=system)
         response = self._call(self._messages(prompt, system), response_format=schema)
@@ -74,8 +126,14 @@ class LiteLlmClient(LlmClient):
     def _supports_schema(self) -> bool:
         """Does this model constrain output to a JSON Schema natively?
 
-        A negative answer (or an unrecognised model) is not an error — it only
-        selects the inherited prompt-and-parse path.
+        An unrecognised model is not an error here — it only selects the
+        inherited prompt-and-parse path.
+
+        Returns:
+            True when litellm reports native response-schema support.
+
+        Raises:
+            ImportError: If litellm is not installed.
         """
         try:
             return bool(self._litellm().supports_response_schema(model=self.model_name))

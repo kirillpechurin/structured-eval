@@ -8,9 +8,9 @@ from typing import Any
 def flatten(obj: dict[str, Any] | list[Any], prefix: str = "") -> dict[str, Any]:
     """Recursively flatten a nested dict/list into dot-and-bracket key paths.
 
-    Dict keys use dot notation:     {"a": {"b": 1}}         → {"a.b": 1}
-    List indices use brackets:      {"a": [1, 2]}           → {"a[0]": 1, "a[1]": 2}
-    Empty containers are left as-is: {"a": {}}              → {"a": {}}
+    - dict keys use dot notation — `{"a": {"b": 1}}` → `{"a.b": 1}`;
+    - list indices use brackets — `{"a": [1, 2]}` → `{"a[0]": 1, "a[1]": 2}`;
+    - an empty container is a leaf — `{"a": {}}` → `{"a": {}}`.
 
     Args:
         obj: Dict or list to flatten.
@@ -48,11 +48,19 @@ def flatten(obj: dict[str, Any] | list[Any], prefix: str = "") -> dict[str, Any]
 def extract_paths(value: Any, prefix: str = "") -> set[str]:
     """Every structural path in a JSON-like value — order- and value-blind.
 
-    Yields the path of each container *and* each leaf, so the set captures the
-    whole skeleton: dict keys (``a``, ``a.b``), list indices (``a[0]``) and the
-    leaf paths beneath them. Values themselves are ignored — only the shape.
-    Unlike :func:`flatten`, intermediate container paths are included, not just
+    Records the path of each container *and* each leaf, so the set captures the
+    whole skeleton: dict keys (`a`, `a.b`), list indices (`a[0]`) and the leaf
+    paths beneath them. Values themselves are ignored — only the shape.
+
+    Unlike `flatten`, intermediate container paths are included, not just
     leaves, and the result is a set of paths rather than a path→value mapping.
+
+    Args:
+        value: Any JSON-like value; a scalar has no paths of its own.
+        prefix: Internal prefix for recursive calls; do not pass externally.
+
+    Returns:
+        Set of dot-and-bracket paths — every container and every leaf.
 
     Example:
         >>> sorted(extract_paths({"a": {"b": 1}, "c": [2]}))

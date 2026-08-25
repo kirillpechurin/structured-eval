@@ -55,7 +55,7 @@ class MetricCollection(BaseModel):
 
     @property
     def extra(self) -> list[dict[str, Any]]:
-        """The non-empty ``extra`` payloads from each node, in path order."""
+        """The non-empty `extra` payloads from each node, in path order."""
         return [r.extra for r in self.values() if r.extra]
 
     def extra_values(self, key: str) -> list[Any]:
