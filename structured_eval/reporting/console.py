@@ -1,9 +1,8 @@
 """Plain-text console rendering for the report types (no hard dependency).
 
-``ConsoleRenderer().render(report)`` returns a string; the module-level
-``render`` is a thin convenience over it, used by ``EvalReport.print_summary``.
-The layout is pure stdlib so it works out of the box; Rich can be layered on
-for colour later.
+`ConsoleRenderer().render(report)` returns a string; the module-level `render`
+is a thin convenience over it, used by `EvalReport.print_summary`. The layout is
+pure stdlib so it works out of the box; Rich can be layered on for colour later.
 """
 
 from __future__ import annotations
@@ -20,9 +19,25 @@ _WIDTH = 60
 
 
 class ConsoleRenderer:
-    """Renders ``EvalReport`` / ``BatchEvalReport`` / ``ConsistencyReport``."""
+    """Renders `EvalReport` / `BatchEvalReport` / `ConsistencyReport`.
+
+    Each report type gets its own layout: a document score plus a per-field
+    table, a batch summary ranking fields worst-first, or a run-to-run variance
+    table. The three share the formatting helpers, not the layout.
+    """
 
     def render(self, report: EvalReport | BatchEvalReport | ConsistencyReport) -> str:
+        """Render one report, dispatching on its type.
+
+        Args:
+            report: The report to lay out.
+
+        Returns:
+            The rendered text, ready to print.
+
+        Raises:
+            NotImplementedError: If `report` is none of the three report types.
+        """
         if isinstance(report, EvalReport):
             return self._render_eval(report)
         if isinstance(report, BatchEvalReport):
@@ -190,5 +205,22 @@ class ConsoleRenderer:
 
 
 def render(report: EvalReport | BatchEvalReport | ConsistencyReport) -> str:
-    """Render any of the report types to a printable string."""
+    """Render any of the report types to a printable string.
+
+    Args:
+        report: An `EvalReport`, `BatchEvalReport` or `ConsistencyReport`.
+
+    Returns:
+        The rendered text, ready to print.
+
+    Raises:
+        NotImplementedError: If `report` is none of the three report types.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.reporting import render
+        >>> report = evaluate({"status": "paid"}, {"status": "due"})
+        >>> print(render(report).splitlines()[1])
+          OVERALL   0.00   ✗ FAIL        mean_score
+    """
     return ConsoleRenderer().render(report)

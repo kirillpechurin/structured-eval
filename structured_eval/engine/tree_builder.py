@@ -51,16 +51,49 @@ DEFAULT_ARRAY_METRIC = ArrayAccuracy
 class TreeBuilder:
     """Phase 1: build the EvalNode tree and resolve each node's metric list.
 
-    ``build`` returns ``(root_node, warnings)``. This phase is purely
-    structural: it shapes the tree, resolves which metrics apply to each node
-    (cascading the config's global metrics by type and adding any per-node
-    ``cfg.metrics``), and attaches them to ``node.metrics``. Computation happens
-    later, uniformly, in ``MetricRunner``. Each node carries an ``actual``-side
-    ``path`` and, when arrays reorder elements, a diverging ``expected_path`` so
-    each side navigates its own index.
+    This phase is purely structural. It shapes the tree from the two documents,
+    resolves which metrics apply to each node — cascading the config's global
+    metrics by node type and adding any per-node `cfg.metrics` — and attaches
+    them to `node.metrics`. Computation happens later, in `MetricRunner`.
+
+    Each node carries an `actual`-side `path` and, where array alignment
+    reorders elements, a diverging `expected_path`, so each side navigates its
+    own index.
+
+    Attributes:
+        context: The sample's data and configuration this build reads.
+        config: The `EvalConfig` of that context, for convenience.
+        warnings: What the build collected so far — extra and missing keys.
+
+    Example:
+        >>> from structured_eval.engine import TreeBuilder
+        >>> from structured_eval.models import EvalConfig, EvalContext
+        >>> from structured_eval.utils import flatten
+        >>> actual = {"status": "paid"}
+        >>> expected = {"status": "due", "total": 10}
+        >>> context = EvalContext(
+        ...     actual=actual,
+        ...     expected=expected,
+        ...     source=None,
+        ...     flat_actual=flatten(actual),
+        ...     flat_expected=flatten(expected),
+        ...     config=EvalConfig()
+        ... )
+        >>> root, warnings = TreeBuilder(context).build()
+        >>> sorted(root.children)
+        ['status', 'total']
+        >>> [metric.name for metric in root.children["status"].metrics]
+        ['exact_match']
+        >>> warnings[0].message
+        "'total' absent in actual"
     """
 
     def __init__(self, context: EvalContext):
+        """Resolve the config sets once, before any node is built.
+
+        Args:
+            context: The sample's data and the configuration to build under.
+        """
         self.context = context
         self.config: EvalConfig = context.config
         self.warnings: list[EvalWarning] = []
@@ -68,12 +101,60 @@ class TreeBuilder:
         self._defaults = self._resolve_defaults()
 
     def build(self) -> tuple[EvalNode, list[EvalWarning]]:
+        """Build the whole tree, from the root down.
+
+        Returns:
+            The root node, carrying the tree beneath it, and the warnings
+            collected while shaping it.
+
+        Example:
+            >>> from structured_eval.engine import TreeBuilder
+            >>> from structured_eval.models import EvalConfig, EvalContext
+            >>> from structured_eval.utils import flatten
+            >>> actual = expected = {"vendor": {"name": "Acme"}}
+            >>> context = EvalContext(
+            ...     actual=actual,
+            ...     expected=expected,
+            ...     source=None,
+            ...     flat_actual=flatten(actual),
+            ...     flat_expected=flatten(expected),
+            ...     config=EvalConfig()
+            ... )
+            >>> root, warnings = TreeBuilder(context).build()
+            >>> root.path, sorted(root.children), warnings
+            ('$', ['vendor'], [])
+        """
         root = self.node("$", "$", self.root_config())
         return root, self.warnings
 
     # ── config resolution ──────────────────────────────────────────────────
 
     def root_config(self) -> ObjectFieldConfig | ArrayFieldConfig | None:
+        """The field config the root node is built under.
+
+        Returns:
+            `config.root` when set, else an `ObjectFieldConfig` over
+            `config.fields`, else `None` when the user configured neither.
+
+        Example:
+            >>> from structured_eval.engine import TreeBuilder
+            >>> from structured_eval.models import EvalConfig, EvalContext
+            >>> configured = EvalContext(
+            ...     actual={},
+            ...     expected={},
+            ...     source=None,
+            ...     flat_actual={},
+            ...     flat_expected={},
+            ...     config=EvalConfig(fields={"total": {"metrics": ["numeric"]}})
+            ... )
+            >>> sorted(TreeBuilder(configured).root_config().fields)
+            ['total']
+            >>> bare = EvalContext(
+            ...     actual={}, expected={}, source=None,
+            ...     flat_actual={}, flat_expected={}, config=EvalConfig())
+            >>> TreeBuilder(bare).root_config() is None
+            True
+        """
         if self.config.root is not None:
             return self.config.root
         if self.config.fields:
@@ -82,11 +163,15 @@ class TreeBuilder:
 
     @staticmethod
     def _applies_to(metric: BaseMetric, node_cls: type, is_root: bool) -> bool:
-        """Whether ``metric`` should be resolved onto a node of ``node_cls``.
+        """Whether `metric` should be resolved onto a node of `node_cls`.
 
-        Typed metrics match their node type (a ``RootMetric`` only at the root);
-        an ``AnyNodeMetric`` matches every node; a ``GenericMetric`` matches iff
-        it defines the node's ``compute_<kind>``.
+        - A typed metric matches its own node type, a `RootMetric` only at the
+          root.
+        - An `AnyNodeMetric` matches every node.
+        - A `GenericMetric` matches when it defines the node's `compute_<kind>`.
+
+        Returns:
+            True when the metric can score such a node, False otherwise.
         """
         if isinstance(metric, RootMetric):
             return is_root
@@ -109,21 +194,26 @@ class TreeBuilder:
         return [resolve_metric(spec) for spec in specs]
 
     def _resolve_globals(self) -> list[BaseMetric]:
-        """The cascade set: ``config.metrics``.
+        """The cascade set: `config.metrics`.
 
-        ``key_metric`` is *not* cascaded here — it is each node's representative
-        metric, resolved per node by ``_key_metric`` (and computed last).
+        `key_metric` is *not* cascaded here — it is each node's representative
+        metric, resolved per node by `_key_metric` (and computed last).
+
+        Returns:
+            The global metrics, resolved once and shared across every node.
         """
         return self._resolve_metrics(self.config.metrics)
 
     def _resolve_defaults(self) -> dict[type, list[BaseMetric]]:
         """The per-type fallback sets, resolved once and shared across nodes.
 
-        ``config.default_<type>_metrics`` replaces the hard-coded constant for
-        that node type; ``None`` keeps the constant. Unlike ``_globals`` these do
-        not cascade — ``_node_metrics`` reaches for them only when a node would
-        otherwise carry no metric at all, and type-checks them there like any
-        other explicit assignment.
+        `config.default_<type>_metrics` replaces the hard-coded constant for
+        that node type; `None` keeps the constant. Unlike `_globals` these do
+        not cascade: `_node_metrics` reaches for them only when a node would
+        otherwise carry no metric at all, and type-checks them there.
+
+        Returns:
+            One resolved fallback list per node class.
         """
         configured: dict[type, tuple[str, type[BaseMetric]]] = {
             ScalarNode: ("default_scalar_metrics", DEFAULT_SCALAR_METRIC),
@@ -141,26 +231,35 @@ class TreeBuilder:
     ) -> list[BaseMetric]:
         """Metrics for one node: applicable globals + this node's own (additive).
 
-        Globals cascade by type (a ``RootMetric`` only at the root) and are
-        silently filtered where they do not apply — cascading-by-type is
-        intentional. Per-node ``cfg.metrics`` are *added*, but an explicit
-        assignment that cannot score this node's type is a configuration mistake
-        and **raises** here (build time, before any metric runs) rather than
-        being dropped.
+        Globals cascade by type (a `RootMetric` only at the root) and are
+        dropped where they do not apply — cascading by type is what lets one
+        global assignment reach every field it fits.
 
-        ``out`` only ever holds metrics applicable to this node; if it ends up
-        empty the node falls back to the default set for its type, so every node
-        always carries at least one metric for its ``key_metric`` to summarise.
-        That set is ``config.default_<type>_metrics`` when configured, else the
-        hard-coded constant, and is type-checked here the same way.
+        Per-node `cfg.metrics` are *added* to that. An explicit assignment that
+        cannot score this node's type is a configuration mistake, so it raises
+        here — at build time, before any metric runs — instead of being dropped.
+
+        `out` only ever holds metrics applicable to this node. An empty `out`
+        falls back to the default set for that node type — whatever
+        `config.default_<type>_metrics` names, else the hard-coded constant — so
+        every node carries a metric for its `key_metric` to summarise.
 
         A name is the key a metric's result lands under, so a node never carries
-        two metrics sharing one — the second would silently overwrite the first.
-        Across *layers* that is an override: this node's own metric displaces the
-        equally-named global, which is how one field runs a stricter
-        configuration (global ``Numeric(0.1)``, this field ``Numeric(0.001)``).
-        Within *one* list it is ambiguous and **raises**; two configurations of
-        one metric there need distinct names (``Numeric(0.01, name="strict")``).
+        two metrics sharing one: the second would overwrite the first.
+
+        Across *layers* that is an override — this node's own metric displaces
+        the equally-named global, which is how one field runs a stricter
+        configuration (global `Numeric(0.1)`, this field `Numeric(0.001)`).
+
+        Within *one* list it is ambiguous and raises; two configurations of one
+        metric there need distinct names (`Numeric(0.01, name="strict")`).
+
+        Returns:
+            The metrics to attach to the node, its own first, never empty.
+
+        Raises:
+            ValueError: If a metric assigned here cannot score this node's type,
+                or if two metrics in one list share a name.
         """
         out: list[BaseMetric] = []
         seen: set[str] = set()  # names already taken on this node
@@ -234,18 +333,27 @@ class TreeBuilder:
     ) -> Metric[Any]:
         """The node's representative metric (computed last).
 
-        Prefers an explicit ``cfg.key_metric``, then a distributable
-        ``config.key_metric`` (each applied only where its type fits), else the
-        default ``MeanScore`` (the mean of the node's own metrics).
+        Prefers an explicit `cfg.key_metric`, then a distributable
+        `config.key_metric` (each applied only where its type fits), else the
+        default `MeanScore` (the mean of the node's own metrics).
 
         A *name string* is resolved against the node's already-resolved
-        ``metrics`` first: an equally-named metric is **reused as-is** (same
-        instance, same params, no duplicate computation). It is instantiated
+        `metrics` first: an equally-named metric is **reused as-is** — same
+        instance, same params, no duplicate computation. It is instantiated
         fresh only when the name is not already on the node.
 
-        An explicit per-node ``cfg.key_metric`` that cannot score this node's
-        type is a configuration mistake and **raises**; the global
-        ``config.key_metric`` is distributable and stays silently filtered.
+        An explicit per-node `cfg.key_metric` that cannot score this node's type
+        is a configuration mistake and raises. The global `config.key_metric` is
+        distributable, so where it does not fit it is filtered out and the node
+        falls back to `MeanScore`.
+
+        Returns:
+            The metric to compute last, whose value becomes the node's
+            representative score.
+
+        Raises:
+            ValueError: If an explicit per-node key metric cannot score this
+                node's type.
         """
         for spec, explicit in (
             (getattr(cfg, "key_metric", None), True),
@@ -254,7 +362,7 @@ class TreeBuilder:
             if spec is None:
                 continue
             # The name is read off the spec without resolving it: a per-instance
-            # override (``Numeric(0.001, name="strict")``) names nothing the
+            # override (`Numeric(0.001, name="strict")`) names nothing the
             # registry knows, so resolving first would raise on a name that is
             # perfectly valid here. The registry is reached only on a miss.
             name = spec if isinstance(spec, str) else spec.name
@@ -281,6 +389,35 @@ class TreeBuilder:
         return key if path in ("$", "") else f"{path}.{key}"
 
     def node(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> EvalNode:
+        """Build the node at one pair of paths, recursing into its children.
+
+        The node type follows `expected` where there is one and `actual`
+        otherwise, so an output that returns a scalar where an object was
+        expected is still scored as the object it should have been.
+
+        Args:
+            apath: The path into the actual document.
+            epath: The path into the expected document — equal to `apath` except
+                where array alignment reordered elements.
+            cfg: The field config for this node, if the user wrote one.
+
+        Returns:
+            An `ObjectNode`, `ArrayNode` or `ScalarNode` with its metrics and
+            key metric already resolved.
+
+        Example:
+            >>> from structured_eval.engine import TreeBuilder
+            >>> from structured_eval.models import EvalConfig, EvalContext
+            >>> from structured_eval.utils import flatten
+            >>> actual = expected = {"vendor": {"name": "Acme"}}
+            >>> context = EvalContext(
+            ...     actual=actual, expected=expected, source=None,
+            ...     flat_actual=flatten(actual), flat_expected=flatten(expected),
+            ...     config=EvalConfig())
+            >>> node = TreeBuilder(context).node("vendor", "vendor", None)
+            >>> type(node).__name__, sorted(node.children)
+            ('ObjectNode', ['name'])
+        """
         actual = self._value(self.context.actual, apath)
         expected = self._value(self.context.expected, epath)
         ref = expected if expected is not None else actual
@@ -375,8 +512,8 @@ class TreeBuilder:
         # One node per actual element, in document order — alignment says which
         # of them has a counterpart, not which of them exist. An unmatched
         # element points one past the end of the expected list, a path that
-        # cannot resolve, so its `expected` reads as absent instead of silently
-        # picking up whichever element sits at the same index.
+        # cannot resolve, so its `expected` reads as absent instead of picking
+        # up whichever element happens to sit at the same index.
         # The root's own path is a label, not a segment: its elements spell
         # themselves without it (`[0]`, not `$[0]`), which is what `navigate`
         # resolves and what `flatten` produces. Same rule as `_child`.
