@@ -103,7 +103,7 @@ owes is decided by **import path and visibility**, not by taste:
 | Tier | What | Owes |
 |------|------|------|
 | **A** | Named in some subpackage's `__all__`, plus that symbol's public methods and properties | summary + prose + `Args:` + `Returns:`/`Yields:` + `Raises:` + `Attributes:` (classes) + **`Example:`** |
-| **B** | Public but not exported (`engine/*`, `metrics/utils/*`, `rule_pass_rate/dsl.py`, …) | summary + the sections that apply, **no** `Example:` |
+| **B** | Public but not exported (`metrics/utils/*`, `rule_pass_rate/dsl.py`, …) | summary + the sections that apply, **no** `Example:` |
 | **C** | `_`-prefixed | one-line summary; sections only when the signature is not self-evident |
 
 - **`Example:` uses doctest** (`>>>`) and is executed by `make doctest`, so an

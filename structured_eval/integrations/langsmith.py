@@ -1,14 +1,9 @@
 """LangSmith adapter: structured-eval as an evaluator function.
 
-Usage (requires ``structured-eval[langsmith]``)::
-
-    from langsmith import evaluate
-    from structured_eval.integrations.langsmith import structured_evaluator
-
-    evaluator = structured_evaluator(config=cfg, threshold=0.85)
-    evaluate(target, data=dataset, evaluators=[evaluator])
-
-The returned callable follows LangSmith's ``(run, example) -> dict`` contract.
+`structured_evaluator` returns a callable following LangSmith's
+`(run, example) -> dict` contract, so a field-level evaluation is recorded as
+one feedback entry. Requires `structured-eval[langsmith]` only to run the host
+side; the evaluator itself is pure structured-eval.
 """
 
 from __future__ import annotations
@@ -25,7 +20,7 @@ Extractor = Callable[[Any], Any]
 
 
 def _outputs(obj: Any) -> Any:
-    """Default extraction: the ``outputs`` payload of a run/example."""
+    """Default extraction: the `outputs` payload of a run/example."""
     if obj is None:
         return None
     if isinstance(obj, dict):
@@ -36,11 +31,28 @@ def _outputs(obj: Any) -> Any:
 class StructuredEvaluator:
     """A LangSmith evaluator that scores structured outputs field-by-field.
 
-    Instances are callable with LangSmith's ``(run, example) -> dict`` contract.
-    ``key`` is the feedback key recorded in LangSmith; ``threshold`` decides the
-    boolean only for the ``comment`` — LangSmith stores the numeric
-    ``report.score`` itself. ``extract_actual`` / ``extract_expected`` adapt the
-    run/example shape (default: their ``outputs`` payload).
+    Instances are callable with LangSmith's `(run, example) -> dict` contract.
+    LangSmith stores the numeric `report.score` itself, so `threshold` shapes
+    only the `comment`: it decides which fields are called out as failures.
+
+    Attributes:
+        config: The configuration each call evaluates under.
+        key: The feedback key the score is recorded under in LangSmith.
+        threshold: The score a document must reach to count as a pass.
+
+    Example:
+        >>> from langsmith import evaluate as langsmith_evaluate  # doctest: +SKIP
+        >>> from structured_eval.integrations.langsmith import StructuredEvaluator
+        >>> evaluator = StructuredEvaluator(threshold=0.85)
+        >>> feedback = evaluator({"outputs": {"status": "paid"}},
+        ...                      {"outputs": {"status": "due"}})
+        >>> feedback["key"], feedback["score"]
+        ('structured_eval', 0.0)
+        >>> langsmith_evaluate(
+        ...     target,
+        ...     data=dataset,
+        ...     evaluators=[evaluator]
+        ... )  # doctest: +SKIP
     """
 
     def __init__(
@@ -52,6 +64,18 @@ class StructuredEvaluator:
         extract_actual: Extractor | None = None,
         extract_expected: Extractor | None = None,
     ) -> None:
+        """Configure the evaluator; nothing is evaluated until it is called.
+
+        Args:
+            config: Field configuration, metrics and policies. Defaults to
+                `EvalConfig()`, which compares every scalar with `ExactMatch`.
+            key: The feedback key to record the score under.
+            threshold: The score a document must reach to count as a pass.
+            extract_actual: How to pull the document out of a run. Defaults to
+                its `outputs` payload.
+            extract_expected: How to pull the reference out of an example.
+                Defaults to its `outputs` payload.
+        """
         self.config = config or EvalConfig()
         self.key = key
         self.threshold = threshold
@@ -60,6 +84,16 @@ class StructuredEvaluator:
         self.__name__ = key
 
     def __call__(self, run: Any, example: Any) -> dict[str, Any]:
+        """Score one run against its example.
+
+        Args:
+            run: The run whose output is under evaluation.
+            example: The dataset example holding the reference.
+
+        Returns:
+            The LangSmith feedback entry: the `key`, the document `score`
+            (`None` without ground truth) and a `comment` naming what failed.
+        """
         report = evaluate(
             self._get_actual(run), self._get_expected(example), self.config
         )
@@ -76,7 +110,35 @@ def structured_evaluator(
     extract_actual: Extractor | None = None,
     extract_expected: Extractor | None = None,
 ) -> StructuredEvaluator:
-    """Convenience factory returning a ``StructuredEvaluator`` instance."""
+    """Build a `StructuredEvaluator`, for callers who prefer a function.
+
+    Args:
+        config: Field configuration, metrics and policies. Defaults to
+            `EvalConfig()`, which compares every scalar with `ExactMatch`.
+        key: The feedback key to record the score under.
+        threshold: The score a document must reach to count as a pass.
+        extract_actual: How to pull the document out of a run. Defaults to its
+            `outputs` payload.
+        extract_expected: How to pull the reference out of an example. Defaults
+            to its `outputs` payload.
+
+    Returns:
+        An evaluator callable with LangSmith's `(run, example) -> dict`
+        contract.
+
+    Example:
+        >>> from langsmith import evaluate as langsmith_evaluate  # doctest: +SKIP
+        >>> from structured_eval.integrations.langsmith import structured_evaluator
+        >>> evaluator = structured_evaluator(key="invoice_fields", threshold=0.85)
+        >>> evaluator({"outputs": {"status": "paid"}},
+        ...           {"outputs": {"status": "paid"}})["score"]
+        1.0
+        >>> langsmith_evaluate(
+        ...     target,
+        ...     data=dataset,
+        ...     evaluators=[evaluator]
+        ... )  # doctest: +SKIP
+    """
     return StructuredEvaluator(
         config,
         key=key,

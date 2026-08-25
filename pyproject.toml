@@ -158,19 +158,12 @@ ignore-one-line-docstrings = true
 ]
 
 # ── Docstring migration (Google style) ────────────────────────────────────────
-# Temporary. One line per layer; a layer's line is deleted by the PR that brings
-# that layer to the convention, so the remaining lines are the todo list. When
-# the last one goes, `D`/`DOC` are strict across the package.
+# Temporary, and down to its last line: every layer of `structured_eval` is now
+# strict, and only `tests/` is still being converted. When this line goes,
+# `D`/`DOC` are strict everywhere.
 #
-# Module, package and class docstrings are done everywhere — what is left per
-# layer is the function/method level: D102 (public method), D103 (public
-# function), D105 (magic method), D107 (__init__) and the DOC section checks.
-"structured_eval/*.py" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/engine/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/integrations/**" = ["D102", "D103", "D105", "D107", "DOC"]
-"structured_eval/reporting/**" = ["D102", "D103", "D105", "D107", "DOC"]
-# Tests are converted last, and only these codes apply to them (the rest are
-# waived permanently in the "tests/**" block above).
+# Only these codes are still waived for tests; the rest are waived permanently
+# in the "tests/**" block above.
 "tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]
 
 # ── Mypy ──────────────────────────────────────────────────────────────────────

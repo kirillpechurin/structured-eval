@@ -13,10 +13,47 @@ from structured_eval.models import (
 
 
 class BatchAggregator:
-    """Combines per-document reports into batch / consistency summaries."""
+    """Combines per-document reports into batch / consistency summaries.
+
+    The two summaries read the same reports along different axes: `batch` treats
+    them as independent documents and averages across them, `consistency` treats
+    them as repeated runs of one prompt and measures how much each field wobbles
+    between them.
+
+    A report that failed to parse stays in the result but contributes no scores.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> from structured_eval.engine import BatchAggregator
+        >>> reports = [evaluate({"status": status}, {"status": "paid"})
+        ...            for status in ("paid", "due")]
+        >>> batch = BatchAggregator().batch(reports)
+        >>> batch.perfect_response_rate, batch.score
+        (0.5, 0.5)
+        >>> BatchAggregator().consistency(reports).unstable_fields
+        ['status']
+    """
 
     def batch(self, reports: list[EvalReport]) -> BatchEvalReport:
-        """Aggregate a list of single-document reports into a BatchEvalReport."""
+        """Aggregate a list of single-document reports.
+
+        Args:
+            reports: One report per document, parse errors included.
+
+        Returns:
+            The batch report: the reports themselves, the mean of each metric
+            over those that parsed, the mean document score, and the
+            `perfect_response_rate` / `parse_error_rate` shares over all of them.
+
+        Example:
+            >>> from structured_eval import evaluate
+            >>> from structured_eval.engine import BatchAggregator
+            >>> reports = [evaluate({"status": status}, {"status": "paid"})
+            ...            for status in ("paid", "due")]
+            >>> batch = BatchAggregator().batch(reports)
+            >>> batch.parse_error_rate, batch.metrics["exact_match"]
+            (0.0, 0.5)
+        """
         n = len(reports)
         errors = sum(1 for r in reports if r.parse_error)
         ok = [r for r in reports if not r.parse_error]
@@ -39,7 +76,27 @@ class BatchAggregator:
     def consistency(
         self, reports: list[EvalReport], variance_threshold: float = 0.05
     ) -> ConsistencyReport:
-        """Measure run-to-run stability across repeated outputs of one prompt."""
+        """Measure run-to-run stability across repeated outputs of one prompt.
+
+        Args:
+            reports: One report per run of the same prompt.
+            variance_threshold: The bar a field's score variance must stay at
+                or below to count as stable.
+
+        Returns:
+            The stability report: the reports themselves, the score variance of
+            each leaf field, the split into stable and unstable fields, and the
+            mean and variance of the document score.
+
+        Example:
+            >>> from structured_eval import evaluate
+            >>> from structured_eval.engine import BatchAggregator
+            >>> reports = [evaluate({"status": status}, {"status": "paid"})
+            ...            for status in ("paid", "paid", "due")]
+            >>> summary = BatchAggregator().consistency(reports)
+            >>> summary.stable_fields, summary.unstable_fields
+            ([], ['status'])
+        """
         ok = [r for r in reports if not r.parse_error]
 
         by_path: dict[str, list[float]] = {}

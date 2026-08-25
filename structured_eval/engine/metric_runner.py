@@ -15,25 +15,62 @@ if TYPE_CHECKING:
 class MetricRunner:
     """Phase 2: compute each node's own metrics across the tree, in place.
 
-    Every node carries the metrics resolved for it by ``TreeBuilder``. They are
+    Every node carries the metrics resolved for it by `TreeBuilder`. They are
     computed **post-order** — children before their parent — so an aggregating
     parent reads its children's already-computed representative scores, and
     computation stays uniform and fully recursive at any nesting depth.
 
-    Within a node the ``key_metric`` runs *last*: it is the representative score
+    Within a node the `key_metric` runs *last*: it is the representative score
     and its logic may depend on the node's other metrics (the default
-    ``MeanScore`` averages them). A metric returning ``None`` (e.g.
-    ``FieldFaithfulness`` without a source) is skipped.
+    `MeanScore` averages them). A metric returning `None` (for instance
+    `FieldFaithfulness` with no source to grade against) is skipped.
 
-    Post-order plus "key_metric last" is not a style choice, it is the
-    dependency graph written down: an aggregating metric reads
-    ``child.representative``, which is the child's ``key_metric`` value, which
-    in turn summarises the child's own metrics. The chain alternates between the
-    two levels, so there is no cut that computes all the ordinary metrics first
-    and all the representatives after.
+    Example:
+        >>> from structured_eval.engine import MetricRunner, TreeBuilder
+        >>> from structured_eval.models import EvalConfig, EvalContext
+        >>> from structured_eval.utils import flatten
+        >>> actual, expected = {"status": "paid"}, {"status": "due"}
+        >>> context = EvalContext(
+        ...     actual=actual,
+        ...     expected=expected,
+        ...     source=None,
+        ...     flat_actual=flatten(actual),
+        ...     flat_expected=flatten(expected),
+        ...     config=EvalConfig()
+        ... )
+        >>> root, _ = TreeBuilder(context).build()
+        >>> MetricRunner().run(root)
+        >>> float(root.children["status"].metric_results["exact_match"])
+        0.0
+        >>> float(root.representative)          # the key metric, computed last
+        0.0
     """
 
     def run(self, root: EvalNode) -> None:
+        """Compute the metrics of every node under `root`, in place.
+
+        Args:
+            root: The root of the tree `TreeBuilder` produced.
+
+        Example:
+            >>> from structured_eval.engine import MetricRunner, TreeBuilder
+            >>> from structured_eval.models import EvalConfig, EvalContext
+            >>> from structured_eval.utils import flatten
+            >>> actual, expected = {"status": "paid"}, {"status": "due"}
+            >>> context = EvalContext(
+            ...     actual=actual,
+            ...     expected=expected,
+            ...     source=None,
+            ...     flat_actual=flatten(actual),
+            ...     flat_expected=flatten(expected),
+            ...     config=EvalConfig()
+            ... )
+            >>> root, _ = TreeBuilder(context).build()
+            >>> MetricRunner().run(root) is None     # computed in place
+            True
+            >>> sorted(root.children["status"].metric_results)
+            ['exact_match', 'mean_score']
+        """
         self._visit(root)
 
     def _visit(self, node: EvalNode) -> None:
@@ -53,12 +90,21 @@ class MetricRunner:
 
     @staticmethod
     def _normalize(name: str, result: MetricOutput) -> dict[str, MetricResult]:
-        """Coerce any ``compute`` return into ``{key: MetricResult}``.
+        """Coerce any `compute` return into `{key: MetricResult}`.
 
-        Accepts ``None`` (skip), a bare value, a ``dict`` of sub-scores, a
-        ``MetricResult``, or a ``(value | dict, extra)`` tuple — so a metric can
-        attach structured ``extra`` regardless of how it shapes its score. A
-        tuple's ``extra`` is attached to every key it produces.
+        A metric may attach structured `extra` regardless of how it shapes its
+        score, so all five return shapes are accepted: `None` (skip), a bare
+        value, a `dict` of sub-scores, a `MetricResult`, or a
+        `(value | dict, extra)` tuple.
+
+        Args:
+            name: The metric's name, the key a single unnamed value lands under.
+            result: Whatever the metric returned.
+
+        Returns:
+            The results keyed by report name — empty for `None`, one entry per
+            sub-score for a `dict`, one entry otherwise. A tuple's `extra` is
+            merged into every entry it produces.
         """
         if result is None:
             return {}

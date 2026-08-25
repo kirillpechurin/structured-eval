@@ -34,15 +34,42 @@ def evaluate(
     *,
     source: str | None = None,
 ) -> EvalReport:
-    """Evaluate one document against an expected reference → ``EvalReport``.
+    """Evaluate one document against an expected reference.
 
-    Two call shapes:
-    - ``evaluate(actual, expected, config=...)`` — shorthand for one document;
-    - ``evaluate(sample, config=...)`` — one ``Sample``.
+    Two call shapes are accepted:
 
-    A bare ``list`` is a single document with an array root, not a batch. To
-    evaluate several samples use :func:`evaluate_batch`. Thin wrapper over
-    ``Evaluator``.
+    - `evaluate(actual, expected, config=...)` — the two documents directly;
+    - `evaluate(sample, config=...)` — one `Sample` carrying both.
+
+    A bare `list` is one document with an array root, not a batch; a list of
+    `Sample` objects belongs in `evaluate_batch` and is rejected here. Thin
+    wrapper over `Evaluator`.
+
+    Args:
+        actual: The document under evaluation — a dict, a list, a scalar, a
+            JSON/YAML string, or a `Sample` carrying all three arguments.
+        expected: The reference document. Ignored when `actual` is a `Sample`.
+        config: Field configuration, metrics and policies. Defaults to
+            `EvalConfig()`, which compares every scalar with `ExactMatch`.
+        source: Grounding text for the faithfulness metrics. Ignored when
+            `actual` is a `Sample`.
+
+    Returns:
+        The report for this document: `score` is the root node's representative
+        metric, `field_scores` holds one entry per path, `metrics` gives the
+        cross-field view per metric name.
+
+    Raises:
+        TypeError: If `actual` is a list of `Sample` objects.
+
+    Example:
+        >>> from structured_eval import evaluate
+        >>> report = evaluate({"status": "paid", "total": 12},
+        ...                   {"status": "paid", "total": 10})
+        >>> round(report.score, 2)
+        0.5
+        >>> float(report.field_scores["total"].score)
+        0.0
     """
     if _is_batch(actual):
         raise TypeError(
@@ -60,11 +87,33 @@ def evaluate_batch(
     samples: list[Sample],
     config: EvalConfig | None = None,
 ) -> BatchEvalReport:
-    """Evaluate a list of ``Sample`` s → ``BatchEvalReport``.
+    """Evaluate a list of samples and aggregate the results.
 
-    Each sample carries its own ``actual`` / ``expected`` / ``source``; the
-    aggregate report exposes per-sample reports plus batch-level metrics. Thin
-    wrapper over ``Evaluator``.
+    Each sample carries its own `actual` / `expected` / `source`, so a batch may
+    mix documents freely; only the configuration is shared. Thin wrapper over
+    `Evaluator`.
+
+    Args:
+        samples: The documents to score, one `Sample` each.
+        config: Field configuration, metrics and policies. Defaults to
+            `EvalConfig()`, which compares every scalar with `ExactMatch`.
+
+    Returns:
+        The aggregate report: the per-sample reports, the mean of each metric
+        across them, and the batch rates `perfect_response_rate` and
+        `parse_error_rate`.
+
+    Example:
+        >>> from structured_eval import evaluate_batch
+        >>> from structured_eval.models import Sample
+        >>> report = evaluate_batch([
+        ...     Sample(actual={"status": "paid"}, expected={"status": "paid"}),
+        ...     Sample(actual={"status": "due"}, expected={"status": "paid"}),
+        ... ])
+        >>> report.perfect_response_rate
+        0.5
+        >>> round(report.score, 2)
+        0.5
     """
     return Evaluator(config).evaluate_batch(samples)
 
@@ -77,10 +126,32 @@ def evaluate_consistency(
 ) -> ConsistencyReport:
     """Measure run-to-run stability across repeated outputs of one prompt.
 
-    ``runs`` are several outputs for the same input (with or without a shared
-    ``expected``). Fields whose score varies at most ``variance_threshold``
-    across runs are reported as stable, the rest as unstable. Thin wrapper over
-    ``Evaluator``.
+    Stability is a property of the model, not of the reference, so the runs may
+    share an `expected` or carry none at all. Thin wrapper over `Evaluator`.
+
+    Args:
+        runs: Several outputs produced for the same input, one `Sample` each.
+        config: Field configuration, metrics and policies. Defaults to
+            `EvalConfig()`, which compares every scalar with `ExactMatch`.
+        variance_threshold: The bar a field's score variance must stay at or
+            below to count as stable.
+
+    Returns:
+        The stability report: the per-run reports, each leaf field's score
+        variance, the split into `stable_fields` / `unstable_fields`, and the
+        mean and variance of the document score.
+
+    Example:
+        >>> from structured_eval import evaluate_consistency
+        >>> from structured_eval.models import Sample
+        >>> runs = [Sample(actual={"status": "paid", "total": total},
+        ...                expected={"status": "paid", "total": 10})
+        ...         for total in (10, 10, 12)]
+        >>> report = evaluate_consistency(runs)
+        >>> report.stable_fields
+        ['status']
+        >>> report.unstable_fields
+        ['total']
     """
     return Evaluator(config).evaluate_consistency(
         runs, variance_threshold=variance_threshold
