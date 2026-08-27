@@ -112,6 +112,7 @@ class LiteLlmClient(LlmClient):
         return self.parse_reply(self._content(response), schema)
 
     def _call(self, messages: list[dict[str, str]], **overrides: Any) -> Any:
+        """One completion call, with the per-call overrides on top of `params`."""
         try:
             return self._litellm().completion(
                 model=self.model_name, messages=messages, **self._params, **overrides
@@ -144,6 +145,7 @@ class LiteLlmClient(LlmClient):
 
     @staticmethod
     def _litellm() -> Any:
+        """The `litellm` module, imported at call time so the extra stays optional."""
         try:
             import litellm
         except ImportError as exc:
@@ -152,12 +154,14 @@ class LiteLlmClient(LlmClient):
 
     @staticmethod
     def _messages(prompt: str, system: str | None) -> list[dict[str, str]]:
+        """The prompt and system turn as the chat messages litellm expects."""
         messages = [{"role": "system", "content": system}] if system else []
         messages.append({"role": "user", "content": prompt})
         return messages
 
     @staticmethod
     def _content(response: Any) -> str:
+        """The reply text, treating any other response shape as a failed call."""
         try:
             content = response.choices[0].message.content
         except (AttributeError, IndexError, KeyError, TypeError) as exc:

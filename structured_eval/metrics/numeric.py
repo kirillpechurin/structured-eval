@@ -59,15 +59,15 @@ class Numeric(FieldMetric):
     ):
         """Set the tolerance band, in either of the two forms it accepts.
 
+        Either explicit band takes precedence over `tolerance`/`mode`, and a
+        value matches when it falls within *either* of them.
+
         Args:
             tolerance: Width of the single band; `0` means exact equality.
             mode: Whether that band is relative or absolute.
             relative_tolerance: Explicit relative band.
             absolute_tolerance: Explicit absolute band.
             name: Per-instance report key.
-
-        Either explicit band takes precedence over `tolerance`/`mode`, and a
-        value matches when it falls within *either* of them.
         """
         super().__init__(name=name)
         self.tolerance = tolerance
@@ -86,6 +86,7 @@ class Numeric(FieldMetric):
         return 1.0 if self._within_tolerance(a, e) else 0.0
 
     def _within_tolerance(self, a: float, e: float) -> bool:
+        """Whether the gap fits the band this instance was configured with."""
         if a == e:
             return True
 

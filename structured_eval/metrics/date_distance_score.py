@@ -12,6 +12,7 @@ from structured_eval.metrics.utils.null import both_null
 
 
 def _to_date(value: Any) -> date | None:
+    """Read a date out of a `date`, a `datetime` or an ISO-8601 string."""
     try:
         adapter = TypeAdapter(date)
         return adapter.validate_python(value)

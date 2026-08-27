@@ -166,6 +166,7 @@ class HungarianAligner(ArrayAligner):
     # ── element similarity ──────────────────────────────────────────────────
 
     def _score(self, expected: Any, actual: Any) -> float:
+        """How well two elements match — one cell of the cost matrix."""
         if self.key is None:
             return self._similarity(expected, actual, self.scorer)
         # `key` picks the fields to compare on, `scorer` says how: a dict
@@ -187,6 +188,7 @@ class HungarianAligner(ArrayAligner):
         actual: Any,
         scorer: Scorer | dict[str, Scorer] | None,
     ) -> float:
+        """The pair's similarity under whichever shape of scorer applies."""
         if isinstance(scorer, dict):
             return self._object_similarity(expected, actual, scorer)
         if scorer is not None:
@@ -198,6 +200,7 @@ class HungarianAligner(ArrayAligner):
     def _object_similarity(
         self, expected: Any, actual: Any, scorers: Mapping[str, Scorer | None]
     ) -> float:
+        """Mean per-key similarity of two objects, over the union of their keys."""
         if not isinstance(expected, dict) or not isinstance(actual, dict):
             return 1.0 if expected == actual else 0.0
         keys = set(expected) | set(actual)
@@ -211,6 +214,7 @@ class HungarianAligner(ArrayAligner):
 
     @staticmethod
     def _apply(scorer: Scorer, expected: Any, actual: Any) -> float:
+        """One scorer's verdict, be it a plain callable or a metric to resolve."""
         if callable(scorer) and not isinstance(scorer, (str, Metric)):
             return float(scorer(actual, expected))
         return MetricInvoker(resolve_metric(scorer)).scalar_on_values(actual, expected)

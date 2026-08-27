@@ -110,6 +110,7 @@ class ChatModelClient(LlmClient):
         return self.validate_reply(reply, schema)
 
     def _invoke(self, model: Any, prompt: str, system: str | None) -> Any:
+        """One chat-model call, with any provider failure turned into ours."""
         messages: list[tuple[str, str]] = [("human", prompt)]
         if system:
             messages.insert(0, ("system", system))
@@ -122,6 +123,7 @@ class ChatModelClient(LlmClient):
 
     @classmethod
     def _infer_model_name(cls, chat_model: Any) -> str:
+        """The model's own name, however this provider spells the attribute."""
         for attr in cls._NAME_ATTRS:
             value = getattr(chat_model, attr, None)
             if isinstance(value, str) and value:

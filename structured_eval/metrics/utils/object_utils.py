@@ -32,6 +32,7 @@ def leaf_name(path: str) -> str:
 def _resolve_threshold(
     thresholds: float | dict[str, float] | None, name: str, fallback: float
 ) -> float:
+    """One child's bar: its own entry, the blanket value, or the node's own."""
     if isinstance(thresholds, dict):
         return float(thresholds.get(name, fallback))
     if thresholds is not None:
@@ -40,6 +41,7 @@ def _resolve_threshold(
 
 
 def _weight_of(child: EvalNode, weight_mode: WeightMode) -> float:
+    """One child's weight — its configured one, or 1.0 when weights are off."""
     return child.weight if weight_mode == WeightMode.PROPORTIONAL else 1.0
 
 

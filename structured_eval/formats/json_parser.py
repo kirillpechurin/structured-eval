@@ -68,6 +68,7 @@ class JsonlParser:
         return self._iter(text)
 
     def _iter(self, text: str) -> Iterator[object]:
+        """Decode the lines one at a time, skipping the blank ones."""
         for lineno, raw_line in enumerate(text.splitlines(), start=1):
             line = raw_line.strip()
             if not line:

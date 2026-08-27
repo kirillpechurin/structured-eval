@@ -50,6 +50,7 @@ class MetricResult(float):
     #    else as `{"value": ..., "extra": ...}`; both forms re-validate) ──
     @classmethod
     def _validate(cls, value: Any) -> MetricResult:
+        """Either serialized form read back; an instance passes through."""
         if isinstance(value, cls):
             return value
         if isinstance(value, dict):
@@ -58,6 +59,7 @@ class MetricResult(float):
 
     @staticmethod
     def _serialize(value: MetricResult) -> Any:
+        """A bare float when there is no `extra`, the pair otherwise."""
         return (
             {"value": float(value), "extra": value.extra}
             if value.extra

@@ -12,7 +12,26 @@ _NON_NUMERIC = re.compile(r"[^0-9eE.+\-]")
 
 
 def parse_number(value: Any) -> float | None:
-    """Coerce `value` to a float, or `None` if it isn't cleanly numeric."""
+    """Coerce `value` to a float, or `None` if it isn't cleanly numeric.
+
+    A model writes numbers the way a document does, so the string forms are
+    read too:
+
+    - currency, thousands separators and stray text are stripped
+      (`"$1,234.50"` → `1234.5`);
+    - accounting parentheses mean a negative (`"(123)"` → `-123.0`);
+    - scientific notation is kept intact (`"1e3"` → `1000.0`).
+
+    A `bool` is rejected rather than read as `0`/`1`: `True` is an answer to a
+    different question than the number one, and scoring it as `1` would hide
+    a wrongly-typed field.
+
+    Args:
+        value: The value to read a number out of.
+
+    Returns:
+        The number, or `None` when nothing numeric is left to parse.
+    """
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):

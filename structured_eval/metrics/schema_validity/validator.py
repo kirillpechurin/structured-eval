@@ -63,6 +63,11 @@ class SchemaValidator:
         Returns:
             The verdict, with the type errors, missing required fields and
             unasked-for fields it found.
+
+        Raises:
+            TypeError: If the bound schema is neither a pydantic model class
+                nor a dict.
+            ImportError: If the `jsonschema` extra is not installed.
         """
         schema = self._json_schema()
         total = len(schema.get("properties", {}))
@@ -103,6 +108,7 @@ class SchemaValidator:
     # ── the schema, whichever way it was given ──────────────────────────────
 
     def _json_schema(self) -> dict[str, Any]:
+        """The bound schema as a JSON Schema, converting a model if need be."""
         schema = self.schema
         if isinstance(schema, type) and issubclass(schema, BaseModel):
             return schema.model_json_schema()
@@ -114,6 +120,7 @@ class SchemaValidator:
 
     @staticmethod
     def _validator(schema: dict[str, Any]) -> Any:
+        """A jsonschema validator, imported at call time to keep the extra optional."""
         try:
             from jsonschema import Draft7Validator
         except ImportError as exc:

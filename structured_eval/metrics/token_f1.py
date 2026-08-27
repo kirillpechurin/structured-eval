@@ -67,6 +67,7 @@ class TokenF1(FieldMetric):
         self.ignore_articles = ignore_articles
 
     def _tokenize(self, value: str) -> list[str]:
+        """The string as the tokens this instance compares, in order."""
         if self.ignore_case:
             value = value.lower()
         if self.ignore_punctuation:

@@ -42,6 +42,10 @@ class JudgedField(BaseModel):
 
 
 class JudgeReply(BaseModel):
-    """The judge's whole answer — one entry per field, in a single call."""
+    """The judge's whole answer — one entry per field, in a single call.
+
+    Attributes:
+        verdicts: One ruling per field the judge was asked about.
+    """
 
     verdicts: list[JudgedField] = Field(default_factory=list)

@@ -46,14 +46,16 @@ _METRIC_REGISTRY: dict[str, type] = {}
 class BaseMetric(ABC):  # noqa: B024 — registry root; subclasses define the interface
     """Registry root for every metric — no evaluation interface of its own.
 
-    - `name` is the key a scalar result lands under in `report.metrics` and
-      `FieldScore.metrics`. A metric returning a `dict` writes its keys
-      directly, and `name` is then only a registry handle;
     - declaring a subclass with a `name` registers it, which is what lets a
       config name the metric as a string;
     - a metric scores the node it was given and nothing else. One grading a
       whole subtree still reports a single value, with the per-field detail on
       that value's `extra`.
+
+    Attributes:
+        name: The key a scalar result lands under in `report.metrics` and
+            `FieldScore.metrics`. A metric returning a `dict` writes its keys
+            directly, and `name` is then only a registry handle.
 
     Example:
         >>> from structured_eval.metrics import BaseMetric, resolve_metric

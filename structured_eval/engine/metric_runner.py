@@ -74,6 +74,7 @@ class MetricRunner:
         self._visit(root)
 
     def _visit(self, node: EvalNode) -> None:
+        """Compute one node's metrics post-order, its key metric last."""
         for child in node.children_nodes():
             self._visit(child)
         key_metric = node.key_metric
@@ -85,6 +86,7 @@ class MetricRunner:
             self._apply(key_metric, node)
 
     def _apply(self, metric: BaseMetric, node: EvalNode) -> None:
+        """Run one metric on one node and record what it produced."""
         result = MetricInvoker(metric).on_node(node)
         node.metric_results.update(self._normalize(metric.name, result))
 

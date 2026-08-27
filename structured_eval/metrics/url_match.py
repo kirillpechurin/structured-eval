@@ -68,6 +68,7 @@ class UrlMatch(FieldMetric):
         self.ignore_www = ignore_www
 
     def _normalize(self, value: Any) -> tuple[str, ...] | None:
+        """The URL's comparable parts, or `None` when it is not a URL at all."""
         if not isinstance(value, str) or not value.strip():
             return None
         try:
