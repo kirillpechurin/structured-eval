@@ -162,6 +162,7 @@ class LlmClient(ABC):
 
     @staticmethod
     def _preview(raw: str) -> str:
+        """The head of a reply, quoted, for an error message to carry."""
         text = raw.strip()
         return repr(
             text if len(text) <= _PREVIEW_CHARS else text[:_PREVIEW_CHARS] + "…"

@@ -38,6 +38,7 @@ _ARITH_OPS: dict[type[ast.operator], Any] = {
 
 
 def _ensure_jsonpath() -> None:
+    """Fail with the install hint when the `rules` extra is missing."""
     try:
         import jsonpath_ng  # noqa: F401
     except ImportError as e:
@@ -48,6 +49,7 @@ def _ensure_jsonpath() -> None:
 
 
 def _resolve_path(path: str, document: dict[str, Any]) -> Any:
+    """The first value a JSONPath finds; a path that finds none is an error."""
     _ensure_jsonpath()
     from jsonpath_ng import parse
 
@@ -64,6 +66,7 @@ def _eval_arithmetic(expr: str, document: dict[str, Any]) -> Any:
     """Resolve JSONPath fragments inside expr, then evaluate safe arithmetic."""
 
     def _replace(m: re.Match[str]) -> str:
+        """One matched path, as the literal its value spells."""
         return repr(_resolve_path(m.group(), document))
 
     resolved = _PATH_IN_EXPR_RE.sub(_replace, expr)
@@ -72,6 +75,7 @@ def _eval_arithmetic(expr: str, document: dict[str, Any]) -> Any:
 
 
 def _eval_node(node: ast.expr) -> Any:
+    """One node's value, within the arithmetic subset the DSL allows."""
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
@@ -88,17 +92,24 @@ def _eval_node(node: ast.expr) -> Any:
 
 
 class _CustomRule:
-    """Returned by Rule.custom(). Evaluates an arbitrary function over a document."""
+    """A caller's own predicate, wrapped as a rule — what `Rule.custom()` returns.
+
+    Anything the DSL cannot express is written as a function instead, and goes
+    into the same rule list as anything the builder produced.
+    """
 
     def __init__(self, fn: Callable[[dict[str, Any]], bool], *, name: str = "") -> None:
+        """Adopt `fn` as the rule's check, under an optional report name."""
         self._fn = fn
         self._name = name
 
     @property
     def name(self) -> str:
+        """The name the result is reported under, `"custom"` when unnamed."""
         return self._name or "custom"
 
     def evaluate(self, document: dict[str, Any]) -> RuleResult:
+        """Run the predicate; if it raises, the rule fails with the error text."""
         try:
             passed = bool(self._fn(document))
         except Exception as exc:
@@ -148,6 +159,7 @@ class Rule:
     # ── Builder ───────────────────────────────────────────────────────────────
 
     def _bind(self, op: str, rhs: Any) -> Rule:
+        """A new rule with the comparison bound — the builder never mutates."""
         r = Rule(self._path, name=self._name)
         r._op = op
         r._rhs = rhs
@@ -245,6 +257,7 @@ class Rule:
         return RuleResult(name=self.name, passed=passed, message=msg)
 
     def _resolve_rhs(self, rhs: Any, document: dict[str, Any]) -> Any:
+        """The right-hand side as a value: a literal, a path, or arithmetic."""
         if isinstance(rhs, str) and "$" in rhs:
             stripped = rhs.strip()
             if _PLAIN_PATH_RE.match(stripped):
@@ -253,6 +266,7 @@ class Rule:
         return rhs
 
     def _compare(self, lhs: Any, rhs: Any) -> bool:
+        """Whether the two resolved sides satisfy the bound operator."""
         if self._op == "eq":
             return bool(lhs == rhs)
         if self._op == "lt":

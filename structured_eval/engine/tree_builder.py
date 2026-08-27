@@ -382,10 +382,12 @@ class TreeBuilder:
     # ── tree construction ────────────────────────────────────────────────
 
     def _value(self, doc: Any, path: str) -> Any:
+        """The value at `path`, with an unresolvable path read as `None`."""
         value = navigate(doc, path)
         return None if value is MISSING else value
 
     def _child(self, path: str, key: str) -> str:
+        """The path of `key` inside the object at `path` (maybe the root)."""
         return key if path in ("$", "") else f"{path}.{key}"
 
     def node(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> EvalNode:
@@ -436,6 +438,7 @@ class TreeBuilder:
         actual: Any,
         expected: Any,
     ) -> ObjectNode:
+        """Build an object node: its key sets, warnings and child nodes."""
         a_keys = set(actual) if isinstance(actual, dict) else set()
         e_keys = set(expected) if isinstance(expected, dict) else set()
         both = a_keys & e_keys
@@ -500,6 +503,7 @@ class TreeBuilder:
         actual: Any,
         expected: Any,
     ) -> ArrayNode:
+        """Build an array node: run the aligner, then one node per element."""
         a_list: list[Any] = actual if isinstance(actual, list) else []
         e_list: list[Any] = expected if isinstance(expected, list) else []
         if isinstance(cfg, ArrayFieldConfig):
@@ -547,6 +551,7 @@ class TreeBuilder:
         )
 
     def _scalar(self, apath: str, epath: str, cfg: AnyFieldConfig | None) -> ScalarNode:
+        """Build a leaf node — no children, only its own metrics."""
         is_root = apath == "$"
         metrics = self._node_metrics(apath, ScalarNode, cfg, is_root)
         return ScalarNode(
@@ -561,5 +566,6 @@ class TreeBuilder:
 
     @staticmethod
     def _threshold(cfg: AnyFieldConfig | None) -> float:
+        """The bar the node's score must clear, defaulting to an exact 1.0."""
         threshold = getattr(cfg, "threshold", None)
         return float(threshold) if threshold is not None else 1.0

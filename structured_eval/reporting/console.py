@@ -2,7 +2,7 @@
 
 `ConsoleRenderer().render(report)` returns a string; the module-level `render`
 is a thin convenience over it, used by `EvalReport.print_summary`. The layout is
-pure stdlib so it works out of the box; Rich can be layered on for colour later.
+pure stdlib, so printing a report needs nothing installed beyond the core.
 """
 
 from __future__ import annotations
@@ -49,6 +49,7 @@ class ConsoleRenderer:
     # ── EvalReport ──────────────────────────────────────────────────────────
 
     def _render_eval(self, report: EvalReport) -> str:
+        """The single-document layout: score, metrics, per-field table."""
         out: list[str] = [_BAR * _WIDTH]
 
         if report.parse_error:
@@ -105,6 +106,7 @@ class ConsoleRenderer:
     # ── BatchEvalReport ───────────────────────────────────────────────────
 
     def _render_batch(self, report: BatchEvalReport) -> str:
+        """The batch layout: the summary, then fields ranked worst-first."""
         bar = _BAR * _WIDTH
         n = len(report.per_sample)
         out = [bar, f"  BATCH   {n} samples"]
@@ -139,6 +141,7 @@ class ConsoleRenderer:
     # ── ConsistencyReport ─────────────────────────────────────────────────
 
     def _render_consistency(self, report: ConsistencyReport) -> str:
+        """The consistency layout: run-to-run spread, then per-field variance."""
         bar = _BAR * _WIDTH
         out = [bar, f"  CONSISTENCY   {len(report.per_run)} runs"]
         if report.mean_score is not None:
@@ -163,10 +166,12 @@ class ConsoleRenderer:
 
     @staticmethod
     def _num(value: float | None) -> str:
+        """A score in two decimals, or a dash when there is none."""
         return "—" if value is None else f"{value:.2f}"
 
     @staticmethod
     def _mark(score: float | None, bar: float | None) -> str:
+        """The pass/fail tick for one score, blank when either side is absent."""
         if score is None or bar is None:
             return " "
         return "✓" if score >= bar else "✗"
@@ -185,6 +190,7 @@ class ConsoleRenderer:
         aligns = aligns or ["<"] * len(headers)
 
         def fmt(cells: list[str]) -> str:
+            """One row, padded to the column widths measured above."""
             return "  ".join(
                 f"{c:{a}{w}}" for c, w, a in zip(cells, widths, aligns, strict=False)
             )

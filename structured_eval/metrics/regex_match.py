@@ -57,6 +57,7 @@ class RegexMatch(FieldMetric):
         self.strip = strip
 
     def _normalize(self, value: str) -> str:
+        """The string as this instance rewrites it before comparing."""
         if self.lower:
             value = value.lower()
         if self.strip:

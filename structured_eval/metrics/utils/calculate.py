@@ -47,7 +47,25 @@ def prf_counts(
     spurious_weight: float,
     mode: GradingMode = GradingMode.HARD,
 ) -> tuple[float, float, float]:
-    """Return weighted `(tp, predicted, expected)`; uniform weights → counts."""
+    """Weighted `(tp, predicted, expected)`; uniform weights → plain counts.
+
+    A matched entry counts for its weight, and `mode` decides what fraction of
+    that weight becomes a true positive. The two weight arguments carry the
+    entries with no verdict at all: a spurious one inflates `predicted`, a
+    missing one inflates `expected`, and neither is ever a true positive.
+
+    Args:
+        verdicts: One `(score, threshold, weight)` per matched entry.
+        missing_weight: Summed weight of the expected-only (FN) entries.
+        spurious_weight: Summed weight of the produced-only (FP) entries.
+        mode: How a matched entry counts toward TP:
+
+            - `HARD` counts it only once it clears its threshold;
+            - `SOFT` counts its score fractionally, ignoring the threshold.
+
+    Returns:
+        True positives, predicted total and expected total.
+    """
     matched_weight = sum(weight for _, _, weight in verdicts)
     predicted = matched_weight + spurious_weight
     expected = matched_weight + missing_weight
@@ -61,7 +79,7 @@ def prf_counts(
 def precision(tp: float, predicted: float, expected: float) -> float:
     """`tp / predicted`; an empty prediction is vacuously precise."""
     if predicted == 0:
-        return 1.0 if expected == 0 else 0.0  # empty object is vacuously precise
+        return 1.0 if expected == 0 else 0.0
     return tp / predicted
 
 

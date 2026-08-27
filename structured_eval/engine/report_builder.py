@@ -126,6 +126,7 @@ class ReportBuilder:
         )
 
     def _field_score(self, node: EvalNode) -> FieldScore:
+        """One node as the report's per-field entry."""
         return FieldScore(
             path=node.path,
             node_type=self._NODE_TYPE.get(type(node), NodeType.SCALAR),

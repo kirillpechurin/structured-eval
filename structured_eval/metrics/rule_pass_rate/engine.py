@@ -1,4 +1,4 @@
-"""`RuleProcessor` — evaluation of a list of rules against one document."""
+"""Checking a document against a list of business rules."""
 
 from __future__ import annotations
 
@@ -9,13 +9,11 @@ if TYPE_CHECKING:
 
 
 class RuleProcessor:
-    """Evaluates a list of business rules against a document.
+    """The `rule_pass_rate` metric's rule loop, over one document.
 
-    Each rule must expose `evaluate(document) -> RuleResult`,
-    satisfied by both `Rule` and the result of `Rule.custom()`.
-
-    `run` returns the per-rule results and the pass rate
-    (1.0 when there are no rules).
+    A rule is anything exposing `evaluate(document) -> RuleResult`. `Rule` and
+    what `Rule.custom()` returns both qualify, and so does a caller's own
+    class: the parameter stays `list[Any]` so that stays true.
     """
 
     def run(

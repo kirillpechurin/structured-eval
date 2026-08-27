@@ -61,6 +61,7 @@ class CharacterF1(FieldMetric):
         self.ignore_punctuation = ignore_punctuation
 
     def _characters(self, value: str) -> list[str]:
+        """The string as the characters this instance compares, in order."""
         if self.ignore_case:
             value = value.lower()
         if self.ignore_punctuation:

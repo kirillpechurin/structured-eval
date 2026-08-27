@@ -153,4 +153,5 @@ class Evaluator:
 
 
 def _flat(data: Any) -> dict[str, Any]:
+    """The document flattened; anything that is not one flattens to nothing."""
     return flatten(data) if isinstance(data, (dict, list)) else {}

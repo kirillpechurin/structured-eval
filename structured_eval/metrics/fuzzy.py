@@ -63,14 +63,14 @@ class Fuzzy(FieldMetric):
     ):
         """Pick the scorer and the normalization applied before it.
 
+        The two normalizations are independent, so a case-insensitive but
+        whitespace-sensitive comparison is expressible, or the reverse.
+
         Args:
             method: Which RapidFuzz scorer to use.
             ignore_case: Lowercase both sides first.
             ignore_whitespace: Collapse runs of whitespace and trim the ends.
             name: Per-instance report key.
-
-        The two normalizations are independent, so a case-insensitive but
-        whitespace-sensitive comparison is expressible, or the reverse.
         """
         super().__init__(name=name)
         self.method = FuzzyMethod(method)

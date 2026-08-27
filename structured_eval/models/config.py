@@ -182,6 +182,7 @@ class EvalConfig(BaseModel):
     )
     @classmethod
     def _non_empty(cls, value: list[Any] | None, info: Any) -> list[Any] | None:
+        """Reject an empty default list — `None` is how a default is kept."""
         if value is not None and not value:
             raise ValueError(
                 f"{info.field_name} must list at least one metric; "
