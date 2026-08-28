@@ -1,6 +1,6 @@
 """The rule_pass_rate package: Rule DSL (dsl.py) + RuleProcessor (engine.py).
 
-One cohesive unit — comparisons, JSONPath arithmetic, ``in_``, custom rules,
+One cohesive unit — comparisons, JSONPath arithmetic, `in_`, custom rules,
 failure paths, and pass-rate aggregation.
 """
 
@@ -27,6 +27,7 @@ DOC = {
 
 
 def _passed(rule: Rule, doc: dict[str, Any] = DOC) -> bool:
+    """Whether the rule holds on the document."""
     return bool(rule.evaluate(doc).passed)
 
 

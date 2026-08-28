@@ -1,9 +1,9 @@
 """CharacterF1 — multiset character-overlap F1 for short free-text fields.
 
-String-only: any non-``str`` side scores 0.0. By default punctuation and
+String-only: any non-`str` side scores 0.0. By default punctuation and
 whitespace are dropped and characters are lowercased before the multiset
-comparison; each step is toggled by ``ignore_case`` / ``ignore_whitespace`` /
-``ignore_punctuation``.
+comparison; each step is toggled by `ignore_case` / `ignore_whitespace` /
+`ignore_punctuation`.
 """
 
 from typing import Any

@@ -1,9 +1,9 @@
 """MetricCollection — one named metric's values across the whole tree.
 
-``report.metrics[name]``. The reductions answer different questions about the
-same map: ``mean``/``min``/``max`` summarise every node that produced the
-metric, ``root`` is the document-level value, and ``representative`` picks
-whichever of the two is meaningful. An empty collection answers ``0.0`` rather
+`report.metrics[name]`. The reductions answer different questions about the
+same map: `mean`/`min`/`max` summarise every node that produced the
+metric, `root` is the document-level value, and `representative` picks
+whichever of the two is meaningful. An empty collection answers `0.0` rather
 than raising — a metric that ran nowhere is not an error.
 """
 
@@ -17,6 +17,7 @@ pytestmark = pytest.mark.unit
 
 
 def _coll(**by_path: float) -> MetricCollection:
+    """A collection named `m` holding one result per path."""
     return MetricCollection(
         name="m", by_path={p: MetricResult(v) for p, v in by_path.items()}
     )

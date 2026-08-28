@@ -71,7 +71,7 @@ def test_default_name_is_used_when_none_given(
 def test_key_metric_resolves_against_a_custom_name(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    """A custom name is a valid ``key_metric`` string — the instance is reused."""
+    """A custom name is a valid `key_metric` string — the instance is reused."""
     config = EvalConfig(
         fields={
             "total": FieldConfig(

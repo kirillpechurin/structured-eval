@@ -1,7 +1,7 @@
-"""Golden regression tests: run evaluate() on dataset fixtures and assert the
-headline numbers. These pin real end-to-end behaviour across representative
-shapes (invoice / NER / tool-call / deep-nested) so refactors can't silently
-shift scores.
+"""Golden regression: `evaluate` over the dataset fixtures, headline numbers pinned.
+
+The fixtures cover representative shapes — invoice, NER, tool call, deep-nested,
+root array — so a refactor that shifts a score cannot pass silently.
 """
 
 import json
@@ -26,6 +26,7 @@ FIXTURES = Path(__file__).parent.parent / "fixtures"
 
 
 def _load(name: str) -> dict[str, Any]:
+    """The fixture JSON document with that file name."""
     result: dict[str, Any] = json.loads((FIXTURES / name).read_text(encoding="utf-8"))
     return result
 
@@ -37,6 +38,7 @@ def _load(name: str) -> dict[str, Any]:
     "case", _load("invoices.json")["cases"], ids=lambda c: c["name"]
 )
 def test_invoice_object_f1(case: Any) -> None:
+    """Invoice extraction: every case's pinned `object_f1`."""
     r = evaluate(
         case["actual"], case["expected"], config=EvalConfig(metrics=[ObjectF1()])
     )
@@ -49,6 +51,7 @@ def test_invoice_object_f1(case: Any) -> None:
 
 
 def test_ner_array_by_key() -> None:
+    """NER spans aligned by text: 2 matched, 1 spurious, 1 missed."""
     actual = {
         "entities": [
             {"text": "Acme", "label": "ORG"},
@@ -89,6 +92,7 @@ def test_ner_array_by_key() -> None:
 
 
 def test_tool_call_nested() -> None:
+    """A tool call with nested `arguments`: 2 of its 3 leaves are correct."""
     actual = {"name": "get_weather", "arguments": {"city": "Paris", "unit": "celsius"}}
     expected = {
         "name": "get_weather",
@@ -108,6 +112,7 @@ def test_root_array_of_records() -> None:
     # "Extract every line item" answers with a list, not an object wrapping one.
     # The root's path is a label, so its elements spell themselves without it —
     # `[0].sku`, the same way `flatten` writes them and `navigate` reads them.
+    """A document that *is* an array: elements align by key, not by index."""
     actual = [
         {"sku": "B-7", "qty": 5},
         {"sku": "A-1", "qty": 99},
@@ -146,6 +151,7 @@ def test_root_array_of_records() -> None:
 
 
 def test_deep_nested() -> None:
+    """A four-level document: leaf paths and scores survive the depth."""
     actual = {"a": {"b": {"c": {"d": 1, "e": 2}}}}
     expected = {"a": {"b": {"c": {"d": 1, "e": 9}}}}
     r = evaluate(actual, expected, config=EvalConfig(metrics=[OverallLeafScore()]))

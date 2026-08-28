@@ -1,7 +1,7 @@
-"""The shape an LLM judge reports in: ``FieldJudgeVerdict`` / ``JudgeVerdict``.
+"""The shape an LLM judge reports in: `FieldJudgeVerdict` / `JudgeVerdict`.
 
 A judge produces one score for the node it ran on plus a verdict per field
-underneath it. The verdicts travel to the report inside ``MetricResult.extra``,
+underneath it. The verdicts travel to the report inside `MetricResult.extra`,
 which is serialized with the report — so what is pinned here is the round trip
 and the defaults callers rely on, independent of *what* the judge judges.
 """

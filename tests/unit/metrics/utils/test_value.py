@@ -1,7 +1,7 @@
 """render_value — how a field's value is shown to an LLM judge.
 
-JSON rather than ``str``, because the judge has to tell the string ``"100"``
-from the number ``100``, and an empty string from a null: quoting is what
+JSON rather than `str`, because the judge has to tell the string `"100"`
+from the number `100`, and an empty string from a null: quoting is what
 carries that distinction into the prompt.
 """
 

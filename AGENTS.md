@@ -144,10 +144,11 @@ owes is decided by **import path and visibility**, not by taste:
   the base one — each states what *this* metric does with the values.
 - Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in
   `tests/`, `D101`/`D102`/`D103`/`D107` are not. A test's name and its
-  `parametrize` ids are its documentation; add a docstring only where they aren't
-  enough (fixtures, builders, golden/property tests).
+  `parametrize` ids are its documentation. Everything around the tests still owes
+  a docstring — every module and package, every fixture, builder and helper — and
+  so do golden/property tests, whose pinned numbers and invariants no name can
+  carry. `tests/README.md` §4 is the detail.
 
 Enforced by `ruff` (`D` with `convention = "google"`, plus pydoclint
-`DOC201`/`DOC402`/`DOC501` checking sections against the signature). The
-`per-file-ignores` block named "Docstring migration" in `pyproject.toml` is the
-remaining todo list — one line per layer, deleted as that layer is converted.
+`DOC201`/`DOC402`/`DOC501` checking sections against the signature) across the
+whole repository.

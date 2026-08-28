@@ -1,8 +1,8 @@
 """Case E — report serialization round-trips losslessly.
 
 A report is the framework's output contract (CI artifacts, dashboards, the diff
-machinery). ``to_json`` → ``from_json`` must preserve the headline score, the
-per-field scores, and the structured ``.extra`` side-channels (schema errors,
+machinery). `to_json` → `from_json` must preserve the headline score, the
+per-field scores, and the structured `.extra` side-channels (schema errors,
 rule results). We generate varied documents and assert the round-trip is a
 fixed point at the level callers actually read.
 """
@@ -29,6 +29,7 @@ pytestmark = pytest.mark.property
 
 
 def _assert_report_equivalent(a: EvalReport, b: EvalReport) -> None:
+    """Assert two reports carry the same scores, fields and metric names."""
     assert a.score == pytest.approx(b.score) if a.score is not None else b.score is None
     assert a.score_label == b.score_label
     assert a.parse_error == b.parse_error
@@ -40,6 +41,7 @@ def _assert_report_equivalent(a: EvalReport, b: EvalReport) -> None:
 
 @pytest.mark.parametrize("seed", SEEDS)
 def test_roundtrip_preserves_scores_and_fields(seed: Any) -> None:
+    """Scores and field paths survive `to_dict` → `from_dict`."""
     rng = random.Random(seed)
     expected = random_document(rng, depth=3)
     actual = random_document(rng, depth=3)
@@ -50,12 +52,14 @@ def test_roundtrip_preserves_scores_and_fields(seed: Any) -> None:
 
 
 class _Invoice(BaseModel):
+    """The schema whose failure fills the `schema_errors` side-channel."""
+
     id: str
     total: float
 
 
 def test_roundtrip_preserves_schema_errors_extra() -> None:
-    """The ``schema_errors`` side-channel survives a JSON round-trip."""
+    """The `schema_errors` side-channel survives a JSON round-trip."""
     cfg = EvalConfig(metrics=[SchemaValidity(_Invoice)])
     report = evaluate({"id": "1"}, None, config=cfg)  # missing total → invalid
 
@@ -68,7 +72,7 @@ def test_roundtrip_preserves_schema_errors_extra() -> None:
 
 
 def test_roundtrip_preserves_rule_results_extra() -> None:
-    """The ``rule_results`` side-channel survives a JSON round-trip."""
+    """The `rule_results` side-channel survives a JSON round-trip."""
     cfg = EvalConfig(
         metrics=[
             ObjectF1(),

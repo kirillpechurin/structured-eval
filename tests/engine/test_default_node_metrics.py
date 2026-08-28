@@ -100,8 +100,11 @@ def test_defaults_reach_every_node_of_their_type(
 def test_scalar_default_reaches_a_primitive_array_element(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    """A primitive array element *is* a scalar node, so the scalar default lands
-    on it directly — not only on scalars nested inside array objects."""
+    """The scalar default lands on a primitive array element directly.
+
+    Such an element *is* a scalar node — the default is not confined to scalars
+    nested inside array objects.
+    """
     config = EvalConfig(default_scalar_metrics=[Numeric(tolerance=0.1)])
     report = evaluate_one({"lines": [100.5]}, {"lines": [100.0]}, config)
 

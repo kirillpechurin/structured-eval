@@ -1,9 +1,9 @@
-"""JudgeFaithfulness driven by a real ``LlmClient``, not a stand-in.
+"""JudgeFaithfulness driven by a real `LlmClient`, not a stand-in.
 
-``tests/unit/metrics/test_judge_faithfulness.py`` fakes the client and
-``test_litellm_client.py`` exercises litellm without the judge — so between them
+`tests/unit/metrics/test_judge_faithfulness.py` fakes the client and
+`test_litellm_client.py` exercises litellm without the judge — so between them
 nothing checks the seam the two meet at: the schema handed to the provider and
-the reply parsed back into verdicts. litellm's ``mock_response`` keeps these
+the reply parsed back into verdicts. litellm's `mock_response` keeps these
 offline: no API key, no network.
 """
 

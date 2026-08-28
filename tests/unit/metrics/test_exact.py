@@ -1,6 +1,6 @@
 """ExactMatch — strict, type-sensitive equality.
 
-A field metric *is* the comparison: ``score(actual, expected) -> float`` is a
+A field metric *is* the comparison: `score(actual, expected) -> float` is a
 pure primitive, tested without the engine.
 """
 

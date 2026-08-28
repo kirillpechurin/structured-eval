@@ -1,9 +1,9 @@
 """FieldFaithfulness — L1 substring grounding of each scalar leaf in the source.
 
 Each leaf scores 1.0 if its string form is a substring of the sample's
-``source`` (case-insensitive), else 0.0. Hallucinated fields are the leaves
-scoring 0.0 (``report.metrics["field_faithfulness"].by_path``). A missing
-``source`` is a configuration error (``ValueError``).
+`source` (case-insensitive), else 0.0. Hallucinated fields are the leaves
+scoring 0.0 (`report.metrics["field_faithfulness"].by_path`). A missing
+`source` is a configuration error (`ValueError`).
 """
 
 from typing import Any
@@ -21,10 +21,12 @@ CFG = EvalConfig(metrics=[FieldFaithfulness()])
 
 
 def _faith(actual: Any, source: str = SOURCE) -> MetricCollection:
+    """The `field_faithfulness` collection for a document graded against `source`."""
     return evaluate(actual, None, CFG, source=source).metrics["field_faithfulness"]
 
 
 def _hallucinated(mc: MetricCollection) -> list[str]:
+    """The paths scored 0.0 — the fields the metric calls hallucinated."""
     return [p for p, v in mc.by_path.items() if float(v) == 0.0]
 
 

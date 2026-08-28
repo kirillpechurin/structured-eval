@@ -1,7 +1,7 @@
-"""NumericCloseness — graded ratio similarity ``min/max`` for same-sign numbers.
+"""NumericCloseness — graded ratio similarity `min/max` for same-sign numbers.
 
 Numbers only: any non-number side scores 0.0, with no equality fallback. Shares
-``Numeric``'s lenient parser, so numeric strings are graded rather than collapsed.
+`Numeric`'s lenient parser, so numeric strings are graded rather than collapsed.
 """
 
 from typing import Any

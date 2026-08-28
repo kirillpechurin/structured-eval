@@ -26,7 +26,7 @@ pytestmark = pytest.mark.property
 
 @pytest.mark.parametrize("seed", SEEDS)
 def test_corrupting_more_fields_never_raises_score(seed: Any) -> None:
-    """Start from a perfect doc; corrupt leaves one at a time → score is monotone non-increasing."""
+    """Corrupting one more leaf of a perfect doc never raises the score."""
     rng = random.Random(seed)
     n = rng.randint(2, 8)
     expected = {f"f{i}": rng.randint(0, 100) for i in range(n)}

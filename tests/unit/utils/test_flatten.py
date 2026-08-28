@@ -1,3 +1,5 @@
+"""`flatten` — a nested document as a flat path → value mapping."""
+
 from structured_eval.utils import flatten
 from structured_eval.utils.flatten import flatten as flatten_direct
 

@@ -16,6 +16,7 @@ pytestmark = pytest.mark.unit
 
 
 def _report(actual: Any, expected: Any) -> EvalReport:
+    """A report whose key metric is `object_f1`."""
     return evaluate(actual, expected, config=EvalConfig(key_metric=ObjectF1()))
 
 

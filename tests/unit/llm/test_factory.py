@@ -1,4 +1,4 @@
-"""``resolve_client`` — one dispatch for every shape a user may pass."""
+"""`resolve_client` — one dispatch for every shape a user may pass."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ class FakeChatModel:
 
 
 def generate_fn(prompt: str, *, system: str | None = None) -> str:
-    """A function with ``LlmClient.generate``'s own signature."""
+    """A function with `LlmClient.generate`'s own signature."""
     return "ok"
 
 

@@ -28,6 +28,7 @@ pytestmark = pytest.mark.unit
 
 
 def _render(actual: Any, expected: Any, **kw: Any) -> str:
+    """The console rendering of one evaluation."""
     report = evaluate(actual, expected, config=EvalConfig(key_metric=ObjectF1()), **kw)
     return ConsoleRenderer().render(report)
 

@@ -1,9 +1,9 @@
 """UrlMatch — binary URL equivalence after equivalence-preserving normalization.
 
-Normalizes scheme/host casing, ``www.``, default ports, trailing slash and
+Normalizes scheme/host casing, `www.`, default ports, trailing slash and
 query-parameter order; equivalent URLs score 1.0, different ones 0.0. Non-URL
-or unparseable inputs score 0.0. Strictness is tunable via ``ignore_query`` /
-``ignore_fragment`` / ``ignore_www``.
+or unparseable inputs score 0.0. Strictness is tunable via `ignore_query` /
+`ignore_fragment` / `ignore_www`.
 """
 
 from typing import Any

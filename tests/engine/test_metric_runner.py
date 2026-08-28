@@ -1,9 +1,9 @@
 """MetricRunner — phase 2, computing every node's metrics in place.
 
-The full pipeline is covered by ``test_evaluator.py``; what is pinned here is
+The full pipeline is covered by `test_evaluator.py`; what is pinned here is
 the runner's own contract, driven by hand-built nodes so the order is
-observable: post-order across the tree, ``key_metric`` last within a node, and
-a metric returning ``None`` skipped rather than scored.
+observable: post-order across the tree, `key_metric` last within a node, and
+a metric returning `None` skipped rather than scored.
 """
 
 from collections.abc import Callable
@@ -22,7 +22,7 @@ pytestmark = pytest.mark.engine
 class Recorder(AnyNodeMetric):
     """Scores a constant and remembers, in order, where it was asked.
 
-    ``log`` is shared between instances when several of them sit on one node,
+    `log` is shared between instances when several of them sit on one node,
     so the order *within* a node is observable as well as the order across the
     tree.
     """

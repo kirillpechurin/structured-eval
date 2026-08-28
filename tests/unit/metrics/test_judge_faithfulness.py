@@ -3,12 +3,12 @@
 Driven by a fake client so the tests are free and deterministic: it records the
 prompts it was given and replies with whatever verdicts the case needs. What is
 pinned is the metric's own behaviour — one call per attachment, the score it
-reports for the node it ran on, the verdicts it carries in ``extra``, the
+reports for the node it ran on, the verdicts it carries in `extra`, the
 verdict→score policy, and staying sane on a sloppy reply — not the wording of
 the prompt.
 
-The judge is always attached **explicitly** (``root=`` / ``fields=``) rather
-than through ``config.metrics``: it applies to every node type, so cascading it
+The judge is always attached **explicitly** (`root=` / `fields=`) rather
+than through `config.metrics`: it applies to every node type, so cascading it
 would buy one model call per node in the document.
 """
 
@@ -37,7 +37,7 @@ ACTUAL: dict[str, Any] = {"vendor": "Acme Corp", "total": 100.0}
 class FakeJudge:
     """A stand-in LLM: replies with canned verdicts, remembers what it was asked.
 
-    Shaped like ``LlmClient.generate`` so ``resolve_client`` adapts it as a
+    Shaped like `LlmClient.generate` so `resolve_client` adapts it as a
     plain callable — the injection path a user without an API key takes.
     """
 
@@ -51,6 +51,7 @@ class FakeJudge:
 
 
 def judge(verdicts: list[dict[str, str]], **kwargs: Any) -> JudgeFaithfulness:
+    """A `JudgeFaithfulness` wired to a fake client replying with these verdicts."""
     return JudgeFaithfulness(client=FakeJudge(verdicts), **kwargs)
 
 
@@ -62,8 +63,11 @@ def run(
 ) -> EvalReport:
     """Evaluate with the judge hung on the document root.
 
-    Per-field configuration goes inside the root config: ``config.root`` and
-    ``config.fields`` are alternatives, and the former wins.
+    Per-field configuration goes inside the root config: `config.root` and
+    `config.fields` are alternatives, and the former wins.
+
+    Returns:
+        The report for `actual` graded against `source`.
     """
     return evaluate(
         actual if actual is not None else ACTUAL,
@@ -77,7 +81,7 @@ def run(
 
 
 def verdicts(report: EvalReport, path: str = "$") -> dict[str, dict[str, str]]:
-    """The judge's per-field verdicts at ``path``, keyed by the field they name."""
+    """The judge's per-field verdicts at `path`, keyed by the field they name."""
     summary = report.field_scores[path].metrics["judge_faithfulness"].extra
     return {v["path"]: v for v in summary["verdict"]["verdicts"]}
 

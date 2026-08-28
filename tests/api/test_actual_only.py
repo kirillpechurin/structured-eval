@@ -1,8 +1,8 @@
-"""Schema-only / rules-only / faithfulness-only modes of evaluate (no ``expected``).
+"""Schema-only / rules-only / faithfulness-only modes, with no `expected`.
 
-Metrics are instances in ``EvalConfig.metrics`` and results live in
-``report.metrics`` / side channels — there is no ``detailed`` param and no
-``report.f1`` shorthand.
+Metrics are instances in `EvalConfig.metrics` and results live in
+`report.metrics` / side channels — there is no `detailed` param and no
+`report.f1` shorthand.
 """
 
 import pytest
@@ -21,6 +21,8 @@ pytestmark = pytest.mark.engine
 
 
 class Invoice(BaseModel):
+    """The schema the schema-only mode validates the document against."""
+
     id: str
     total: float
     status: str

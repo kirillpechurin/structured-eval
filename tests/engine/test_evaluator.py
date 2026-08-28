@@ -44,6 +44,8 @@ pytestmark = pytest.mark.engine
 
 
 class Invoice(BaseModel):
+    """The schema the evaluated document is validated against."""
+
     id: str
     total: float
     status: str
@@ -608,7 +610,7 @@ def test_global_cascaded_metric_does_not_raise(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     # ObjectAccuracy cascades globally: it fits the objects and is silently
-    # filtered from the scalar ``total`` node — never raised.
+    # filtered from the scalar `total` node — never raised.
     r = evaluate_one(_DOC, _DOC, EvalConfig(metrics=[ObjectAccuracy()]))
     assert "object_accuracy" in r.field_scores["vendor"].metrics
     assert "object_accuracy" not in r.field_scores["total"].metrics

@@ -1,6 +1,6 @@
 """object_utils — the verdicts an object metric aggregates over its children.
 
-The ``Object*`` metric tests cover the arithmetic; this file covers the helper's
+The `Object*` metric tests cover the arithmetic; this file covers the helper's
 own contract, which the metrics only partly reach: how a bar is chosen for each
 matched child, and how a child's name is read off its path.
 """
@@ -22,6 +22,7 @@ CONFIG = EvalConfig(
 
 
 def _object() -> ObjectNode:
+    """A two-field object node, built and computed."""
     root = build_tree({"a": 1, "b": 2}, {"a": 1, "b": 2}, CONFIG)
     assert isinstance(root, ObjectNode)
     return root

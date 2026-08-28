@@ -1,6 +1,6 @@
 """Numeric — tolerant numeric equality over a lenient parser.
 
-Strips currency/separators, honors accounting notation ``(123) → −123``, and
+Strips currency/separators, honors accounting notation `(123) → −123`, and
 supports relative / absolute tolerance bands. Booleans are not numbers.
 """
 

@@ -1,7 +1,7 @@
 """EvalNode tree base: lazy navigation, accessors, traversal.
 
-Nodes never copy data — ``actual``/``expected`` resolve by navigating the shared
-context. ``navigate`` distinguishes 'absent' (MISSING → surfaced as None).
+Nodes never copy data — `actual`/`expected` resolve by navigating the shared
+context. `navigate` distinguishes 'absent' (MISSING → surfaced as None).
 """
 
 from collections.abc import Callable

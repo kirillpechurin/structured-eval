@@ -14,6 +14,8 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
@@ -71,7 +73,7 @@ def test_default_schema_path_passes_system_through_untouched():
 
 
 def test_a_client_without_generate_cannot_be_built():
-    """``generate`` is the whole contract — nothing else may be left unimplemented."""
+    """`generate` is the whole contract — nothing else may be left unimplemented."""
 
     class Incomplete(LlmClient):
         pass

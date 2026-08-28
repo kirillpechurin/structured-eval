@@ -1,10 +1,10 @@
 """The litellm-backed client against the real library.
 
-``tests/unit/llm/test_litellm.py`` drives a stub, so by construction it cannot
+`tests/unit/llm/test_litellm.py` drives a stub, so by construction it cannot
 notice litellm changing shape underneath us. These tests pin the assumptions
-that stub encodes — the response shape ``completion`` returns and the existence
-of ``supports_response_schema`` — and are skipped when the extra is absent.
-litellm's own ``mock_response`` keeps them offline: no API key, no network.
+that stub encodes — the response shape `completion` returns and the existence
+of `supports_response_schema` — and are skipped when the extra is absent.
+litellm's own `mock_response` keeps them offline: no API key, no network.
 """
 
 import pytest
@@ -14,6 +14,8 @@ pytestmark = pytest.mark.integration
 
 
 class Verdict(BaseModel):
+    """The response schema the real model is asked to fill."""
+
     score: float
     reason: str
 

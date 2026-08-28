@@ -1,6 +1,6 @@
 """Fuzzy (rapidfuzz) and its thin alias Levenshtein.
 
-``Levenshtein`` *is* ``Fuzzy(method=RATIO)`` — one cohesive unit, so both live
+`Levenshtein` *is* `Fuzzy(method=RATIO)` — one cohesive unit, so both live
 here. Fuzzy is string-only.
 """
 
@@ -36,10 +36,10 @@ def test_partial_match_is_between() -> None:
     assert 0.0 < Fuzzy().score("Acme Corporation", "Acme Corp") < 1.0
 
 
-# ``ignore_case`` and ``ignore_whitespace`` are independent: each folds only its
-# own dimension, leaving the other significant. ``ignore_whitespace`` collapses
-# whitespace runs to one space and trims the ends. Pinned to ``ratio`` — the
-# default ``token_sort_ratio`` normalizes whitespace itself.
+# `ignore_case` and `ignore_whitespace` are independent: each folds only its
+# own dimension, leaving the other significant. `ignore_whitespace` collapses
+# whitespace runs to one space and trims the ends. Pinned to `ratio` — the
+# default `token_sort_ratio` normalizes whitespace itself.
 @pytest.mark.parametrize(
     ("kwargs", "actual", "expected", "predicate"),
     [

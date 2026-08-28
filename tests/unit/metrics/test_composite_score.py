@@ -1,7 +1,7 @@
 """CompositeScore — normalized weighted blend of other metrics on the same node.
 
-Reads ``node.metric_results`` for the named metrics; best used as a node's
-``key_metric`` (run last). Unknown metrics are ignored, absent ones contribute 0.
+Reads `node.metric_results` for the named metrics; best used as a node's
+`key_metric` (run last). Unknown metrics are ignored, absent ones contribute 0.
 """
 
 import pytest
@@ -14,6 +14,7 @@ pytestmark = pytest.mark.unit
 
 
 def _field_node(config: EvalConfig) -> EvalNode:
+    """The scalar node for field `a`, built under `config`."""
     root = build_tree({"a": "kitten"}, {"a": "sitting"}, config)
     return next(c for c in root.children_nodes() if c.path == "a")
 

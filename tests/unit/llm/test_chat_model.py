@@ -1,4 +1,4 @@
-"""``ChatModelClient`` — a LangChain-style model, duck-typed against a fake."""
+"""`ChatModelClient` — a LangChain-style model, duck-typed against a fake."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
@@ -33,12 +35,16 @@ class FakeChatModel:
 
 
 class StructuredChatModel(FakeChatModel):
+    """A chat model that also offers `with_structured_output`."""
+
     def with_structured_output(self, schema: type[BaseModel]) -> FakeChatModel:
         self.bound_schema = schema
         return self
 
 
 class Reply:
+    """A message object: its text sits behind `.content`."""
+
     def __init__(self, content: Any) -> None:
         self.content = content
 

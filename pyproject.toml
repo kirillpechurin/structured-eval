@@ -157,15 +157,6 @@ ignore-one-line-docstrings = true
     "D107",
 ]
 
-# ── Docstring migration (Google style) ────────────────────────────────────────
-# Temporary, and down to its last line: every layer of `structured_eval` is now
-# strict, and only `tests/` is still being converted. When this line goes,
-# `D`/`DOC` are strict everywhere.
-#
-# Only these codes are still waived for tests; the rest are waived permanently
-# in the "tests/**" block above.
-"tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]
-
 # ── Mypy ──────────────────────────────────────────────────────────────────────
 
 [tool.mypy]

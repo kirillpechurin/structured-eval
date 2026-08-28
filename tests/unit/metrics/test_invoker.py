@@ -1,9 +1,9 @@
 """MetricInvoker — the one way to run a metric, in either input mode.
 
-Nothing calls ``compute`` / ``compute_<kind>`` / ``score`` directly. Two modes:
-``on_node`` when a node exists (the engine), ``on_values`` when only raw values
-do (array alignment, before any node is built). A ``GenericMetric`` dispatches
-per kind in both; anything else uses ``compute`` / ``score``.
+Nothing calls `compute` / `compute_<kind>` / `score` directly. Two modes:
+`on_node` when a node exists (the engine), `on_values` when only raw values
+do (array alignment, before any node is built). A `GenericMetric` dispatches
+per kind in both; anything else uses `compute` / `score`.
 """
 
 from collections.abc import Callable
@@ -20,7 +20,7 @@ pytestmark = pytest.mark.unit
 
 
 class Plain(AnyNodeMetric):
-    """A non-generic metric: one ``compute``, one ``score``."""
+    """A non-generic metric: one `compute`, one `score`."""
 
     name = "plain_probe"
 
@@ -77,6 +77,7 @@ class Splitting(AnyNodeMetric):
 
 
 def _nodes(context: EvalContext) -> dict[str, EvalNode]:
+    """One node of each type, all sharing the context."""
     return {
         "scalar": ScalarNode(path="total", context=context),
         "object": ObjectNode(path="vendor", context=context),

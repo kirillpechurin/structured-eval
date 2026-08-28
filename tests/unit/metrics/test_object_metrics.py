@@ -1,7 +1,7 @@
 """Unit tests for object metrics, run over a TreeBuilder-built ObjectNode root.
 
 Object metrics grade only the *scalar* fields of an object: matched fields are
-both predicted and expected, ``missing`` keys are FN, ``spurious`` keys are FP
+both predicted and expected, `missing` keys are FN, `spurious` keys are FP
 (only when ExtraKeysPolicy.PENALIZE). Nested children grade at their own node.
 """
 
@@ -151,6 +151,7 @@ def test_empty_object_vacuously_perfect(tree_factory: Callable[..., EvalNode]) -
 
 def _weighted_tree(tree_factory: Callable[..., EvalNode]) -> ObjectNode:
     # a correct, b wrong; b is 3× as important as a.
+    """An object node with `a` correct and `b` wrong, `b` weighing 3×."""
     cfg = EvalConfig(
         fields={"a": FieldConfig(weight=1.0), "b": FieldConfig(weight=3.0)}
     )

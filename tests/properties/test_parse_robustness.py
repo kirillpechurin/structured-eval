@@ -1,7 +1,7 @@
 """Case G — the parse phase never throws; it reports.
 
 LLM output is untrusted text. A malformed document must surface as a structured
-``parse_error`` on the report, never as an exception out of ``evaluate``. We
+`parse_error` on the report, never as an exception out of `evaluate`. We
 fuzz with random byte-ish strings and known-pathological JSON-ish fragments and
 assert the contract holds every time.
 """
@@ -41,6 +41,7 @@ PATHOLOGICAL = [
 
 @pytest.mark.parametrize("bad", PATHOLOGICAL, ids=range(len(PATHOLOGICAL)))
 def test_pathological_strings_report_not_raise(bad: Any) -> None:
+    """Every hand-picked malformed document reports instead of raising."""
     report = evaluate(bad, {"a": 1}, config=EvalConfig(metrics=[ObjectF1()]))
     if report.parse_error:
         assert report.parse_error_message
@@ -50,6 +51,7 @@ def test_pathological_strings_report_not_raise(bad: Any) -> None:
 
 @pytest.mark.parametrize("seed", SEEDS)
 def test_random_garbage_reports_not_raise(seed: Any) -> None:
+    """Random garbage reports a parse error instead of raising."""
     rng = random.Random(seed)
     n = rng.randint(0, 40)
     alphabet = string.printable + "{}[]:,\"'"

@@ -37,6 +37,8 @@ pytestmark = pytest.mark.engine
 
 
 class Invoice(BaseModel):
+    """The L1 schema: the shape a valid invoice must have."""
+
     id: str
     vendor: str
     subtotal: float
@@ -72,6 +74,7 @@ SOURCE = (
 
 @pytest.fixture
 def report() -> EvalReport:
+    """One evaluation of the flawed document, with every level's metric on it."""
     cfg = EvalConfig(
         metrics=[
             ObjectF1(),
