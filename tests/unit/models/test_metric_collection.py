@@ -1,10 +1,14 @@
 """MetricCollection — one named metric's values across the whole tree.
 
-`report.metrics[name]`. The reductions answer different questions about the
-same map: `mean`/`min`/`max` summarise every node that produced the
-metric, `root` is the document-level value, and `representative` picks
-whichever of the two is meaningful. An empty collection answers `0.0` rather
-than raising — a metric that ran nowhere is not an error.
+`report.metrics[name]`. The reductions answer different questions of the same
+map:
+
+- `mean` / `min` / `max` — over every node that produced the metric;
+- `root` — the document-level value;
+- `representative` — whichever of the two is meaningful.
+
+An empty collection answers `0.0` rather than raising: a metric that ran
+nowhere is not an error.
 """
 
 from typing import Any

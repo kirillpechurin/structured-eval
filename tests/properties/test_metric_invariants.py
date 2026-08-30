@@ -5,10 +5,10 @@ the LLM emits, that function must obey four laws. Examples can't prove a law;
 these sweep a seeded corpus so a single counterexample fails the build with a
 reproducible seed.
 
-  * Boundedness   — result is always a finite float in [0, 1]; never raises.
-  * Identity      — `score(x, x) == 1.0` on the metric's own domain.
-  * Symmetry      — order-independent metrics give `score(a,e) == score(e,a)`.
-  * String-only   — text metrics return exactly 0.0 on any non-str input.
+- Boundedness — result is always a finite float in [0, 1]; never raises.
+- Identity — `score(x, x) == 1.0` on the metric's own domain.
+- Symmetry — order-independent metrics give `score(a,e) == score(e,a)`.
+- String-only — text metrics return exactly 0.0 on any non-str input.
 """
 
 import math

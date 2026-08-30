@@ -35,12 +35,14 @@ class Recorder(AnyNodeMetric):
         log: list[str] | None = None,
         name: str | None = None,
     ) -> None:
+        """Pin the score to report, and take the shared log to write into."""
         super().__init__(name=name)
         self.value = value
         self.seen: list[str] = []
         self.log = log
 
     def compute(self, node: EvalNode) -> float | None:
+        """The pinned value; the node's path and this name are recorded first."""
         self.seen.append(node.path)
         if self.log is not None:
             self.log.append(self.name)

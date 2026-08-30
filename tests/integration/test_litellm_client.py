@@ -4,6 +4,7 @@
 notice litellm changing shape underneath us. These tests pin the assumptions
 that stub encodes — the response shape `completion` returns and the existence
 of `supports_response_schema` — and are skipped when the extra is absent.
+
 litellm's own `mock_response` keeps them offline: no API key, no network.
 """
 

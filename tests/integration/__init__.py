@@ -1,1 +1,1 @@
-"""Adapter tests against the host libraries; skipped without their extras."""
+"""Tests against the real optional libraries; skipped without their extras."""

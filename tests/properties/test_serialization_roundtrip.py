@@ -1,10 +1,12 @@
 """Case E — report serialization round-trips losslessly.
 
 A report is the framework's output contract (CI artifacts, dashboards, the diff
-machinery). `to_json` → `from_json` must preserve the headline score, the
+machinery). `to_dict` → `from_dict` must preserve the headline score, the
 per-field scores, and the structured `.extra` side-channels (schema errors,
-rule results). We generate varied documents and assert the round-trip is a
-fixed point at the level callers actually read.
+rule results).
+
+We generate varied documents and assert the round-trip is a fixed point at the
+level callers actually read.
 """
 
 import random

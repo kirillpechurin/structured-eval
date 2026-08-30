@@ -18,6 +18,7 @@ class FakeChatModel:
     """Shaped like a LangChain chat model, dependency-free."""
 
     def invoke(self, messages: Any) -> Any:
+        """The one method `resolve_client` looks for; the reply is irrelevant."""
         return "ok"
 
 
@@ -87,8 +88,8 @@ def test_a_blank_model_is_treated_as_unset(monkeypatch, value):
 
 
 def test_an_unset_model_is_a_configuration_error(monkeypatch):
-    # No silent fallback to some default model: the judge names what graded the
-    # data, or it refuses to run.
+    # No fallback to some default model: the judge names what graded the data,
+    # or it refuses to run.
     monkeypatch.delenv(MODEL_ENV_VAR, raising=False)
 
     with pytest.raises(ValueError, match="no LLM client was given"):

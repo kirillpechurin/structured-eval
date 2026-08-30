@@ -2,9 +2,10 @@
 
 Being a `float` subclass is the point: every consumer that averages, compares
 or serializes a score keeps working, and the metric that has something to say
-attaches it to `.extra` without a wrapper anyone has to unwrap. What is
-pinned here is that both halves survive: arithmetic behaves like a float, and
-`extra` round-trips through pydantic.
+attaches it to `.extra` without a wrapper anyone has to unwrap.
+
+What is pinned here is that both halves survive: arithmetic behaves like a
+float, and `extra` round-trips through pydantic.
 """
 
 from typing import Any

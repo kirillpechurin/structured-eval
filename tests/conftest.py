@@ -67,7 +67,8 @@ def build_tree(
     aggregating metric called on the returned tree can read its children.
 
     Returns:
-        The root node, with every node's metrics already computed.
+        The root node — `ObjectNode`, `ArrayNode` or `ScalarNode`, following
+        the document.
     """
     ctx = make_context(actual, expected, config, source=source)
     root, _warnings = TreeBuilder(ctx).build()
@@ -134,7 +135,7 @@ def make_invoice(**overrides: Any) -> dict[str, Any]:
     differs from the baseline, instead of repeating the full literal.
 
     Returns:
-        The baseline invoice with `overrides` applied.
+        A fresh dict of `id` / `vendor` / `total` / `status`, overrides applied.
     """
     base = {"id": "INV-001", "vendor": "Acme Corp", "total": 100.0, "status": "paid"}
     base.update(overrides)

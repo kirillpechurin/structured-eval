@@ -139,9 +139,9 @@ def test_representative_refuses_to_invent_a_score(
     results: dict[str, Any],
     message: str,
 ) -> None:
-    # A parent aggregating its children reads this; a fallback here would turn a
-    # missing computation into a silent zero and quietly move every score above
-    # it. The engine's job is to make sure this never has to raise.
+    # A parent aggregating its children reads this; a fallback here would turn
+    # a missing computation into a zero and drag down every score above it in
+    # the tree. The engine's job is to make sure this never has to raise.
     node = EvalNode(
         path="a",
         context=context_factory({"a": 1}),

@@ -76,9 +76,9 @@ table.
 ## 4. Docstrings
 
 Ruff enforces the Google convention here too (`AGENTS.md` → "Docstrings — Google
-style"), with one waiver: **a test owes no docstring**. Its name plus its
-`parametrize` ids are the documentation — `test_currency_symbols_stripped` says
-more than a sentence restating it would.
+style"), with one waiver — `D103`, and it covers **test functions alone**. A
+test's name plus its `parametrize` ids are the documentation:
+`test_currency_symbols_stripped` says more than a sentence restating it would.
 
 Everything around the tests does owe one:
 
@@ -87,15 +87,20 @@ Everything around the tests does owe one:
   what the fixtures pin, what is deliberately *not* covered here.
 - **Every fixture, builder and helper** — one line saying what it hands back.
   Sections only once the docstring has a body, and then `Returns:` comes with it
-  (pydoclint `DOC201`).
+  (pydoclint `DOC201`). When the section is there, make it name what the summary
+  cannot — the shape of the value, not the summary again.
+- **Every class at module level and its methods** (`D101`/`D102`/`D107`) — one
+  line on what the class stands for, one on what the method hands back. Where a
+  probe returns a sentinel, say which branch that number pins.
 - **Golden and property tests** — the exception to the waiver. A name cannot
   carry a pinned number or an invariant, so the docstring does: *"NER spans
   aligned by text: 2 matched, 1 spurious, 1 missed."*
 
-A fake defined *inside* a test body is part of that test's arrange block and
-stays bare; the enclosing test already names it. And no `Example:` blocks —
-`make doctest` runs over `structured_eval`, so an example here would never
-execute.
+One thing stays bare: a fake defined **inside a test body** — part of that
+test's arrange block, which its enclosing test already names.
+
+No `Example:` blocks either — `make doctest` runs over `structured_eval`, so an
+example here would never execute.
 
 ## 5. Shared infrastructure (`conftest.py`)
 

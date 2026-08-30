@@ -97,7 +97,7 @@ def test_resolve_passes_instances_through() -> None:
 # ── per-instance name override ───────────────────────────────────────────────
 
 # Constructor args for the metrics that require them. Exhaustiveness is asserted
-# below, so a new arg-taking metric cannot silently skip the name contract.
+# below, so a new arg-taking metric missing from this table fails the suite.
 ARG_METRICS: dict[str, tuple[Any, ...]] = {
     "composite_score": ({"exact_match": 1.0},),
     "rule_pass_rate": ([],),

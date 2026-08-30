@@ -26,11 +26,13 @@ class ScriptedClient(LlmClient):
     model_name = "scripted"
 
     def __init__(self, reply: str) -> None:
+        """Pin the one reply every call returns, and start the logs empty."""
         self.reply = reply
         self.prompts: list[str] = []
         self.systems: list[str | None] = []
 
     def generate(self, prompt: str, *, system: str | None = None) -> str:
+        """The pinned reply; both arguments are logged on the way past."""
         self.prompts.append(prompt)
         self.systems.append(system)
         return self.reply

@@ -1,1 +1,1 @@
-"""Unit tests: one module at a time, without the engine."""
+"""Unit tests: one module per file; the engine only ever supplies the input."""

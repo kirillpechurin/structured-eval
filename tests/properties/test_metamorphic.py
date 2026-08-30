@@ -4,9 +4,9 @@ Metamorphic tests assert how the score *changes* when the input changes in a
 known direction — stronger than pinning a single number, and immune to formula
 re-tuning that preserves ordering.
 
-  * C Monotonic degradation — corrupting one more field never raises the score.
-  * D Weight decomposition  — with uniform weights, PROPORTIONAL collapses to
-    the plain count-based (NONE) result.
+- C Monotonic degradation — corrupting one more field never raises the score.
+- D Weight decomposition — with uniform weights, PROPORTIONAL collapses to the
+  plain count-based (NONE) result.
 """
 
 import random

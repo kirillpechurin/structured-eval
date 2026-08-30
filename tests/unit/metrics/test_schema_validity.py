@@ -31,7 +31,7 @@ class Invoice(BaseModel):
 
 
 class ClosedInvoice(BaseModel):
-    """A schema that refuses unknown fields (the default silently drops them)."""
+    """A schema that refuses unknown fields; the default would still validate."""
 
     model_config = ConfigDict(extra="forbid")
 

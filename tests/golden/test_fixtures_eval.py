@@ -1,7 +1,7 @@
-"""Golden regression: `evaluate` over the dataset fixtures, headline numbers pinned.
+"""Golden regression: `evaluate` over the dataset fixtures, with numbers pinned.
 
 The fixtures cover representative shapes — invoice, NER, tool call, deep-nested,
-root array — so a refactor that shifts a score cannot pass silently.
+root array — so a refactor that shifts a score fails a test here.
 """
 
 import json
@@ -109,10 +109,10 @@ def test_tool_call_nested() -> None:
 
 
 def test_root_array_of_records() -> None:
+    """A document that *is* an array: elements align by key, not by index."""
     # "Extract every line item" answers with a list, not an object wrapping one.
     # The root's path is a label, so its elements spell themselves without it —
     # `[0].sku`, the same way `flatten` writes them and `navigate` reads them.
-    """A document that *is* an array: elements align by key, not by index."""
     actual = [
         {"sku": "B-7", "qty": 5},
         {"sku": "A-1", "qty": 99},

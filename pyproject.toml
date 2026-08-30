@@ -148,13 +148,7 @@ ignore-one-line-docstrings = true
 "tests/**" = [
     "ARG",     # unused args common in fixtures/parametrize
     "PLR2004", # magic numbers in test assertions are fine
-    # A test's name plus its `parametrize` ids are the documentation; Google's
-    # own guide says to omit trivial test docstrings. `D100`/`D104` stay on —
-    # every test module and package still states what unit it covers.
-    "D101",
-    "D102",
-    "D103",
-    "D107",
+    "D103",    # a test's name and its `parametrize` ids are the documentation
 ]
 
 # ── Mypy ──────────────────────────────────────────────────────────────────────
