@@ -1,4 +1,4 @@
-"""ArrayJaccardSimilarity — set-overlap ``|A∩B|/|A∪B|`` over arrays.
+"""ArrayJaccardSimilarity — set-overlap `|A∩B|/|A∪B|` over arrays.
 
 Order- and count-insensitive; membership is exact equality. Built for arrays of
 scalars, but does not crash on object/list elements (keyed by canonical JSON).

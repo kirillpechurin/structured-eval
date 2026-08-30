@@ -1,14 +1,14 @@
 """Case A — field-metric invariants over generated scalar pairs.
 
-A field metric is a pure function ``score(actual, expected) -> float``. Whatever
+A field metric is a pure function `score(actual, expected) -> float`. Whatever
 the LLM emits, that function must obey four laws. Examples can't prove a law;
 these sweep a seeded corpus so a single counterexample fails the build with a
 reproducible seed.
 
-  * Boundedness   — result is always a finite float in [0, 1]; never raises.
-  * Identity      — ``score(x, x) == 1.0`` on the metric's own domain.
-  * Symmetry      — order-independent metrics give ``score(a,e) == score(e,a)``.
-  * String-only   — text metrics return exactly 0.0 on any non-str input.
+- Boundedness — result is always a finite float in [0, 1]; never raises.
+- Identity — `score(x, x) == 1.0` on the metric's own domain.
+- Symmetry — order-independent metrics give `score(a,e) == score(e,a)`.
+- String-only — text metrics return exactly 0.0 on any non-str input.
 """
 
 import math
@@ -32,7 +32,7 @@ from .conftest import SEEDS, random_scalar, random_str
 
 pytestmark = pytest.mark.property
 
-# Every value metric that exposes the pure ``score(actual, expected)`` primitive.
+# Every value metric that exposes the pure `score(actual, expected)` primitive.
 # (Presence/FieldFaithfulness override compute(node) instead and are covered at
 # the engine layer.)
 ALL_SCORE_METRICS = [
@@ -51,6 +51,7 @@ SYMMETRIC = [ExactMatch(), TypeMatch(), Fuzzy(), TokenF1(), NumericCloseness()]
 
 
 def _ids(metrics: list[Any]) -> list[str]:
+    """Parametrize ids: one metric class name per case."""
     return [type(m).__name__ for m in metrics]
 
 

@@ -1,9 +1,9 @@
 """MetricInvoker — the one way to run a metric, in either input mode.
 
-Nothing calls ``compute`` / ``compute_<kind>`` / ``score`` directly. Two modes:
-``on_node`` when a node exists (the engine), ``on_values`` when only raw values
-do (array alignment, before any node is built). A ``GenericMetric`` dispatches
-per kind in both; anything else uses ``compute`` / ``score``.
+Nothing calls `compute` / `compute_<kind>` / `score` directly. Two modes:
+`on_node` when a node exists (the engine), `on_values` when only raw values
+do (array alignment, before any node is built). A `GenericMetric` dispatches
+per kind in both; anything else uses `compute` / `score`.
 """
 
 from collections.abc import Callable
@@ -20,38 +20,50 @@ pytestmark = pytest.mark.unit
 
 
 class Plain(AnyNodeMetric):
-    """A non-generic metric: one ``compute``, one ``score``."""
+    """A non-generic metric: one `compute`, one `score`."""
 
     name = "plain_probe"
 
     def compute(self, node: EvalNode) -> float:
+        """The node branch, pinned at 0.25."""
         return 0.25
 
     def score(self, actual: Any, expected: Any) -> float:
+        """The values branch, pinned at 0.75."""
         return 0.75
 
 
 class PerKind(GenericMetric):
-    """A generic metric implementing every kind, in both modes."""
+    """A generic metric implementing every kind, in both modes.
+
+    Each branch returns a distinct value, so a test reads which one ran off
+    the number alone.
+    """
 
     name = "per_kind_probe"
 
     def compute_scalar(self, node: ScalarNode) -> float:
+        """The `on_node` scalar branch, pinned at 0.1."""
         return 0.1
 
     def compute_object(self, node: ObjectNode) -> float:
+        """The `on_node` object branch, pinned at 0.2."""
         return 0.2
 
     def compute_array(self, node: ArrayNode) -> float:
+        """The `on_node` array branch, pinned at 0.3."""
         return 0.3
 
     def score_scalar(self, actual: Any, expected: Any) -> float:
+        """The `on_values` scalar branch, pinned at 0.4."""
         return 0.4
 
     def score_object(self, actual: Any, expected: Any) -> float:
+        """The `on_values` object branch, pinned at 0.5."""
         return 0.5
 
     def score_array(self, actual: Any, expected: Any) -> float:
+        """The `on_values` array branch, pinned at 0.6."""
         return 0.6
 
 
@@ -61,6 +73,7 @@ class ObjectsOnly(GenericMetric):
     name = "objects_only_probe"
 
     def compute_object(self, node: ObjectNode) -> float:
+        """The one branch implemented; every other kind has to opt out."""
         return 1.0
 
 
@@ -70,13 +83,16 @@ class Splitting(AnyNodeMetric):
     name = "splitting_probe"
 
     def compute(self, node: EvalNode) -> dict[str, float]:
+        """Two sub-scores from a node, so there is nothing to narrow."""
         return {"left": 0.0, "right": 1.0}
 
     def score(self, actual: Any, expected: Any) -> dict[str, float]:
+        """Two sub-scores from raw values — the same shape as `compute`."""
         return {"left": 0.0, "right": 1.0}
 
 
 def _nodes(context: EvalContext) -> dict[str, EvalNode]:
+    """One node of each type, all sharing the context."""
     return {
         "scalar": ScalarNode(path="total", context=context),
         "object": ObjectNode(path="vendor", context=context),
@@ -131,7 +147,7 @@ def test_a_generic_metric_dispatches_on_the_node_kind(
 
 
 @pytest.mark.parametrize("kind", ["scalar", "array"], ids=["scalar", "array"])
-def test_a_generic_metric_is_silent_on_a_kind_it_does_not_implement(
+def test_a_generic_metric_returns_none_on_a_kind_it_does_not_implement(
     context_factory: Callable[..., EvalContext], kind: str
 ) -> None:
     # `TreeBuilder` already keeps it off those nodes; this is the same answer
@@ -158,7 +174,7 @@ def test_a_generic_metric_dispatches_on_the_inferred_kind(
     assert MetricInvoker(PerKind()).on_values(actual, expected) == value
 
 
-def test_a_generic_metric_is_silent_on_values_it_has_no_score_for() -> None:
+def test_a_generic_metric_returns_none_on_values_it_has_no_score_for() -> None:
     assert MetricInvoker(ObjectsOnly()).on_values("a", "b") is None
 
 

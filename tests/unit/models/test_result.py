@@ -1,7 +1,7 @@
-"""Result models (model/result.py): EvalReport queries, asserts, diff,
-serialization, plus BatchEvalReport / ConsistencyReport aggregates.
+"""Result models: `EvalReport` queries, asserts, diff and serialization.
 
-Reports are constructed directly (no engine) to isolate the model behaviour.
+Covers the `BatchEvalReport` / `ConsistencyReport` aggregates too. Reports are
+constructed directly, without the engine, to isolate the model behaviour.
 """
 
 from pathlib import Path
@@ -40,6 +40,7 @@ def _fs(
     actual: Any = None,
     expected: Any = None,
 ) -> FieldScore:
+    """A scalar `FieldScore` carrying one `exact_match` metric."""
     return FieldScore(
         path=path,
         node_type=NodeType.SCALAR,
@@ -57,6 +58,7 @@ def _report(
     fields: list[FieldScore] | None = None,
     **kwargs: Any,
 ) -> EvalReport:
+    """An `EvalReport` assembled from plain scores, without the engine."""
     return EvalReport(
         score=score,
         metrics={k: _coll(k, v) for k, v in (metrics or {}).items()},

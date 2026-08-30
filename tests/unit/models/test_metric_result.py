@@ -1,10 +1,11 @@
 """MetricResult — a float everywhere, with structured detail attached.
 
-Being a ``float`` subclass is the point: every consumer that averages, compares
+Being a `float` subclass is the point: every consumer that averages, compares
 or serializes a score keeps working, and the metric that has something to say
-attaches it to ``.extra`` without a wrapper anyone has to unwrap. What is
-pinned here is that both halves survive: arithmetic behaves like a float, and
-``extra`` round-trips through pydantic.
+attaches it to `.extra` without a wrapper anyone has to unwrap.
+
+What is pinned here is that both halves survive: arithmetic behaves like a
+float, and `extra` round-trips through pydantic.
 """
 
 from typing import Any
@@ -18,6 +19,8 @@ pytestmark = pytest.mark.unit
 
 
 class Holder(BaseModel):
+    """A model with a `MetricResult` field — the embedding under test."""
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     value: MetricResult

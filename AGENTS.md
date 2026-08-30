@@ -125,9 +125,9 @@ owes is decided by **import path and visibility**, not by taste:
   listing its exports or submodules is an enumeration — write it as a Markdown
   `-` list, one line per entry, never flattened into a semicolon-joined
   sentence. A docstring that explains how something works is prose.
-- **A summary line is one physical line of at most 80 characters** ending in
-  `.`, `?` or `!`. Nothing enforces the 80 (`E501` is off and the formatter
-  wraps at 88) — it is on you.
+- **A summary is one line of at most 80 characters** ending in `.`, `?` or `!`.
+  The 80 counts the summary text, not the physical source line — the opening
+  `"""` and the indent before it do not count against it.
 - **Keep it short.** A module docstring is a summary plus at most one short
   paragraph or list saying what is in the module and how it is used. Design
   rationale, algorithm detail and per-argument behaviour belong on the class or
@@ -142,12 +142,14 @@ owes is decided by **import path and visibility**, not by taste:
   rather than being chopped into one-line fragments.
 - Overridden `score` / `compute` carry their own docstring rather than inheriting
   the base one — each states what *this* metric does with the values.
-- Test docstrings are per-module, not per-test: `D100`/`D104` are enforced in
-  `tests/`, `D101`/`D102`/`D103`/`D107` are not. A test's name and its
-  `parametrize` ids are its documentation; add a docstring only where they aren't
-  enough (fixtures, builders, golden/property tests).
+- Test docstrings are per-module, not per-test. `tests/` carries exactly one
+  waiver, `D103`, and it stands for **test functions alone**: a test's name and
+  its `parametrize` ids are its documentation. Everything around them owes a
+  docstring — every module and package, every fixture, builder and helper, every
+  class at module level and its methods — and so do golden/property tests, whose
+  pinned numbers and invariants no name can carry. What stays bare is a fake
+  nested inside a test body. `tests/README.md` §4 is the detail.
 
 Enforced by `ruff` (`D` with `convention = "google"`, plus pydoclint
-`DOC201`/`DOC402`/`DOC501` checking sections against the signature). The
-`per-file-ignores` block named "Docstring migration" in `pyproject.toml` is the
-remaining todo list — one line per layer, deleted as that layer is converted.
+`DOC201`/`DOC402`/`DOC501` checking sections against the signature) across the
+whole repository.

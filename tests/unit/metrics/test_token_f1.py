@@ -1,6 +1,6 @@
 """TokenF1 — SQuAD-style multiset token-overlap F1.
 
-Defaults reproduce the official SQuAD ``normalize_answer`` (lowercase, drop
+Defaults reproduce the official SQuAD `normalize_answer` (lowercase, drop
 punctuation, drop articles); each step is an independent toggle. String-only.
 """
 

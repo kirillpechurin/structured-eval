@@ -1,22 +1,16 @@
 """The L0→L6 thesis test: one document, every level reported independently.
 
-This is the project's reason to exist: structural validity
-(L0–L3) does not imply value correctness (L4), faithfulness to a source (L5),
-or business-rule consistency (L6). A document can be perfectly parseable,
-schema-valid and correctly typed while still being *wrong*.
+This is the project's reason to exist: structural validity (L0–L3) does not
+imply value correctness (L4), faithfulness to a source (L5), or business-rule
+consistency (L6). We build a document that is parseable, schema-valid and
+correctly typed while still being *wrong*, and assert each level's own verdict:
 
-We build exactly such a document and assert each level surfaces its own verdict:
-
-  L0 parse        — valid JSON, no parse error.
-  L1 schema       — matches the pydantic schema (SchemaValidity == 1.0).
-  L2/L3 types/req — all required fields present with correct types.
-  L4 values       — a wrong value (`total`) drags the value score below 1.0.
-  L5 faithfulness — a field absent from `source` is flagged as a hallucination.
-  L6 rules        — `total == subtotal + tax` is violated and reported.
-
-If a future refactor lets a higher level "leak" into a lower one (e.g. a bad
-value silently failing the schema, or a rule failure not surfacing), this test
-breaks — which is the whole point.
+- L0 parse — valid JSON, no parse error.
+- L1 schema — matches the pydantic schema (SchemaValidity == 1.0).
+- L2/L3 types/req — all required fields present with correct types.
+- L4 values — a wrong value (`total`) drags the value score below 1.0.
+- L5 faithfulness — a field absent from `source` is flagged as a hallucination.
+- L6 rules — `total == subtotal + tax` is violated and reported.
 """
 
 import pytest
@@ -37,6 +31,8 @@ pytestmark = pytest.mark.engine
 
 
 class Invoice(BaseModel):
+    """The L1 schema: the shape a valid invoice must have."""
+
     id: str
     vendor: str
     subtotal: float
@@ -46,9 +42,9 @@ class Invoice(BaseModel):
 
 
 # Structurally flawless, semantically broken:
-#   * total is 999.0 but should be 110.0  (L4 wrong value)
-#   * total != subtotal + tax            (L6 rule violation)
-#   * vendor "Globex" does not appear in the source text (L5 hallucination)
+#   - total is 999.0 but should be 110.0  (L4 wrong value)
+#   - total != subtotal + tax             (L6 rule violation)
+#   - vendor "Globex" does not appear in the source text (L5 hallucination)
 ACTUAL = {
     "id": "INV-001",
     "vendor": "Globex",
@@ -72,6 +68,7 @@ SOURCE = (
 
 @pytest.fixture
 def report() -> EvalReport:
+    """One evaluation of the flawed document, with every level's metric on it."""
     cfg = EvalConfig(
         metrics=[
             ObjectF1(),

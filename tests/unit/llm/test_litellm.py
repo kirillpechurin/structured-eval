@@ -1,7 +1,7 @@
-"""The litellm-backed client, exercised against a stubbed ``litellm`` module.
+"""The litellm-backed client, exercised against a stubbed `litellm` module.
 
-The extra is never installed for the unit run: ``litellm`` is lazy-imported, so
-a stub in ``sys.modules`` covers the real code path without the dependency.
+The extra is never installed for the unit run: `litellm` is lazy-imported, so
+a stub in `sys.modules` covers the real code path without the dependency.
 """
 
 from __future__ import annotations
@@ -20,11 +20,14 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
 
 def make_response(content: Any) -> SimpleNamespace:
+    """A litellm completion response carrying `content`."""
     return SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
     )
@@ -32,7 +35,7 @@ def make_response(content: Any) -> SimpleNamespace:
 
 @pytest.fixture
 def litellm_stub(monkeypatch):
-    """A stand-in for the ``litellm`` module, recording every call."""
+    """A stand-in for the `litellm` module, recording every call."""
     stub = SimpleNamespace(
         calls=[],
         reply='{"score": 1.0, "reason": "grounded"}',
@@ -129,7 +132,7 @@ def test_fallback_puts_the_schema_in_the_prompt(litellm_stub):
 
 
 def test_unknown_model_falls_back_instead_of_failing(litellm_stub):
-    """``supports_response_schema`` raising is a routing signal, not an error."""
+    """`supports_response_schema` raising is a routing signal, not an error."""
 
     def raises(model: str) -> bool:
         raise KeyError(model)

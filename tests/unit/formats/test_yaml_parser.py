@@ -1,4 +1,4 @@
-"""YamlParser — optional (``yaml`` extra); skipped when PyYAML is absent."""
+"""YamlParser — optional (`yaml` extra); skipped when PyYAML is absent."""
 
 import sys
 

@@ -1,11 +1,11 @@
 """Lightweight, dependency-free property-based generators.
 
 The project pins no third-party PBT library (no hypothesis), so we roll a tiny
-seeded generator instead. Tests parametrize over ``SEEDS`` and build a fresh
-``random.Random(seed)`` per case: every failure is reproducible from its seed
+seeded generator instead. Tests parametrize over `SEEDS` and build a fresh
+`random.Random(seed)` per case: every failure is reproducible from its seed
 (printed in the test id), and the corpus is deterministic across runs/CI.
 
-These produce the messy inputs an LLM actually emits — mixed types, ``None``,
+These produce the messy inputs an LLM actually emits — mixed types, `None`,
 nested dicts/lists, currency-formatted numbers — which is exactly where a
 scoring framework must stay total (never raise) and bounded (stay in [0, 1]).
 """
@@ -20,6 +20,7 @@ SEEDS = list(range(60))
 
 
 def _word(rng: random.Random) -> str:
+    """A short run of letters and spaces."""
     n = rng.randint(1, 8)
     return "".join(rng.choice(string.ascii_letters + " ") for _ in range(n))
 
@@ -60,7 +61,7 @@ def random_scalar(rng: random.Random) -> Any:
 
 
 def random_json(rng: random.Random, depth: int = 3) -> Any:
-    """A random JSON document: nested dicts/lists down to ``depth``."""
+    """A random JSON document: nested dicts/lists down to `depth`."""
     if depth <= 0 or rng.random() < 0.4:
         return random_scalar(rng)
     if rng.random() < 0.5:
@@ -72,11 +73,14 @@ def random_json(rng: random.Random, depth: int = 3) -> Any:
 
 
 def random_document(rng: random.Random, depth: int = 3) -> dict[str, Any]:
-    """A random JSON *document* — always an object root (what ``evaluate`` accepts).
+    """A random JSON *document* — always an object root (what `evaluate` accepts).
 
     Scalar/array roots are a separate, partly-unsupported path; document-shaped
     inputs keep these tests focused on the report machinery rather than root-kind
     edge cases.
+
+    Returns:
+        An object of one to five keys, nesting down to `depth`.
     """
     n = rng.randint(1, 5)
     keys = rng.sample(string.ascii_lowercase, k=min(n, 26))

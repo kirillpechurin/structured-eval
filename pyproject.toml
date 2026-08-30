@@ -148,23 +148,8 @@ ignore-one-line-docstrings = true
 "tests/**" = [
     "ARG",     # unused args common in fixtures/parametrize
     "PLR2004", # magic numbers in test assertions are fine
-    # A test's name plus its `parametrize` ids are the documentation; Google's
-    # own guide says to omit trivial test docstrings. `D100`/`D104` stay on —
-    # every test module and package still states what unit it covers.
-    "D101",
-    "D102",
-    "D103",
-    "D107",
+    "D103",    # a test's name and its `parametrize` ids are the documentation
 ]
-
-# ── Docstring migration (Google style) ────────────────────────────────────────
-# Temporary, and down to its last line: every layer of `structured_eval` is now
-# strict, and only `tests/` is still being converted. When this line goes,
-# `D`/`DOC` are strict everywhere.
-#
-# Only these codes are still waived for tests; the rest are waived permanently
-# in the "tests/**" block above.
-"tests/**/*" = ["D100", "D104", "D205", "D209", "DOC"]
 
 # ── Mypy ──────────────────────────────────────────────────────────────────────
 

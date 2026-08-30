@@ -1,8 +1,8 @@
 """Per-instance metric names: two configurations of one metric on one node.
 
 The name is the key a result lands under, so a node's names must be unique:
-without a custom name both instances key on the class name and one would
-silently overwrite the other, which TreeBuilder rejects at build time.
+without a custom name both instances key on the class name and the second
+would overwrite the first's result, which TreeBuilder rejects at build time.
 """
 
 from collections.abc import Callable
@@ -44,7 +44,7 @@ def test_two_configs_of_one_metric_coexist(
 def test_without_custom_names_the_collision_raises(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    """The collision this feature exists to remove: silent overwrite is refused."""
+    """The collision this feature exists to remove: two instances, one key."""
     config = EvalConfig(
         fields={
             "total": FieldConfig(
@@ -71,7 +71,7 @@ def test_default_name_is_used_when_none_given(
 def test_key_metric_resolves_against_a_custom_name(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    """A custom name is a valid ``key_metric`` string — the instance is reused."""
+    """A custom name is a valid `key_metric` string — the instance is reused."""
     config = EvalConfig(
         fields={
             "total": FieldConfig(

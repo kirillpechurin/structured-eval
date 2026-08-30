@@ -1,4 +1,4 @@
-"""Tests for the public ``evaluate`` entrypoint: the various call shapes."""
+"""Tests for the public `evaluate` entrypoint: the various call shapes."""
 
 import pytest
 

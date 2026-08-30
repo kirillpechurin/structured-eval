@@ -44,6 +44,8 @@ pytestmark = pytest.mark.engine
 
 
 class Invoice(BaseModel):
+    """The schema the evaluated document is validated against."""
+
     id: str
     total: float
     status: str
@@ -210,7 +212,7 @@ def test_nested_representative_bubbles_into_parent(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
     # A nested object's representative is what the parent's ObjectF1 aggregates —
-    # object-in-object is counted exactly like a scalar, not silently dropped.
+    # object-in-object is counted exactly like a scalar, not dropped.
     cfg = EvalConfig(metrics=[ObjectF1()])
     r = evaluate_one(
         {"u": {"a": 1, "b": 9}, "x": 1}, {"u": {"a": 1, "b": 2}, "x": 1}, cfg
@@ -310,7 +312,7 @@ def test_a_document_that_is_an_array_resolves_its_elements(
     # The root's path `"$"` is a label, not a segment: its elements spell
     # themselves without it, exactly as an object's children do (`vendor`, never
     # `$.vendor`) and as `flatten` writes them. Prefixing it would produce paths
-    # `navigate` cannot resolve, and every element would silently read as None.
+    # `navigate` cannot resolve, and every element would read as None.
     doc = [{"sku": "A-1"}, {"sku": "X-3"}]
     r = evaluate_one(doc, doc)
 
@@ -366,7 +368,7 @@ def test_generic_metric_lands_only_where_it_defines_a_compute(
 ) -> None:
     # Unlike the typed metrics, a GenericMetric is not pinned to one node type:
     # it is admitted onto exactly the kinds it implements a `compute_<kind>` for,
-    # and silently skipped on the rest.
+    # and skipped on the rest.
     class Shape(GenericMetric):
         name = "shape"
 
@@ -543,8 +545,8 @@ def test_object_array_config_without_key_metric_unchanged(
 # ── incompatible metric assignment fails fast ────────────────────────────────
 # An explicit per-node metric that cannot score the node's type is a config
 # mistake — deterministic, input-independent — so TreeBuilder raises at build
-# time instead of silently dropping it. Globals cascaded from EvalConfig stay
-# exempt: cascading-by-type is intended, so a global that does not fit is filtered.
+# time instead of dropping it. Globals cascaded from EvalConfig stay exempt:
+# cascading-by-type is intended, so a global that does not fit is filtered.
 
 # doc is a perfect self-match: any raise is about the config, never the data.
 _DOC = {"vendor": {"name": "Acme"}, "total": 100.0}
@@ -607,8 +609,8 @@ def test_incompatible_metric_raises(
 def test_global_cascaded_metric_does_not_raise(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    # ObjectAccuracy cascades globally: it fits the objects and is silently
-    # filtered from the scalar ``total`` node — never raised.
+    # ObjectAccuracy cascades globally: it fits the objects and is filtered
+    # from the scalar `total` node — never raised.
     r = evaluate_one(_DOC, _DOC, EvalConfig(metrics=[ObjectAccuracy()]))
     assert "object_accuracy" in r.field_scores["vendor"].metrics
     assert "object_accuracy" not in r.field_scores["total"].metrics
@@ -627,7 +629,7 @@ def test_a_metric_outside_the_hierarchy_fits_no_node(
 ) -> None:
     # A direct BaseMetric subclass declares no node kind at all, so it is a
     # registry entry and nothing more — there is no node it could score, and
-    # assigning it says so rather than passing silently.
+    # assigning it raises instead of being accepted as a no-op.
     class Rogue(BaseMetric):
         name = "rogue"
 
@@ -639,10 +641,10 @@ def test_a_metric_outside_the_hierarchy_fits_no_node(
 def test_two_globals_sharing_a_name_raise(
     evaluate_one: Callable[..., EvalReport],
 ) -> None:
-    # A name is the key a result lands under, so the second would silently
-    # overwrite the first wherever the two land together. Across *layers* an
-    # equal name is an override (a field's own metric displaces the global);
-    # within one list it is only ambiguous.
+    # A name is the key a result lands under, so the second would overwrite the
+    # first wherever the two land together. Across *layers* an equal name is an
+    # override (a field's own metric displaces the global); within one list it
+    # is only ambiguous.
     config = EvalConfig(metrics=[TokenF1(name="same"), ExactMatch(name="same")])
     with pytest.raises(ValueError, match="assigned twice"):
         evaluate_one(_DOC, _DOC, config)

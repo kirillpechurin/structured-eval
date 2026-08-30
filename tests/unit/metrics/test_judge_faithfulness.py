@@ -2,14 +2,16 @@
 
 Driven by a fake client so the tests are free and deterministic: it records the
 prompts it was given and replies with whatever verdicts the case needs. What is
-pinned is the metric's own behaviour — one call per attachment, the score it
-reports for the node it ran on, the verdicts it carries in ``extra``, the
-verdict→score policy, and staying sane on a sloppy reply — not the wording of
-the prompt.
+pinned is the metric's own behaviour, not the wording of the prompt:
 
-The judge is always attached **explicitly** (``root=`` / ``fields=``) rather
-than through ``config.metrics``: it applies to every node type, so cascading it
-would buy one model call per node in the document.
+- one call per attachment;
+- the score it reports for the node it ran on;
+- the verdicts it carries in `extra`, and the verdict→score policy;
+- staying sane on a sloppy reply.
+
+The judge is always attached **explicitly** (`root=` / `fields=`) rather than
+through `config.metrics`: it applies to every node type, so cascading it would
+buy one model call per node in the document.
 """
 
 import json
@@ -37,20 +39,23 @@ ACTUAL: dict[str, Any] = {"vendor": "Acme Corp", "total": 100.0}
 class FakeJudge:
     """A stand-in LLM: replies with canned verdicts, remembers what it was asked.
 
-    Shaped like ``LlmClient.generate`` so ``resolve_client`` adapts it as a
+    Shaped like `LlmClient.generate` so `resolve_client` adapts it as a
     plain callable — the injection path a user without an API key takes.
     """
 
     def __init__(self, verdicts: list[dict[str, str]]) -> None:
+        """Freeze `verdicts` into the JSON body every call replies with."""
         self.reply = json.dumps({"verdicts": verdicts})
         self.prompts: list[str] = []
 
     def __call__(self, prompt: str, *, system: str | None = None) -> str:
+        """The frozen reply; `prompt` is recorded so a test can read it back."""
         self.prompts.append(prompt)
         return self.reply
 
 
 def judge(verdicts: list[dict[str, str]], **kwargs: Any) -> JudgeFaithfulness:
+    """A `JudgeFaithfulness` wired to a fake client replying with these verdicts."""
     return JudgeFaithfulness(client=FakeJudge(verdicts), **kwargs)
 
 
@@ -62,8 +67,12 @@ def run(
 ) -> EvalReport:
     """Evaluate with the judge hung on the document root.
 
-    Per-field configuration goes inside the root config: ``config.root`` and
-    ``config.fields`` are alternatives, and the former wins.
+    Per-field configuration goes inside the root config: `config.root` and
+    `config.fields` are alternatives, and the former wins.
+
+    Returns:
+        The report of an expected-free run — the judge on the root node,
+        `presence` on every scalar leaf.
     """
     return evaluate(
         actual if actual is not None else ACTUAL,
@@ -77,7 +86,7 @@ def run(
 
 
 def verdicts(report: EvalReport, path: str = "$") -> dict[str, dict[str, str]]:
-    """The judge's per-field verdicts at ``path``, keyed by the field they name."""
+    """The judge's per-field verdicts at `path`, keyed by the field they name."""
     summary = report.field_scores[path].metrics["judge_faithfulness"].extra
     return {v["path"]: v for v in summary["verdict"]["verdicts"]}
 
@@ -541,7 +550,7 @@ def test_fields_without_a_criterion_get_the_default() -> None:
 
 def test_a_null_field_is_judged_like_any_other() -> None:
     # null claims "the source states nothing here": true → supported,
-    # false → contradicted. It is never silently dropped.
+    # false → contradicted. It is judged, never skipped.
     report = run(
         judge(
             [

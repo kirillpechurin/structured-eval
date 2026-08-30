@@ -1,8 +1,8 @@
-"""DateDistanceScore — linear ``max(0, 1 - days/max_days)`` date similarity.
+"""DateDistanceScore — linear `max(0, 1 - days/max_days)` date similarity.
 
-Accepts ``date`` / ``datetime`` and ISO-8601 strings (coerced via pydantic);
+Accepts `date` / `datetime` and ISO-8601 strings (coerced via pydantic);
 datetime is compared by calendar date only. Any unparseable side scores 0.0.
-``max_days`` must be > 0.
+`max_days` must be > 0.
 """
 
 from datetime import date, datetime

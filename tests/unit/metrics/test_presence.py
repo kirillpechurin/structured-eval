@@ -1,6 +1,6 @@
 """Presence — 1.0 if the field exists in the actual document, else 0.0.
 
-Unlike the comparison metrics, Presence overrides ``compute(node)`` (it inspects
+Unlike the comparison metrics, Presence overrides `compute(node)` (it inspects
 the node, not a value pair), so it is exercised through a ScalarNode.
 """
 

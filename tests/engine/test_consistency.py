@@ -12,6 +12,7 @@ pytestmark = pytest.mark.engine
 
 
 def _runs(actuals: list[Any], expected: Any) -> list[Sample]:
+    """One expected document paired with each of several actual runs."""
     return [Sample(actual=a, expected=expected) for a in actuals]
 
 

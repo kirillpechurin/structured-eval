@@ -1,6 +1,6 @@
 """SchemaValidity — validate the document against a pydantic model or JSON Schema.
 
-Returns ``(score, extra)`` where ``extra["schema_errors"]`` buckets failures into
+Returns `(score, extra)` where `extra["schema_errors"]` buckets failures into
 type_errors / missing_required / extra_fields, each naming the field it is about.
 A model is validated as its JSON Schema, so both forms answer identically.
 """
@@ -23,13 +23,15 @@ pytestmark = pytest.mark.unit
 
 
 class Invoice(BaseModel):
+    """The schema under test: three required fields, extras allowed."""
+
     id: str
     total: float
     status: str
 
 
 class ClosedInvoice(BaseModel):
-    """A schema that refuses unknown fields (the default silently drops them)."""
+    """A schema that refuses unknown fields; the default would still validate."""
 
     model_config = ConfigDict(extra="forbid")
 

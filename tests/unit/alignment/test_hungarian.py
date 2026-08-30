@@ -1,8 +1,8 @@
 """HungarianAligner — optimal one-to-one assignment (scipy).
 
-Owns its element-similarity logic and a ``Scorer`` type: a single
-metric/name/callable, or a per-field ``dict[str, Scorer]``. ``key`` picks the
-field(s) compared — one, or several as a composite key — and ``scorer`` how.
+Owns its element-similarity logic and a `Scorer` type: a single
+metric/name/callable, or a per-field `dict[str, Scorer]`. `key` picks the
+field(s) compared — one, or several as a composite key — and `scorer` how.
 """
 
 from typing import Any
@@ -94,7 +94,7 @@ def test_a_per_field_scorer_over_plain_values_compares_them_whole() -> None:
 
 
 def test_a_plain_callable_is_a_scorer_too() -> None:
-    # Similarity does not have to be a metric: any ``(actual, expected) -> float``
+    # Similarity does not have to be a metric: any `(actual, expected) -> float`
     # is used as-is, no adapter and no registry lookup.
     def same_initial(actual: Any, expected: Any) -> float:
         return 1.0 if actual[0] == expected[0] else 0.0

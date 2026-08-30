@@ -1,7 +1,7 @@
 """Contract test for the metric registry.
 
-Every metric exported from the package's public API must register its ``name``
-in ``_METRIC_REGISTRY`` and resolve via ``get_metric_class`` — this guards
+Every metric exported from the package's public API must register its `name`
+in `_METRIC_REGISTRY` and resolve via `get_metric_class` — this guards
 against the catalog and the registry drifting apart (e.g. EvalConfig.from_yaml).
 """
 

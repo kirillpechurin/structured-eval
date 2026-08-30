@@ -1,7 +1,7 @@
 """Shared aligner helpers (alignment/base.py) — key extraction.
 
-``key_value`` is what every keyed aligner pairs on, so its three answers have to
-stay distinct: the value, ``None`` for a field the element does not carry, and a
+`key_value` is what every keyed aligner pairs on, so its three answers have to
+stay distinct: the value, `None` for a field the element does not carry, and a
 sentinel for an element that carries no fields at all.
 """
 

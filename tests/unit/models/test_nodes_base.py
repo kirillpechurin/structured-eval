@@ -1,7 +1,7 @@
 """EvalNode tree base: lazy navigation, accessors, traversal.
 
-Nodes never copy data — ``actual``/``expected`` resolve by navigating the shared
-context. ``navigate`` distinguishes 'absent' (MISSING → surfaced as None).
+Nodes never copy data — `actual`/`expected` resolve by navigating the shared
+context. `navigate` distinguishes 'absent' (MISSING → surfaced as None).
 """
 
 from collections.abc import Callable
@@ -139,9 +139,9 @@ def test_representative_refuses_to_invent_a_score(
     results: dict[str, Any],
     message: str,
 ) -> None:
-    # A parent aggregating its children reads this; a fallback here would turn a
-    # missing computation into a silent zero and quietly move every score above
-    # it. The engine's job is to make sure this never has to raise.
+    # A parent aggregating its children reads this; a fallback here would turn
+    # a missing computation into a zero and drag down every score above it in
+    # the tree. The engine's job is to make sure this never has to raise.
     node = EvalNode(
         path="a",
         context=context_factory({"a": 1}),

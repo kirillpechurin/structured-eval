@@ -1,4 +1,4 @@
-"""``CallableClient`` — a function that is ``generate``, forwarded verbatim."""
+"""`CallableClient` — a function that is `generate`, forwarded verbatim."""
 
 from __future__ import annotations
 
@@ -12,12 +12,14 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
 
 def test_the_call_is_forwarded_verbatim():
-    """The function *is* ``generate`` — both arguments reach it unchanged."""
+    """The function *is* `generate` — both arguments reach it unchanged."""
     seen: list[tuple[str, str | None]] = []
 
     def record(prompt: str, *, system: str | None = None) -> str:

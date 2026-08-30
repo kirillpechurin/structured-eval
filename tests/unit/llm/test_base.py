@@ -14,6 +14,8 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
@@ -24,11 +26,13 @@ class ScriptedClient(LlmClient):
     model_name = "scripted"
 
     def __init__(self, reply: str) -> None:
+        """Pin the one reply every call returns, and start the logs empty."""
         self.reply = reply
         self.prompts: list[str] = []
         self.systems: list[str | None] = []
 
     def generate(self, prompt: str, *, system: str | None = None) -> str:
+        """The pinned reply; both arguments are logged on the way past."""
         self.prompts.append(prompt)
         self.systems.append(system)
         return self.reply
@@ -71,7 +75,7 @@ def test_default_schema_path_passes_system_through_untouched():
 
 
 def test_a_client_without_generate_cannot_be_built():
-    """``generate`` is the whole contract — nothing else may be left unimplemented."""
+    """`generate` is the whole contract — nothing else may be left unimplemented."""
 
     class Incomplete(LlmClient):
         pass

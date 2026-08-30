@@ -136,8 +136,8 @@ def test_single_key_list_matches_string_key() -> None:
 def test_an_element_with_no_fields_has_no_key_and_pairs_with_nothing() -> None:
     # Both sides are scalars, so neither can be keyed. Treating "no key" as a
     # value both share would tie every pair at a perfect score and hand them out
-    # in index order — keyed alignment quietly turning into alignment by
-    # position, and a plausible number instead of a wrong one.
+    # in index order — keyed alignment turning into alignment by position, and
+    # a plausible number instead of a wrong one.
     r = ByKeyAligner(key="sku").align(["alpha", "beta", "gamma"], ["gamma", "beta"])
     assert r.matched == []
     assert r.missed == [0, 1, 2]

@@ -10,6 +10,7 @@ pytestmark = pytest.mark.engine
 
 
 def _batch(samples: list[Sample], cfg: EvalConfig | None = None) -> BatchEvalReport:
+    """Evaluate a list of samples through the public batch API."""
     report = evaluate_batch(samples, cfg)
     assert isinstance(report, BatchEvalReport)
     return report

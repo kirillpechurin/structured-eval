@@ -1,7 +1,7 @@
-"""ExponentialNumericScore — ``exp(-|a-e|/scale)`` similarity for numbers.
+"""ExponentialNumericScore — `exp(-|a-e|/scale)` similarity for numbers.
 
-Numbers only (shares ``Numeric``'s lenient parser); any non-number side scores
-0.0. ``scale`` controls the decay; it must be > 0.
+Numbers only (shares `Numeric`'s lenient parser); any non-number side scores
+0.0. `scale` controls the decay; it must be > 0.
 """
 
 import math

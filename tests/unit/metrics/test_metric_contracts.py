@@ -23,10 +23,13 @@ ALL_METRICS = sorted(_METRIC_REGISTRY.items())
 
 
 def _instantiable_field_score_metrics() -> list[tuple[str, FieldMetric]]:
-    """Field metrics with a no-arg ctor and a pure ``score`` (engine-free).
+    """Field metrics with a no-arg ctor and a pure `score` (engine-free).
 
     Excludes node-based field metrics (Presence inspects the node;
     FieldFaithfulness requires a source) and anything needing constructor args.
+
+    Returns:
+        One `(registry name, instance)` pair per qualifying metric.
     """
     out = []
     for name, cls in ALL_METRICS:
@@ -94,7 +97,7 @@ def test_resolve_passes_instances_through() -> None:
 # ── per-instance name override ───────────────────────────────────────────────
 
 # Constructor args for the metrics that require them. Exhaustiveness is asserted
-# below, so a new arg-taking metric cannot silently skip the name contract.
+# below, so a new arg-taking metric missing from this table fails the suite.
 ARG_METRICS: dict[str, tuple[Any, ...]] = {
     "composite_score": ({"exact_match": 1.0},),
     "rule_pass_rate": ([],),
@@ -106,7 +109,7 @@ _CTOR_IDS = [name for name, _, _ in CONSTRUCTIBLE]
 
 
 def test_arg_metric_table_is_exhaustive() -> None:
-    """New metrics with required ctor args must be added to ``ARG_METRICS``."""
+    """New metrics with required ctor args must be added to `ARG_METRICS`."""
     needs_args = {n for n, _ in ALL_METRICS} - {n for n, _ in NO_ARG_METRICS}
     assert needs_args == set(ARG_METRICS)
 
@@ -118,10 +121,10 @@ def test_omitting_name_keeps_the_class_name(name: Any, cls: Any, args: Any) -> N
 
 @pytest.mark.parametrize(("name", "cls", "args"), CONSTRUCTIBLE, ids=_CTOR_IDS)
 def test_custom_name_shadows_only_the_instance(name: Any, cls: Any, args: Any) -> None:
-    """Every metric forwards ``name`` to BaseMetric; the class stays untouched.
+    """Every metric forwards `name` to BaseMetric; the class stays untouched.
 
-    Guards the ``super().__init__(name=name)`` convention: a metric that defines
-    ``__init__`` and forgets to forward will fail here.
+    Guards the `super().__init__(name=name)` convention: a metric that defines
+    `__init__` and forgets to forward will fail here.
     """
     instance = cls(*args, name="custom")
     assert instance.name == "custom"
@@ -141,7 +144,7 @@ def test_registry_key_is_unaffected_by_a_custom_name(
     ("name", "cls"), NO_ARG_METRICS, ids=[n for n, _ in NO_ARG_METRICS]
 )
 def test_name_resolution_survives_a_custom_name(name: Any, cls: Any) -> None:
-    """``resolve_metric("numeric")`` still yields a default-named instance."""
+    """`resolve_metric("numeric")` still yields a default-named instance."""
     cls(name="custom")
     assert resolve_metric(name).name == name
 
@@ -175,13 +178,13 @@ def test_two_nulls_agree(metric: Any) -> None:
     """Null expected + null produced = a correct answer, not a mismatch.
 
     A metric's type gate (str / number / date) would otherwise reject the pair
-    and score a right answer 0.0 — the schemas under evaluation ask for ``null``
+    and score a right answer 0.0 — the schemas under evaluation ask for `null`
     whenever a value is absent, so this is the common case.
     """
     assert metric.score(None, None) == 1.0
 
 
-# One side ``None``: a value was expected and nothing came back, or vice versa.
+# One side `None`: a value was expected and nothing came back, or vice versa.
 HALF_NULL_PAIRS = [(None, "x"), ("x", None), (None, 7), (7, None)]
 
 

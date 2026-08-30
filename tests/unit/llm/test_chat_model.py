@@ -1,4 +1,4 @@
-"""``ChatModelClient`` — a LangChain-style model, duck-typed against a fake."""
+"""`ChatModelClient` — a LangChain-style model, duck-typed against a fake."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ pytestmark = pytest.mark.unit
 
 
 class Verdict(BaseModel):
+    """The response schema passed to `generate_with_schema`."""
+
     score: float
     reason: str
 
@@ -22,24 +24,32 @@ class FakeChatModel:
     """Shaped like a LangChain chat model, dependency-free."""
 
     def __init__(self, reply: Any, *, model_name: str = "fake/model") -> None:
+        """Pin the one reply every call returns, and start the call log empty."""
         self.reply = reply
         self.model_name = model_name
         self.seen: list[Any] = []
         self.bound_schema: type[BaseModel] | None = None
 
     def invoke(self, messages: Any) -> Any:
+        """The pinned reply; `messages` is recorded in `seen` on the way past."""
         self.seen.append(messages)
         return self.reply
 
 
 class StructuredChatModel(FakeChatModel):
+    """A chat model that also offers `with_structured_output`."""
+
     def with_structured_output(self, schema: type[BaseModel]) -> FakeChatModel:
+        """Record the bound schema and return self, as LangChain's does."""
         self.bound_schema = schema
         return self
 
 
 class Reply:
+    """A message object: its text sits behind `.content`."""
+
     def __init__(self, content: Any) -> None:
+        """Wrap `content` as the one attribute the client reads."""
         self.content = content
 
 

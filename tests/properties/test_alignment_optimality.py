@@ -1,16 +1,15 @@
 """Case B — alignment optimality: Hungarian dominates greedy ByKey.
 
-``HungarianAligner`` is the *optimal* one-to-one assignment,
-while ``ByKeyAligner`` is a cheap *globally-greedy* approximation.
-The optimum can never match fewer pairs than the approximation.
+`HungarianAligner` is the *optimal* one-to-one assignment, while `ByKeyAligner`
+is a cheap *globally-greedy* approximation. The optimum can never match fewer
+pairs than the approximation. We pin that as:
 
-We pin that as:
-  * a property — over random key lists, ``len(hungarian.matched) >=
-    len(bykey.matched)`` with identical exact-match scoring;
-  * a non-vacuous baseline — on a recoverable permutation both reach the
-    ceiling (the >= is not satisfied by one strategy matching nothing); and
-  * score-level dominance — on a graded cross-match Hungarian's ArrayF1 is
-    never below greedy's.
+- a property — over random key lists, `len(hungarian.matched) >=
+  len(bykey.matched)` with identical exact-match scoring;
+- a non-vacuous baseline — on a recoverable permutation both reach the ceiling
+  (the >= is not satisfied by one strategy matching nothing); and
+- score-level dominance — on a graded cross-match Hungarian's ArrayF1 is never
+  below greedy's.
 """
 
 import random
